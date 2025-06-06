@@ -2,6 +2,12 @@
 
 GlobalFree
 
+// Network
+
+DNS_FREE_TYPE
+DNS_INFO_NO_RECORDS
+DnsQuery_W
+
 // Process
 
 JOBOBJECT_EXTENDED_LIMIT_INFORMATION

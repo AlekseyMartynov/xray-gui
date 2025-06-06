@@ -13,6 +13,12 @@ static class NativeUtils {
         }
     }
 
+    public static void MustSucceed(WIN32_ERROR result) {
+        if(result != WIN32_ERROR.NO_ERROR) {
+            throw new Win32Exception((int)result);
+        }
+    }
+
     public static unsafe void CheckHandle(void* h) {
         if(h == null) {
             ThrowLastWin32Error();
