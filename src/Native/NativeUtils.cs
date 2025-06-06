@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Win32.Foundation;
 
@@ -20,5 +21,11 @@ static class NativeUtils {
 
     static void ThrowLastWin32Error() {
         throw new Win32Exception(Marshal.GetLastWin32Error());
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Span<T> Cast<S, T>(scoped ref S source) where S : struct where T : struct {
+        var sourceSpan = MemoryMarshal.CreateSpan(ref source, 1);
+        return MemoryMarshal.Cast<S, T>(sourceSpan);
     }
 }
