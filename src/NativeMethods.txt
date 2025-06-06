@@ -2,6 +2,16 @@
 
 GlobalFree
 
+// Process
+
+JOBOBJECT_EXTENDED_LIMIT_INFORMATION
+AssignProcessToJobObject
+CreateJobObject
+CreateProcess
+ResumeThread
+SetInformationJobObject
+TerminateProcess
+
 // WinINet
 
 HTTP_QUERY_*
