@@ -1,0 +1,23 @@
+// Common
+
+GlobalFree
+
+// WinINet
+
+HTTP_QUERY_*
+INTERNET_ACCESS_TYPE
+INTERNET_FLAG_*
+INTERNET_OPTION_*
+INTERNET_PER_CONN_OPTIONW
+INTERNET_PER_CONN_OPTION_LISTW
+INTERNET_SERVICE_HTTP
+PROXY_TYPE_*
+HttpOpenRequest
+HttpQueryInfo
+HttpSendRequest
+InternetCloseHandle
+InternetConnect
+InternetOpen
+InternetReadFile
+InternetQueryOption
+InternetSetOption
