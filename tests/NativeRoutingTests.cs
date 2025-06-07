@@ -15,12 +15,10 @@ public class NativeRoutingTests {
     [Fact]
     public void FindRoute_OnLink() {
         Assert.NotNull(
-            // v4 loopback
-            NativeRouting.FindRoute(new(127), 8)
+            NativeRouting.FindRoute(NativeIPAddress.IPv4Loopback, 32)
         );
         Assert.NotNull(
-            // v6 loopback
-            NativeRouting.FindRoute(new([0, 0, 0, 0, 0, 0, 0, 1]), 128)
+            NativeRouting.FindRoute(NativeIPAddress.IPv6Loopback, 128)
         );
         Assert.NotNull(
             // v4 multicast

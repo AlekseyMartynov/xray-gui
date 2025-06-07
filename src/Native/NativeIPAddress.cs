@@ -44,10 +44,6 @@ readonly partial struct NativeIPAddress {
         return AsBytes().TryCopyTo(destination);
     }
 
-    public bool SequenceEqual(ReadOnlySpan<byte> bytes) {
-        return AsBytes().SequenceEqual(bytes);
-    }
-
     public override string ToString() {
         var textHead = (stackalloc char[39]);
         var textCurr = textHead;
@@ -96,10 +92,28 @@ readonly partial struct NativeIPAddress {
     }
 }
 
+partial struct NativeIPAddress : IEquatable<NativeIPAddress> {
+
+    public override bool Equals(object? obj) {
+        return obj is NativeIPAddress ip && Equals(ip);
+    }
+
+    public bool Equals(NativeIPAddress other) {
+        return Lower == other.Lower
+            && Upper == other.Upper;
+    }
+
+    public override int GetHashCode() {
+        return HashCode.Combine(Lower, Upper);
+    }
+}
+
 partial struct NativeIPAddress {
     public static readonly NativeIPAddress
         IPv4Zero = new(0),
-        IPv6Zero = new([]);
+        IPv6Zero = new([]),
+        IPv4Loopback = new(127, 0, 0, 1),
+        IPv6Loopback = new([0, 0, 0, 0, 0, 0, 0, 1]);
 
     public static bool TryParse(ReadOnlySpan<char> text, out NativeIPAddress result) {
         return TryParseV4(text, out result)
@@ -162,9 +176,27 @@ partial struct NativeIPAddress {
 
     public static NativeIPAddress From(in SOCKADDR_INET addr) {
         if(addr.si_family == ADDRESS_FAMILY.AF_INET) {
-            return new(addr.Ipv4.sin_addr.S_un.S_addr);
+            return From(in addr.Ipv4.sin_addr);
         } else {
-            return new(addr.Ipv6.sin6_addr.u.Word.AsReadOnlySpan(), true);
+            return From(in addr.Ipv6.sin6_addr);
         }
+    }
+
+    public static unsafe NativeIPAddress From(SOCKADDR* p) {
+        if(p->sa_family == ADDRESS_FAMILY.AF_INET) {
+            var p4 = (SOCKADDR_IN*)p;
+            return From(in p4->sin_addr);
+        } else {
+            var p6 = (SOCKADDR_IN6*)p;
+            return From(in p6->sin6_addr);
+        }
+    }
+
+    static NativeIPAddress From(in IN_ADDR addr) {
+        return new(addr.S_un.S_addr);
+    }
+
+    static NativeIPAddress From(in IN6_ADDR addr) {
+        return new(addr.u.Word.AsReadOnlySpan(), true);
     }
 }

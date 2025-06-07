@@ -7,6 +7,7 @@ GlobalFree
 
 DNS_FREE_TYPE
 DNS_INFO_NO_RECORDS
+SOCKADDR
 CreateIpForwardEntry2
 DeleteIpForwardEntry2
 DnsQuery_W

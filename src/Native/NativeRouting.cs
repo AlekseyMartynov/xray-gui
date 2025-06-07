@@ -35,7 +35,7 @@ static class NativeRouting {
                 if(candidateDest.PrefixLength != destPrefixLen) {
                     continue;
                 }
-                if(!destPrefix.SequenceEqual(AsBytes(ref candidateDest.Prefix))) {
+                if(!destPrefix.Equals(NativeIPAddress.From(in candidateDest.Prefix))) {
                     continue;
                 }
                 if(bestRowIndex < 0 || candidate.Metric < rows[bestRowIndex].Metric) {
