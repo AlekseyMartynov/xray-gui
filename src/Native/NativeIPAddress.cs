@@ -2,6 +2,7 @@ using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using Windows.Win32.Networking.WinSock;
 
 namespace Project;
 
@@ -156,6 +157,14 @@ partial struct NativeIPAddress {
         } else {
             result = default;
             return false;
+        }
+    }
+
+    public static NativeIPAddress From(in SOCKADDR_INET addr) {
+        if(addr.si_family == ADDRESS_FAMILY.AF_INET) {
+            return new(addr.Ipv4.sin_addr.S_un.S_addr);
+        } else {
+            return new(addr.Ipv6.sin6_addr.u.Word.AsReadOnlySpan(), true);
         }
     }
 }
