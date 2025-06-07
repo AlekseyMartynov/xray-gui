@@ -14,7 +14,11 @@ static class NativeUtils {
     }
 
     public static void MustSucceed(WIN32_ERROR result) {
-        if(result != WIN32_ERROR.NO_ERROR) {
+        MustSucceed((uint)result);
+    }
+
+    public static void MustSucceed(uint result) {
+        if(result != 0) {
             throw new Win32Exception((int)result);
         }
     }

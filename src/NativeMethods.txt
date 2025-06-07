@@ -12,6 +12,7 @@ CreateIpForwardEntry2
 DeleteIpForwardEntry2
 DnsQuery_W
 FreeMibTable
+GetAdaptersAddresses
 GetIpForwardTable2
 
 // Process
