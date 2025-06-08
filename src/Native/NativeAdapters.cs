@@ -7,6 +7,7 @@ using Windows.Win32.NetworkManagement.Ndis;
 namespace Project;
 
 readonly ref struct NativeAdapterInfo {
+    public required Guid Guid { get; init; }
     public required ReadOnlySpan<char> Name { get; init; }
     public required ReadOnlySpan<char> Description { get; init; }
     public required IF_OPER_STATUS Status { get; init; }
@@ -42,6 +43,7 @@ static class NativeAdapters {
                     unicastPtr = unicastPtr->Next;
                 }
                 callback(new NativeAdapterInfo {
+                    Guid = NativeUtils.ParseGuid(itemPtr->AdapterName),
                     Name = itemPtr->FriendlyName.AsSpan(),
                     Description = itemPtr->Description.AsSpan(),
                     Status = itemPtr->OperStatus,

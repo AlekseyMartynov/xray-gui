@@ -38,4 +38,18 @@ static class NativeUtils {
         var sourceSpan = MemoryMarshal.CreateSpan(ref source, 1);
         return MemoryMarshal.Cast<S, T>(sourceSpan);
     }
+
+    public static Guid ParseGuid(PSTR text) {
+        try {
+            var span = text.AsSpan();
+            var len = span.Length;
+            var chars = (stackalloc char[len]);
+            for(var i = 0; i < len; i++) {
+                chars[i] = (char)span[i];
+            }
+            return Guid.Parse(chars);
+        } catch(FormatException) {
+            return Guid.Empty;
+        }
+    }
 }
