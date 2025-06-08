@@ -16,4 +16,21 @@ static class Extensions {
         }
         return NativeIPAddress.TryParseV4(host, out _);
     }
+
+    public static JsonObject GetChildObject(this JsonObject obj, params ReadOnlySpan<string> path) {
+        foreach(var key in path) {
+            if(obj.TryGetValue(key, out var value)) {
+                if(value is JsonObject childObj) {
+                    obj = childObj;
+                } else {
+                    throw new InvalidOperationException();
+                }
+            } else {
+                var newChild = new JsonObject();
+                obj[key] = newChild;
+                obj = newChild;
+            }
+        }
+        return obj;
+    }
 }
