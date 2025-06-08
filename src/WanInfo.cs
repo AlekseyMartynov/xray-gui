@@ -29,6 +29,9 @@ static class WanInfo {
 
         Task.Run(async delegate {
             await foreach(var _ in SignalChannel.Reader.ReadAllAsync()) {
+                if(AppConfig.TapMode) {
+                    await WhenTapGatewayReadyAsync();
+                }
                 Update();
             }
         });
@@ -38,6 +41,13 @@ static class WanInfo {
 
     public static void RequestUpdate() {
         SignalChannel.Writer.TryWrite(default);
+    }
+
+    static async Task WhenTapGatewayReadyAsync() {
+        using var icmp = new NativeIcmp();
+        while(AppConfig.TapMode && !icmp.Ping(TapModeAdapters.TapGateway)) {
+            await Task.Yield();
+        }
     }
 
     static void Update() {

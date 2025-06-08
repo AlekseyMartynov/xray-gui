@@ -70,9 +70,6 @@ static class ProcMan {
 
         NotifyTun2SocksExit = true;
         Tun2SocksProc = new(commandLine, WorkDir, default, Tun2Socks_Exited);
-
-        // TODO wait for stdout
-        Thread.Sleep(1234);
     }
 
     public static void StopTun2Socks() {

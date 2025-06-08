@@ -7,6 +7,7 @@ GlobalFree
 
 DNS_FREE_TYPE
 DNS_INFO_NO_RECORDS
+ICMP_ECHO_REPLY
 SOCKADDR
 CreateIpForwardEntry2
 DeleteIpForwardEntry2
@@ -14,6 +15,9 @@ DnsQuery_W
 FreeMibTable
 GetAdaptersAddresses
 GetIpForwardTable2
+IcmpCloseHandle
+IcmpCreateFile
+IcmpSendEcho
 
 // Process
 

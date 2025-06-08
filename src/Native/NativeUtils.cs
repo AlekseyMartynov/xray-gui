@@ -23,6 +23,10 @@ static class NativeUtils {
         }
     }
 
+    public static unsafe void CheckHandle(HANDLE h) {
+        CheckHandle(h.Value);
+    }
+
     public static unsafe void CheckHandle(void* h) {
         if(h == null) {
             ThrowLastWin32Error();
