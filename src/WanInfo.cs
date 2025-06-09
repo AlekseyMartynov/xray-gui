@@ -18,45 +18,51 @@ static class WanInfo {
 #endif
     ];
 
-    static readonly Channel<object?> SignalChannel;
+    static readonly Channel<CancellationToken> PendingUpdateRequests;
 
     static WanInfo() {
-        var channelOptions = new BoundedChannelOptions(1) {
+        var channelOptions = new UnboundedChannelOptions {
             SingleReader = true
         };
 
-        SignalChannel = Channel.CreateBounded<object?>(channelOptions);
+        PendingUpdateRequests = Channel.CreateUnbounded<CancellationToken>(channelOptions);
 
         Task.Run(async delegate {
-            await foreach(var _ in SignalChannel.Reader.ReadAllAsync()) {
-                if(AppConfig.TapMode) {
-                    await WhenTapGatewayReadyAsync();
+            await foreach(var ct in PendingUpdateRequests.Reader.ReadAllAsync()) {
+                if(ct.IsCancellationRequested) {
+                    continue;
                 }
-                Update();
+                if(AppConfig.TapMode) {
+                    await WhenTapGatewayReadyAsync(ct);
+                }
+                Update(ct);
             }
         });
     }
 
     public static event EventHandler<WanInfoEventArgs>? Ready;
 
-    public static void RequestUpdate() {
-        SignalChannel.Writer.TryWrite(default);
+    public static void RequestUpdate(CancellationToken ct) {
+        PendingUpdateRequests.Writer.TryWrite(ct);
     }
 
-    static async Task WhenTapGatewayReadyAsync() {
+    static async Task WhenTapGatewayReadyAsync(CancellationToken ct) {
         using var icmp = new NativeIcmp();
-        while(AppConfig.TapMode && !icmp.Ping(TapModeAdapters.TapGateway)) {
+        while(!ct.IsCancellationRequested && !icmp.Ping(TapModeAdapters.TapGateway)) {
             await Task.Yield();
         }
     }
 
-    static void Update() {
+    static void Update(CancellationToken ct) {
         using var mem = new MemoryStream();
 
         var ip = "";
         var countryCode = "";
 
         foreach(var (uri, ipField, countryCodeField) in Services) {
+            if(ct.IsCancellationRequested) {
+                return;
+            }
             try {
                 mem.Position = 0;
                 mem.SetLength(0);

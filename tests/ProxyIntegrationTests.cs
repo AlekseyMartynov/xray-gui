@@ -41,7 +41,7 @@ public sealed class ProxyIntegrationTests : IDisposable {
             WanInfo.Ready += WanInfo_Ready;
 
             NativeProxyManager.SetConfig(PROXY_HOST + ':' + PROXY_PORT);
-            WanInfo.RequestUpdate();
+            WanInfo.RequestUpdate(default);
 
             var e = await wanInfoReadyTCS.Task;
 
