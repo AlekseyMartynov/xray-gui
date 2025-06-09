@@ -23,9 +23,7 @@ static class XrayConfig {
             if(TapModeServerInfo.IsDomainName) {
                 root["dns"] = new JsonObject {
                     ["hosts"] = new JsonObject {
-                        [TapModeServerInfo.Host] = TapModeServerInfo.IPv4List
-                            .Select(i => i.ToString())
-                            .ToArray()
+                        [TapModeServerInfo.Host] = TapModeServerInfo.IPv4List.ConvertAll(i => i.ToString())
                     }
                 };
                 var sockopt = outbound.GetChildObject("streamSettings", "sockopt");

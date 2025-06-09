@@ -1,5 +1,3 @@
-using System.Web;
-
 namespace Project;
 
 partial class XrayOutbound {
@@ -20,16 +18,7 @@ partial class XrayOutbound {
         var sni = "";
         var type = "";
 
-        var qs = HttpUtility.ParseQueryString(uri.Query);
-
-        foreach(var key in qs.AllKeys) {
-            if(key == null) {
-                continue;
-            }
-            var value = qs[key];
-            if(value == null) {
-                continue;
-            }
+        foreach(var (key, value) in uri.Query.ParseQueryString()) {
             switch(key) {
                 case nameof(allowInsecure):
                     allowInsecure = value;

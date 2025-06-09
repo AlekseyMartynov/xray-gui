@@ -1,5 +1,4 @@
 using System.Text;
-using System.Web;
 
 namespace Project;
 
@@ -8,15 +7,9 @@ namespace Project;
 partial class XrayOutbound {
 
     static JsonObject FromShadowsocksUri(Uri uri) {
-        var qs = HttpUtility.ParseQueryString(uri.Query);
-
         var sip003 = default(SIP003);
 
-        foreach(var key in qs.AllKeys) {
-            if(key == null) {
-                continue;
-            }
-            var value = qs[key];
+        foreach(var (key, value) in uri.Query.ParseQueryString()) {
             if(key == "plugin") {
                 ValidateParamNotBlank(CATEGORY_QUERY_STRING, key, value);
                 var remoteAddr = uri.Host;

@@ -102,7 +102,7 @@ static class TapModeRouting {
     }
 
     static void SaveUndo(string path, List<NativeRoute> routes) {
-        File.WriteAllLines(path, routes.Select(FormatUndoLine));
+        File.WriteAllLines(path, routes.ConvertAll(FormatUndoLine));
     }
 
     static void RunUndo(string path) {
