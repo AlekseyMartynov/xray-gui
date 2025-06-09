@@ -8,10 +8,7 @@ class Program {
         ProxyBackup.TryRestore();
         TapModeRouting.UndoAll();
 
-        AppConfig.ProcConsole = true;
-        AppConfig.TapMode = true;
-        AppConfig.SelectedServerIndex = 0;
-
+        AppConfig.Load();
         ServerList.Load();
 
         Start();
