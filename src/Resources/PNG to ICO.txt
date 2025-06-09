@@ -1,0 +1,8 @@
+var png = File.ReadAllBytes(inputPath);
+using var img = Image.FromFile(inputPath);
+using var ico = File.OpenWrite(outputPath);
+ico.SetLength(0);
+ico.Write([0, 0, 1, 0, 1, 0, (byte)img.Width, (byte)img.Height, 0, 0, 1, 0, 32, 0]);
+ico.Write(BitConverter.GetBytes(png.Length));
+ico.Write(BitConverter.GetBytes(22));
+ico.Write(png);

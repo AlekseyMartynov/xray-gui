@@ -1,9 +1,13 @@
 namespace Project;
 
-class Program {
+static partial class Program {
+    internal static readonly object SingleInstanceLock = AcquireSingleInstanceLock();
+
+    public static bool Started { get; private set; }
 
     static void Main() {
-        WanInfo.Ready += (s, e) => Console.WriteLine(e.IP);
+        AppDomain.CurrentDomain.UnhandledException += AppDomain_UnhandledException;
+        WanInfo.Ready += WanInfo_Ready;
 
         ProxyBackup.TryRestore();
         TapModeRouting.UndoAll();
@@ -11,12 +15,12 @@ class Program {
         AppConfig.Load();
         ServerList.Load();
 
-        Start();
-        Console.ReadLine();
-        Stop();
+        UI.Run();
     }
 
-    static void Start() {
+    public static void Start() {
+        EnsureStopped();
+
         var uri = SelectedServer.GetUri();
 
         if(AppConfig.TapMode) {
@@ -48,9 +52,13 @@ class Program {
         }
 
         WanInfo.RequestUpdate();
+
+        Started = true;
     }
 
-    static void Stop() {
+    public static void Stop() {
+        EnsureStarted();
+
         if(AppConfig.TapMode) {
             ProcMan.StopTun2Socks();
         }
@@ -63,6 +71,44 @@ class Program {
             TapModeRouting.UndoTunnel();
         } else {
             ProxyBackup.TryRestore();
+        }
+
+        Started = false;
+    }
+
+    public static void EnsureStarted() {
+        if(!Started) {
+            throw new InvalidOperationException();
+        }
+    }
+
+    public static void EnsureStopped() {
+        if(Started) {
+            throw new InvalidOperationException();
+        }
+    }
+
+    static Mutex AcquireSingleInstanceLock() {
+        var mutex = new Mutex(true, "Global\\3ae267c1-4cc4-4ead-aef7-4d8c12c5c46f", out var createdNew);
+        if(!createdNew) {
+            Windows.Win32.PInvoke.MessageBox(default, "Already running", default, default);
+            Environment.Exit(default);
+        }
+        return mutex;
+    }
+
+    static void AppDomain_UnhandledException(object? s, UnhandledExceptionEventArgs e) {
+        Windows.Win32.PInvoke.MessageBox(default, e.ExceptionObject.ToString(), default, default);
+    }
+
+    static void WanInfo_Ready(object? s, WanInfoEventArgs e) {
+        if(!Started) {
+            return;
+        }
+        if(e.IP.Length > 0) {
+            UI.ShowBalloon($"{e.IP} ({e.CountryCode})");
+        } else {
+            UI.ShowBalloon("Failed to detect WAN IP", true);
         }
     }
 }

@@ -1,6 +1,7 @@
 // Common
 
 INFINITE
+GetModuleHandle
 GlobalFree
 
 // Network
@@ -28,6 +29,29 @@ CreateProcess
 ResumeThread
 SetInformationJobObject
 TerminateProcess
+
+// UI
+
+IDI_ERROR
+WM_*
+AppendMenu
+CreatePopupMenu
+CreateWindowEx
+DefWindowProc
+DestroyMenu
+DestroyWindow
+DispatchMessage
+GetCursorPos
+GetMessage
+LoadIcon
+MessageBox
+PostMessage
+RegisterClass
+SetForegroundWindow
+SetMenuItemInfo
+Shell_NotifyIcon
+TrackPopupMenu
+TranslateMessage
 
 // WinINet
 

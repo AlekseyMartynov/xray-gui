@@ -56,4 +56,9 @@ static class NativeUtils {
             return Guid.Empty;
         }
     }
+
+    public static unsafe PCWSTR MAKEINTRESOURCE(int id) {
+        // https://stackoverflow.com/q/3610565
+        return (PCWSTR)(char*)id;
+    }
 }

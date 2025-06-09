@@ -96,19 +96,19 @@ static class ProcMan {
 
     static void SIP003_Exited() {
         if(NotifySIP003Exit) {
-            // TODO
+            UI.ShowBalloon("SIP003 plugin process exited unexpectedly", true);
         }
     }
 
     static void Xray_Exited() {
         if(NotifyXrayExit) {
-            // TODO
+            UI.ShowBalloon(Path.GetFileName(XrayExePath) + " exited unexpectedly", true);
         }
     }
 
     static void Tun2Socks_Exited() {
         if(NotifyTun2SocksExit) {
-            // TODO
+            UI.ShowBalloon(Path.GetFileName(Tun2SocksExePath) + " exited unexpectedly", true);
         }
     }
 }

@@ -1,0 +1,5 @@
+// "%ProgramFiles(x86)%\Windows Kits\10\bin\10.0.26100.0\x64\rc.exe" win32.rc
+
+101 ICON "128-blue.ico"
+102 ICON "32-blue.ico"
+103 ICON "32-silver.ico"
