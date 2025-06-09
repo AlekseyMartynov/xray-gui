@@ -151,14 +151,13 @@ static class TapModeRouting {
                 case 4:
                     break;
                 case 2:
-                    var slashIndex = chunk.IndexOf('/');
-                    if(slashIndex < 0) {
+                    if(!chunk.TrySplit('/', out var destPrefixText, out var destPrefixLenText)) {
                         return false;
                     }
-                    if(!NativeIPAddress.TryParse(chunk.Slice(0, slashIndex), out destPrefix)) {
+                    if(!NativeIPAddress.TryParse(destPrefixText, out destPrefix)) {
                         return false;
                     }
-                    if(!byte.TryParse(chunk.Slice(1 + slashIndex), out destPrefixLen)) {
+                    if(!byte.TryParse(destPrefixLenText, out destPrefixLen)) {
                         return false;
                     }
                     break;

@@ -15,14 +15,7 @@ class SIP003 {
         RemoteAddr = remoteAddr;
         RemotePort = remotePort;
 
-        var semiIndex = pluginInfo.IndexOf(';');
-        if(semiIndex < 0) {
-            PluginName = pluginInfo;
-            PluginOptions = "";
-        } else {
-            PluginName = pluginInfo.Substring(0, semiIndex);
-            PluginOptions = pluginInfo.Substring(1 + semiIndex);
-        }
+        pluginInfo.TrySplit(';', out PluginName, out PluginOptions);
     }
 
     public string[] CreateEnv() {

@@ -9,6 +9,32 @@ static class Extensions {
         return "\"" + text + "\"";
     }
 
+    public static bool TrySplit(this ReadOnlySpan<char> text, char separator, out ReadOnlySpan<char> left, out ReadOnlySpan<char> right) {
+        var index = text.IndexOf(separator);
+        if(index < 0) {
+            left = text;
+            right = default;
+            return false;
+        } else {
+            left = text.Slice(0, index);
+            right = text.Slice(1 + index);
+            return true;
+        }
+    }
+
+    public static bool TrySplit(this string text, char separator, out string left, out string right) {
+        var index = text.IndexOf(separator);
+        if(index < 0) {
+            left = text;
+            right = "";
+            return false;
+        } else {
+            left = text.Substring(0, index);
+            right = text.Substring(1 + index);
+            return true;
+        }
+    }
+
     public static bool IsIPAddress(this string host) {
         if(host.Contains(':')) {
             // IPv6 fuzzy check

@@ -31,21 +31,12 @@ partial class XrayOutbound {
         }
 
         var userInfo = uri.UserInfo;
-        var userInfoRaw = userInfo;
 
-        var colonIndex = userInfo.IndexOf(':');
-
-        if(colonIndex < 0) {
-            userInfo = Base64UrlDecode(userInfo);
-            colonIndex = userInfo.IndexOf(':');
+        if(!userInfo.TrySplit(':', out var method, out var password)) {
+            if(!Base64UrlDecode(userInfo).TrySplit(':', out method, out password)) {
+                ThrowParamException(CATEGORY_USERINFO_PARAM, userInfo, "has no colon");
+            }
         }
-
-        if(colonIndex < 0) {
-            ThrowParamException(CATEGORY_USERINFO_PARAM, userInfoRaw, "has no colon");
-        }
-
-        var method = userInfo.Substring(0, colonIndex);
-        var password = userInfo.Substring(1 + colonIndex);
 
         ValidateParam(CATEGORY_USERINFO_PARAM, nameof(method), method, [
             "chacha20-ietf-poly1305",
