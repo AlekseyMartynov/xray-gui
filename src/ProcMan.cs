@@ -62,6 +62,10 @@ static class ProcMan {
 
         var commandLine = String.Join(' ',
             Tun2SocksExePath.Quote(),
+#if FALSE
+            // github.com/eycorsican/go-tun2socks/pull/42
+            "-dnsFallback",
+#endif
             "-tunName", TapModeAdapters.TapName.Quote(),
             "-tunDns", TapModeAdapters.TapDns,
             "-proxyServer", AppConfig.ProxyAddr + ':' + AppConfig.ProxyPort,
