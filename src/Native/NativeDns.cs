@@ -22,6 +22,10 @@ static class NativeDns {
                 return [];
             }
 
+            if(queryResult == WIN32_ERROR.ERROR_TIMEOUT) {
+                throw new UIException("DNS query timeout for " + domain);
+            }
+
             NativeUtils.MustSucceed(queryResult);
 
             var list = new List<NativeIPAddress>();
