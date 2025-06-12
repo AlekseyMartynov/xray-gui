@@ -11,8 +11,7 @@ static partial class Program {
         AppDomain.CurrentDomain.UnhandledException += AppDomain_UnhandledException;
         WanInfo.Ready += WanInfo_Ready;
 
-        ProxyBackup.TryRestore();
-        TapModeRouting.UndoAll();
+        UndoTrafficRedirect();
 
         AppConfig.Load();
         ServerList.Load();
@@ -35,22 +34,22 @@ static partial class Program {
 
         XrayConfig.WriteFile(outbound);
 
-        if(AppConfig.TapMode) {
-            TapModeRouting.AddDefaultOverride();
-            TapModeRouting.AddTunnel();
-        } else {
-            ProxyBackup.TrySave();
-            NativeProxyManager.SetConfig(AppConfig.ProxyAddr + ':' + AppConfig.ProxyPort);
-        }
+        try {
+            SetupTrafficRedirect();
 
-        if(sip003 != null) {
-            ProcMan.StartSIP003(sip003);
-        }
+            if(sip003 != null) {
+                ProcMan.StartSIP003(sip003);
+            }
 
-        ProcMan.StartXray();
+            ProcMan.StartXray();
 
-        if(AppConfig.TapMode) {
-            ProcMan.StartTun2Socks();
+            if(AppConfig.TapMode) {
+                ProcMan.StartTun2Socks();
+            }
+        } catch {
+            ProcMan.StopAll();
+            UndoTrafficRedirect();
+            throw;
         }
 
         WanInfoUpdateCancellation = new(TimeSpan.FromMinutes(1));
@@ -68,19 +67,8 @@ static partial class Program {
             WanInfoUpdateCancellation = null;
         }
 
-        if(AppConfig.TapMode) {
-            ProcMan.StopTun2Socks();
-        }
-
-        ProcMan.StopXray();
-        ProcMan.StopSIP003();
-
-        if(AppConfig.TapMode) {
-            TapModeRouting.UndoDefaultOverride();
-            TapModeRouting.UndoTunnel();
-        } else {
-            ProxyBackup.TryRestore();
-        }
+        ProcMan.StopAll();
+        UndoTrafficRedirect();
 
         Started = false;
     }
@@ -95,6 +83,21 @@ static partial class Program {
         if(Started) {
             throw new InvalidOperationException();
         }
+    }
+
+    static void SetupTrafficRedirect() {
+        if(AppConfig.TapMode) {
+            TapModeRouting.AddDefaultOverride();
+            TapModeRouting.AddTunnel();
+        } else {
+            ProxyBackup.TrySave();
+            NativeProxyManager.SetConfig(AppConfig.ProxyAddr + ':' + AppConfig.ProxyPort);
+        }
+    }
+
+    static void UndoTrafficRedirect() {
+        TapModeRouting.UndoAll();
+        ProxyBackup.TryRestore();
     }
 
     static Mutex AcquireSingleInstanceLock() {

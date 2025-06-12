@@ -76,17 +76,13 @@ static class ProcMan {
         Tun2SocksProc = new(commandLine, WorkDir, default, Tun2Socks_Exited);
     }
 
-    public static void StopTun2Socks() {
+    public static void StopAll() {
         NotifyTun2SocksExit = false;
         Stop(ref Tun2SocksProc);
-    }
 
-    public static void StopXray() {
         NotifyXrayExit = false;
         Stop(ref XrayProc);
-    }
 
-    public static void StopSIP003() {
         NotifySIP003Exit = false;
         Stop(ref SIP003Proc);
     }

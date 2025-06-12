@@ -89,15 +89,7 @@ static class TapModeRouting {
     }
 
     public static void UndoAll() {
-        UndoDefaultOverride();
-        UndoTunnel();
-    }
-
-    public static void UndoDefaultOverride() {
         RunUndo(DefaultOverrideUndoPath);
-    }
-
-    public static void UndoTunnel() {
         RunUndo(TunnelUndoPath);
     }
 
