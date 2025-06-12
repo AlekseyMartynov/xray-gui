@@ -8,18 +8,29 @@ namespace Project;
 
 static class NativeDns {
 
-    public static unsafe IReadOnlyList<NativeIPAddress> QueryIPv4(string domain) {
+    public static IReadOnlyList<NativeIPAddress> QueryIP(string domain, bool v4 = true, bool v6 = true) {
+        var results = new List<NativeIPAddress>();
+        if(v4) {
+            QueryIP(domain, DNS_TYPE.DNS_TYPE_A, results);
+        }
+        if(v6) {
+            QueryIP(domain, DNS_TYPE.DNS_TYPE_AAAA, results);
+        }
+        return results;
+    }
+
+    static unsafe void QueryIP(string domain, DNS_TYPE type, List<NativeIPAddress> results) {
         var resultsPtr = default(DNS_RECORDA*);
 
         try {
-            var queryResult = Query(domain, DNS_TYPE.DNS_TYPE_A, out resultsPtr);
+            var queryResult = Query(domain, type, out resultsPtr);
 
             if(queryResult == WIN32_ERROR.DNS_ERROR_RCODE_NAME_ERROR) {
-                return [];
+                return;
             }
 
             if((int)queryResult == PInvoke.DNS_INFO_NO_RECORDS) {
-                return [];
+                return;
             }
 
             if(queryResult == WIN32_ERROR.ERROR_TIMEOUT) {
@@ -28,18 +39,12 @@ static class NativeDns {
 
             NativeUtils.MustSucceed(queryResult);
 
-            var list = new List<NativeIPAddress>();
             var recordPtr = resultsPtr;
 
             while(recordPtr != null) {
-                var type = (DNS_TYPE)recordPtr->wType;
-                if(type == DNS_TYPE.DNS_TYPE_A) {
-                    list.Add(new(recordPtr->Data.A.IpAddress));
-                }
+                results.Add(NativeIPAddress.From(recordPtr));
                 recordPtr = recordPtr->pNext;
             }
-
-            return list;
         } finally {
             if(resultsPtr != null) {
                 DnsRecordListFree(resultsPtr, DNS_FREE_TYPE.DnsFreeRecordList);

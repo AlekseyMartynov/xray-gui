@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Windows.Win32.Networking.WinSock;
+using Windows.Win32.NetworkManagement.Dns;
 
 namespace Project;
 
@@ -172,6 +173,14 @@ partial struct NativeIPAddress {
             result = default;
             return false;
         }
+    }
+
+    public static unsafe NativeIPAddress From(DNS_RECORDA* p) {
+        return (DNS_TYPE)p->wType switch {
+            DNS_TYPE.DNS_TYPE_A => new(p->Data.A.IpAddress),
+            DNS_TYPE.DNS_TYPE_AAAA => new(p->Data.AAAA.Ip6Address.IP6Word.AsReadOnlySpan(), true),
+            _ => throw new NotSupportedException()
+        };
     }
 
     public static NativeIPAddress From(in SOCKADDR_INET addr) {

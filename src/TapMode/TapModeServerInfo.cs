@@ -15,7 +15,7 @@ static class TapModeServerInfo {
             IPv4List = [ip4];
         } else {
             IsDomainName = true;
-            IPv4List = NativeDns.QueryIPv4(host);
+            IPv4List = NativeDns.QueryIP(host, v6: false);
         }
 
         if(IPv4List.Count < 1) {
