@@ -41,6 +41,10 @@ readonly partial struct NativeIPAddress {
             && Upper << 32 == 0xFFFF_0000_0000_0000;
     }
 
+    public ADDRESS_FAMILY GetFamily() {
+        return IsIPv4() ? ADDRESS_FAMILY.AF_INET : ADDRESS_FAMILY.AF_INET6;
+    }
+
     public bool TryWriteBytes(Span<byte> destination) {
         return AsBytes().TryCopyTo(destination);
     }
