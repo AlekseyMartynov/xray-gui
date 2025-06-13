@@ -15,14 +15,10 @@ class NativeRoute {
 static class NativeRouting {
 
     public static unsafe NativeRoute? FindRoute(NativeIPAddress destPrefix, byte destPrefixLen) {
-        var family = destPrefix.IsIPv4()
-            ? ADDRESS_FAMILY.AF_INET
-            : ADDRESS_FAMILY.AF_INET6;
-
         var tablePtr = default(MIB_IPFORWARD_TABLE2*);
 
         try {
-            NativeUtils.MustSucceed(PInvoke.GetIpForwardTable2(family, out tablePtr));
+            NativeUtils.MustSucceed(PInvoke.GetIpForwardTable2(destPrefix.GetFamily(), out tablePtr));
 
             var rowCount = (int)tablePtr->NumEntries;
             var rows = tablePtr->Table.AsSpan(rowCount);
@@ -115,9 +111,7 @@ static class NativeRouting {
     }
 
     static void SetIPAddr(ref SOCKADDR_INET addr, in NativeIPAddress value) {
-        addr.si_family = value.IsIPv4()
-            ? ADDRESS_FAMILY.AF_INET
-            : ADDRESS_FAMILY.AF_INET6;
+        addr.si_family = value.GetFamily();
         value.TryWriteBytes(AsBytes(ref addr));
     }
 }
