@@ -69,19 +69,31 @@ static class TapModeRouting {
     }
 
     public static void AddTunnel() {
-        var defaultV4 = NativeRouting.FindRoute(NativeIPAddress.IPv4Zero, 0) ?? throw new Exception("No default IPv4 route found");
+        var defaultV4 = NativeRouting.FindRoute(NativeIPAddress.IPv4Zero, 0);
+        var defaultV6 = NativeRouting.FindRoute(NativeIPAddress.IPv6Zero, 0);
+        var count = 0;
         var undo = LoadUndo(TunnelUndoPath);
         try {
-            foreach(var ip in TapModeServerInfo.IPv4List) {
+            foreach(var ip in TapModeServerInfo.IPList) {
+                var (gatewayRoute, destPrefixLen) = ip.IsIPv4()
+                    ? (defaultV4, 32)
+                    : (defaultV6, 128);
+                if(gatewayRoute == null) {
+                    continue;
+                }
+                count++;
                 var route = new NativeRoute {
                     DestPrefix = ip,
-                    DestPrefixLen = 32,
-                    Gateway = defaultV4.Gateway,
-                    AdapterIndex = defaultV4.AdapterIndex,
+                    DestPrefixLen = (byte)destPrefixLen,
+                    Gateway = gatewayRoute.Gateway,
+                    AdapterIndex = gatewayRoute.AdapterIndex,
                 };
                 if(NativeRouting.TryCreateRoute(route)) {
                     undo.Add(route);
                 }
+            }
+            if(count < 0) {
+                throw new Exception("Failed to add tunnel route");
             }
         } finally {
             SaveUndo(TunnelUndoPath, undo);

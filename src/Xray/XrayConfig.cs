@@ -23,11 +23,11 @@ static class XrayConfig {
             if(TapModeServerInfo.IsDomainName) {
                 root["dns"] = new JsonObject {
                     ["hosts"] = new JsonObject {
-                        [TapModeServerInfo.Host] = TapModeServerInfo.IPv4List.ConvertAll(i => i.ToString())
+                        [TapModeServerInfo.Host] = TapModeServerInfo.IPList.ConvertAll(i => i.ToString())
                     }
                 };
                 var sockopt = outbound.GetChildObject("streamSettings", "sockopt");
-                sockopt["domainStrategy"] = "UseIPv4";
+                sockopt["domainStrategy"] = "UseIP";
             }
 
             outboundList.Add(new() {
