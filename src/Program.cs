@@ -87,6 +87,7 @@ static partial class Program {
 
     static void SetupTrafficRedirect() {
         if(AppConfig.TapMode) {
+            TapModeOutsideDnsBlock.Start();
             TapModeRouting.AddDefaultOverride();
             TapModeRouting.AddTunnel();
         } else {
@@ -96,6 +97,7 @@ static partial class Program {
     }
 
     static void UndoTrafficRedirect() {
+        TapModeOutsideDnsBlock.Stop();
         TapModeRouting.UndoAll();
         ProxyBackup.TryRestore();
     }
