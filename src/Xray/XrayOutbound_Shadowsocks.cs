@@ -14,7 +14,7 @@ partial class XrayOutbound {
                 ValidateParamNotBlank(CATEGORY_QUERY_STRING, key, value);
                 var remoteAddr = uri.Host;
                 var remotePort = uri.Port;
-                if(AppConfig.TapMode && !remoteAddr.IsIPAddress()) {
+                if(AppConfig.TapMode && !NativeIPAddress.TryParse(remoteAddr, out _)) {
                     throw new UIException("Plugin won't be able to resolve host name, use IP address");
                 }
                 sip003 = new SIP003(remoteAddr, remotePort, value);

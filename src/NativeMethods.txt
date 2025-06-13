@@ -20,6 +20,8 @@ GetIpForwardTable2
 IcmpCloseHandle
 IcmpCreateFile
 IcmpSendEcho
+InetNtop
+InetPton
 
 // Process
 

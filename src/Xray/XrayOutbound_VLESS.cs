@@ -55,7 +55,7 @@ partial class XrayOutbound {
         ValidateParam(CATEGORY_QUERY_STRING, nameof(security), security, SECURITY_TLS);
         ValidateParamNotBlank(CATEGORY_QUERY_STRING, nameof(fp), fp);
 
-        if(uri.Host.IsIPAddress()) {
+        if(NativeIPAddress.TryParse(uri.Host, out _)) {
             ValidateParamNotBlank(CATEGORY_QUERY_STRING, nameof(sni), sni);
         }
 

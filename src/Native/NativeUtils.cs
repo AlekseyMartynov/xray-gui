@@ -7,6 +7,11 @@ namespace Project;
 
 static class NativeUtils {
 
+    // https://www.rfc-editor.org/rfc/rfc2133.txt
+    // https://gitlab.com/wireshark/wireshark/-/blob/v4.2.12/wsutil/inet_addr.h#L18-49
+    public const int INET_ADDRSTRLEN = 16;
+    public const int INET6_ADDRSTRLEN = 46;
+
     public static void MustSucceed(BOOL result) {
         if(result.Value == 0) {
             ThrowLastWin32Error();

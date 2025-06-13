@@ -4,7 +4,10 @@ public class NativeIPAddressTests {
 
     [Theory]
     [InlineData("1.2.3.4")]
+    [InlineData("101.102.103.104")]
     [InlineData("1:2:3:4:50:60:70:80")]
+    [InlineData("1::8")]
+    [InlineData("1fff:2fff:3fff:4fff:5fff:6fff:7fff:8fff")]
     public void Roundtrip(string text) {
         Assert.True(NativeIPAddress.TryParse(text, out var ip));
         Assert.Equal(text, ip.ToString());
@@ -41,5 +44,13 @@ public class NativeIPAddressTests {
         var networkOrderHextets = NativeUtils.Cast<NativeIPAddress, ushort>(ref ip);
         var ip2 = new NativeIPAddress(networkOrderHextets, true);
         Assert.Equal(ip, ip2);
+    }
+
+    [Fact]
+    public void ParseSlice() {
+        var text = "123.0.0.123";
+        var slice = text.AsSpan().Slice(2, 7);
+        Assert.True(NativeIPAddress.TryParse(slice, out var ip));
+        Assert.Equal("3.0.0.1", ip.ToString());
     }
 }

@@ -9,10 +9,8 @@ static class TapModeServerInfo {
         Host = host;
         IsDomainName = false;
 
-        if(host.Contains(':')) {
-            IPv4List = [];
-        } else if(NativeIPAddress.TryParseV4(host, out var ip4)) {
-            IPv4List = [ip4];
+        if(NativeIPAddress.TryParse(host, out var ip)) {
+            IPv4List = ip.IsIPv4() ? [ip] : [];
         } else {
             IsDomainName = true;
             IPv4List = NativeDns.QueryIP(host, v6: false);
