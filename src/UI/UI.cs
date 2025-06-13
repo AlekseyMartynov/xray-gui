@@ -63,7 +63,7 @@ static partial class UI {
     }
 
     static unsafe HWND CreateMainWindow() {
-        fixed(char* wndClassNamePtr = "MainWindowClass") {
+        fixed(char* wndClassNamePtr = "MainWindowClass\0") {
             var wndClass = new WNDCLASSW {
                 lpszClassName = wndClassNamePtr,
                 lpfnWndProc = &WndProc,
@@ -147,8 +147,8 @@ static partial class UI {
                 data.hIcon = Program.Started ? IconBlue : IconSilver;
             }
 
-            data.szInfo = info;
-            data.szTip = SelectedServer.GetDisplayName();
+            data.szInfo = info.AsSpan().Truncate(256);
+            data.szTip = SelectedServer.GetDisplayName().AsSpan().Truncate(128);
             data.uCallbackMessage = WM_TRAY_ICON_CALLBACK;
 
             if(!PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_ADD, in data)) {

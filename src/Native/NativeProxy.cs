@@ -49,10 +49,10 @@ static class NativeProxyManager {
     }
 
     public static unsafe void SetConfig(NativeProxyConfig config) {
-        fixed(char* pacUrlPtr = config.PacUrl)
-        fixed(char* proxyUrlPtr = config.ProxyUrl)
-        fixed(char* proxyBypassPtr = config.ProxyBypass) {
-
+        var pacUrlPtr = Marshal.StringToHGlobalUni(config.PacUrl);
+        var proxyUrlPtr = Marshal.StringToHGlobalUni(config.ProxyUrl);
+        var proxyBypassPtr = Marshal.StringToHGlobalUni(config.ProxyBypass);
+        try {
             var options = stackalloc INTERNET_PER_CONN_OPTIONW[] {
                 new()  {
                     dwOption = INTERNET_PER_CONN.INTERNET_PER_CONN_FLAGS,
@@ -63,19 +63,19 @@ static class NativeProxyManager {
                 new()  {
                     dwOption = INTERNET_PER_CONN.INTERNET_PER_CONN_PROXY_SERVER,
                     Value = new() {
-                        pszValue = proxyUrlPtr
+                        pszValue = (char*)proxyUrlPtr
                     }
                 },
                 new() {
                     dwOption = INTERNET_PER_CONN.INTERNET_PER_CONN_PROXY_BYPASS,
                     Value = new()  {
-                        pszValue = proxyBypassPtr
+                        pszValue = (char*)proxyBypassPtr
                     }
                 },
                 new() {
                     dwOption = INTERNET_PER_CONN.INTERNET_PER_CONN_AUTOCONFIG_URL,
                     Value = new() {
-                        pszValue = pacUrlPtr
+                        pszValue = (char*)pacUrlPtr
                     }
                 }
             };
@@ -99,6 +99,10 @@ static class NativeProxyManager {
 
             NativeUtils.MustSucceed(PInvoke.InternetSetOption(default, PInvoke.INTERNET_OPTION_SETTINGS_CHANGED, default, default));
             NativeUtils.MustSucceed(PInvoke.InternetSetOption(default, PInvoke.INTERNET_OPTION_REFRESH, default, default));
+        } finally {
+            Marshal.FreeHGlobal(pacUrlPtr);
+            Marshal.FreeHGlobal(proxyUrlPtr);
+            Marshal.FreeHGlobal(proxyBypassPtr);
         }
     }
 

@@ -9,6 +9,13 @@ static class Extensions {
         return "\"" + text + "\"";
     }
 
+    public static ReadOnlySpan<T> Truncate<T>(this ReadOnlySpan<T> span, int maxLen) {
+        if(span.Length <= maxLen) {
+            return span;
+        }
+        return span.Slice(0, maxLen);
+    }
+
     public static bool TrySplit(this ReadOnlySpan<char> text, char separator, out ReadOnlySpan<char> left, out ReadOnlySpan<char> right) {
         var index = text.IndexOf(separator);
         if(index < 0) {
