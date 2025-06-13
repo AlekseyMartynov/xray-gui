@@ -4,7 +4,10 @@ public class NativeIPAddressTests {
 
     [Theory]
     [InlineData("1.2.3.4")]
+    [InlineData("101.102.103.104")]
     [InlineData("1:2:3:4:50:60:70:80")]
+    [InlineData("1::8")]
+    [InlineData("1000:2000:3000:4000:5000:6000:7000:8000")]
     public void Roundtrip(string text) {
         Assert.True(NativeIPAddress.TryParse(text, out var ip));
         Assert.Equal(text, ip.ToString());

@@ -42,14 +42,6 @@ static class Extensions {
         }
     }
 
-    public static bool IsIPAddress(this string host) {
-        if(host.Contains(':')) {
-            // IPv6 fuzzy check
-            return true;
-        }
-        return NativeIPAddress.TryParseV4(host, out _);
-    }
-
     public static IReadOnlyDictionary<string, string> ParseQueryString(this string text) {
         var dict = new Dictionary<string, string>();
         var span = text.AsSpan().TrimStart('?');

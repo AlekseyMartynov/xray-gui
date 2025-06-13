@@ -1,13 +1,15 @@
 using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Windows.Win32;
 using Windows.Win32.Networking.WinSock;
 using Windows.Win32.NetworkManagement.Dns;
 
 namespace Project;
 
 [StructLayout(LayoutKind.Sequential)]
+[SuppressMessage("", "CA1416")]
 readonly partial struct NativeIPAddress {
     readonly ulong Lower;
     readonly ulong Upper;
@@ -49,34 +51,17 @@ readonly partial struct NativeIPAddress {
         return AsBytes().TryCopyTo(destination);
     }
 
-    public override string ToString() {
-        var textHead = (stackalloc char[39]);
-        var textCurr = textHead;
+    public override unsafe string ToString() {
+        var family = GetFamily();
 
-        var bytes = AsBytes();
-        var bytesLen = bytes.Length;
+        var chars = (stackalloc char[family == ADDRESS_FAMILY.AF_INET ? 16 : 40]);
+        chars.Clear(); // https://github.com/dotnet/runtime/discussions/74860
 
-        var v4 = bytes.Length == 4;
-
-        var (sep, step) = v4 ? ('.', 1) : (':', 2);
-
-        for(var i = 0; i < bytesLen; i += step) {
-            if(i > 0) {
-                textCurr[0] = sep;
-                textCurr = textCurr.Slice(1);
-            }
-            int written;
-            if(v4) {
-                bytes[i].TryFormat(textCurr, out written);
-            } else {
-                (256 * bytes[i] + bytes[i + 1]).TryFormat(textCurr, out written, "x");
-            }
-            textCurr = textCurr.Slice(written);
+        fixed(void* bytes = AsBytes()) {
+            PInvoke.InetNtop((int)family, bytes, chars);
         }
 
-        var textLen = textHead.Length - textCurr.Length;
-
-        return new String(textHead.Slice(0, textLen));
+        return chars.TrimEnd('\0').ToString();
     }
 
 #if DEBUG
@@ -120,63 +105,32 @@ partial struct NativeIPAddress {
         IPv4Loopback = new(127, 0, 0, 1),
         IPv6Loopback = new([0, 0, 0, 0, 0, 0, 0, 1]);
 
-    public static bool TryParse(ReadOnlySpan<char> text, out NativeIPAddress result) {
-        return TryParseV4(text, out result)
-            || TryParseV6(text, out result);
-    }
-
-    public static bool TryParseV4(ReadOnlySpan<char> text, out NativeIPAddress result) {
-        var octetList = (stackalloc byte[4]);
-        var count = 0;
-
-        if(text.Length >= 7 && text.Length <= 15) {
-            foreach(var r in text.Split('.')) {
-                if(!byte.TryParse(text[r], out var octet)) {
-                    break;
-                }
-                count++;
-                if(count > octetList.Length) {
-                    break;
-                }
-                octetList[count - 1] = octet;
-            }
-        }
-
-        if(count == octetList.Length) {
-            result = new(octetList[0], octetList[1], octetList[2], octetList[3]);
-            return true;
-        } else {
+    public static unsafe bool TryParse(ReadOnlySpan<char> text, out NativeIPAddress result) {
+        var len = text.Length;
+        if(len > 39) {
             result = default;
             return false;
         }
-    }
 
-    public static bool TryParseV6(ReadOnlySpan<char> text, out NativeIPAddress result) {
-        var hextetList = (stackalloc ushort[8]);
-        var count = 0;
+        var szText = (stackalloc char[1 + len]);
+        var szTextPtr = (char*)Unsafe.AsPointer(ref szText[0]);
+        text.CopyTo(szText);
+        szText[len] = '\0';
 
-        foreach(var r in text.Split(':')) {
-            var slice = text[r];
-            if(slice.IsEmpty) {
-                throw new NotSupportedException();
-            }
-            if(!ushort.TryParse(slice, NumberStyles.HexNumber, default, out var hextet)) {
-                break;
-            }
-            count++;
-            if(count > hextetList.Length) {
-                break;
-            }
-            hextetList[count - 1] = hextet;
-        }
-
-        if(count == hextetList.Length) {
-            result = new(hextetList);
+        var ip4 = default(uint);
+        if(PInvoke.InetPton((int)ADDRESS_FAMILY.AF_INET, szTextPtr, &ip4) == 1) {
+            result = new(ip4);
             return true;
-        } else {
-            result = default;
-            return false;
         }
+
+        var ip6 = default(NativeIPAddress);
+        if(PInvoke.InetPton((int)ADDRESS_FAMILY.AF_INET6, szTextPtr, &ip6) == 1) {
+            result = ip6;
+            return true;
+        }
+
+        result = default;
+        return false;
     }
 
     public static unsafe NativeIPAddress From(DNS_RECORDA* p) {
