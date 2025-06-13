@@ -18,6 +18,9 @@ static class NativeUtils {
     }
 
     public static void MustSucceed(uint result) {
+        if(result == (uint)WIN32_ERROR.ERROR_ACCESS_DENIED) {
+            throw new UIException("Restart as Administrator");
+        }
         if(result != 0) {
             throw new Win32Exception((int)result);
         }

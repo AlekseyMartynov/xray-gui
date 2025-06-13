@@ -67,8 +67,6 @@ static class NativeRouting {
         var row = ToNativeRow(route);
         var result = PInvoke.CreateIpForwardEntry2(in row);
 
-        CheckAccessDenied(result);
-
         if(result == WIN32_ERROR.ERROR_OBJECT_ALREADY_EXISTS) {
             return false;
         }
@@ -82,8 +80,6 @@ static class NativeRouting {
         var row = ToNativeRow(route);
         var result = PInvoke.DeleteIpForwardEntry2(in row);
 
-        CheckAccessDenied(result);
-
         if(result == WIN32_ERROR.ERROR_NOT_FOUND) {
             return false;
         }
@@ -91,12 +87,6 @@ static class NativeRouting {
         NativeUtils.MustSucceed(result);
 
         return true;
-    }
-
-    static void CheckAccessDenied(WIN32_ERROR result) {
-        if(result == WIN32_ERROR.ERROR_ACCESS_DENIED) {
-            throw new UIException("Restart as Administrator");
-        }
     }
 
     static MIB_IPFORWARD_ROW2 ToNativeRow(NativeRoute route) {
