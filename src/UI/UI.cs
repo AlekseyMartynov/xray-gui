@@ -147,8 +147,8 @@ static partial class UI {
                 data.hIcon = Program.Started ? IconBlue : IconSilver;
             }
 
-            data.szInfo = info;
-            data.szTip = SelectedServer.GetDisplayName();
+            data.szInfo = info.AsSpan().Truncate(256);
+            data.szTip = SelectedServer.GetDisplayName().AsSpan().Truncate(128);
             data.uCallbackMessage = WM_TRAY_ICON_CALLBACK;
 
             if(!PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_ADD, in data)) {
