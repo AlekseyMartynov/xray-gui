@@ -9,6 +9,7 @@ GlobalFree
 DNS_FREE_TYPE
 DNS_INFO_NO_RECORDS
 ICMP_ECHO_REPLY
+IPPROTO
 SOCKADDR
 CreateIpForwardEntry2
 DeleteIpForwardEntry2
@@ -52,6 +53,19 @@ SetMenuItemInfo
 Shell_NotifyIcon
 TrackPopupMenu
 TranslateMessage
+
+// Windows Filtering Platform
+
+FWPM_CONDITION_INTERFACE_INDEX
+FWPM_CONDITION_IP_PROTOCOL
+FWPM_CONDITION_IP_REMOTE_PORT
+FWPM_LAYER_ALE_AUTH_CONNECT_V4
+FWPM_LAYER_ALE_AUTH_CONNECT_V6
+FWPM_SESSION_FLAG_DYNAMIC
+Windows.Win32.NetworkManagement.WindowsFilteringPlatform.FwpmEngineOpen0
+Windows.Win32.NetworkManagement.WindowsFilteringPlatform.FwpmEngineClose0
+Windows.Win32.NetworkManagement.WindowsFilteringPlatform.FwpmFilterAdd0
+Windows.Win32.NetworkManagement.WindowsFilteringPlatform.FwpmSubLayerAdd0
 
 // WinINet
 

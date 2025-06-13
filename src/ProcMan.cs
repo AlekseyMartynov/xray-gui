@@ -55,11 +55,6 @@ static class ProcMan {
             );
         }
 
-        // blockOutsideDns creates MFP session with FWPM_SESSION_FLAG_DYNAMIC
-        // Filters are auto deleted on tun2socks exit
-        // https://github.com/eycorsican/go-tun2socks/blob/v1.16.11/common/dns/blocker/blocker_windows.go#L19
-        // https://learn.microsoft.com/windows/win32/api/fwpmtypes/ns-fwpmtypes-fwpm_session0#members
-
         var commandLine = String.Join(' ',
             Tun2SocksExePath.Quote(),
 #if FALSE
@@ -68,8 +63,7 @@ static class ProcMan {
 #endif
             "-tunName", TapModeAdapters.TapName.Quote(),
             "-tunDns", TapModeAdapters.TapDns,
-            "-proxyServer", AppConfig.ProxyAddr + ':' + AppConfig.ProxyPort,
-            "-blockOutsideDns"
+            "-proxyServer", AppConfig.ProxyAddr + ':' + AppConfig.ProxyPort
         );
 
         NotifyTun2SocksExit = true;
