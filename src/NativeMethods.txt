@@ -27,11 +27,26 @@ InetPton
 
 JOBOBJECT_EXTENDED_LIMIT_INFORMATION
 AssignProcessToJobObject
+GetCurrentProcess
 CreateJobObject
-CreateProcess
+CreateProcessAsUser
+OpenProcessToken
 ResumeThread
 SetInformationJobObject
 TerminateProcess
+
+// Security
+
+SAFER_LEVELID_*
+SAFER_SCOPEID_*
+SE_GROUP_INTEGRITY
+SECURITY_MAX_SID_SIZE
+TOKEN_MANDATORY_LABEL
+CreateWellKnownSid
+SaferCloseLevel
+SaferComputeTokenFromLevel
+SaferCreateLevel
+SetTokenInformation
 
 // UI
 

@@ -18,7 +18,7 @@ class NativeProcess : IDisposable {
 
     bool Exited;
 
-    public unsafe NativeProcess(string commandLine, string? workDir = null, string[]? env = null, Action? exitHandler = null) {
+    public unsafe NativeProcess(string commandLine, string? workDir = null, string[]? env = null, Action? exitHandler = null, HANDLE accessToken = default) {
         var si = new STARTUPINFOW {
             cb = (uint)Marshal.SizeOf<STARTUPINFOW>(),
         };
@@ -40,9 +40,14 @@ class NativeProcess : IDisposable {
             envBuf = String.Join('\0', env) + "\0\0";
         }
 
+        if(accessToken.IsNull) {
+            accessToken = NativeRestrictedTokens.NormalUser;
+        }
+
         fixed(void* envBufPtr = envBuf) {
             NativeUtils.MustSucceed(
-                PInvoke.CreateProcess(
+                PInvoke.CreateProcessAsUser(
+                    accessToken,
                     default,
                     ref commandLineSpan,
                     default, default, default,

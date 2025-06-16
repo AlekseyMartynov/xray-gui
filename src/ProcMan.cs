@@ -25,7 +25,7 @@ static class ProcMan {
         }
 
         NotifySIP003Exit = true;
-        SIP003Proc = new(exePath.Quote(), WorkDir, sip003.CreateEnv(), SIP003_Exited);
+        SIP003Proc = new(exePath.Quote(), WorkDir, sip003.CreateEnv(), SIP003_Exited, NativeRestrictedTokens.Constrained);
     }
 
     public static void StartXray() {
@@ -39,7 +39,7 @@ static class ProcMan {
         var commandLine = XrayExePath.Quote() + " -c " + XrayConfig.FilePath.Quote();
 
         NotifyXrayExit = true;
-        XrayProc = new(commandLine, WorkDir, default, Xray_Exited);
+        XrayProc = new(commandLine, WorkDir, default, Xray_Exited, NativeRestrictedTokens.Constrained);
     }
 
     public static void StartTun2Socks() {
@@ -67,7 +67,7 @@ static class ProcMan {
         );
 
         NotifyTun2SocksExit = true;
-        Tun2SocksProc = new(commandLine, WorkDir, default, Tun2Socks_Exited);
+        Tun2SocksProc = new(commandLine, WorkDir, default, Tun2Socks_Exited, NativeRestrictedTokens.NormalUser);
     }
 
     public static void StopAll() {
