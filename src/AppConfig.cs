@@ -21,6 +21,7 @@ static class AppConfig {
 
     public static string ProxyAddr { get; private set; } = "";
     public static int ProxyPort { get; private set; }
+    public static string Proxy => ProxyAddr + ':' + ProxyPort;
 
     public static string SIP003Addr { get; private set; } = "";
     public static int SIP003Port { get; private set; }
@@ -86,7 +87,7 @@ static class AppConfig {
             KEY_SELECTED_SERVER + " = " + SelectedServerIndex,
             KEY_PROC_CONSOLE + " = " + FormatFlag(ProcConsole),
             KEY_TAP_MODE + " = " + FormatFlag(TapMode),
-            KEY_PROXY + " = " + ProxyAddr + ':' + ProxyPort,
+            KEY_PROXY + " = " + Proxy,
             KEY_SIP003_PORT + " = " + SIP003Port,
         ]);
     }

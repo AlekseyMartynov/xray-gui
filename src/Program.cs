@@ -93,7 +93,7 @@ static partial class Program {
             TapModeRouting.AddTunnel();
         } else {
             ProxyBackup.TrySave();
-            NativeProxyManager.SetConfig(AppConfig.ProxyAddr + ':' + AppConfig.ProxyPort);
+            NativeProxyManager.SetConfig(AppConfig.Proxy);
         }
     }
 

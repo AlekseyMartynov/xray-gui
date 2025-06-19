@@ -63,7 +63,7 @@ static class ProcMan {
 #endif
             "-tunName", TapModeAdapters.TapName.Quote(),
             "-tunDns", TapModeAdapters.TapDns,
-            "-proxyServer", AppConfig.ProxyAddr + ':' + AppConfig.ProxyPort
+            "-proxyServer", AppConfig.Proxy
         );
 
         NotifyTun2SocksExit = true;
