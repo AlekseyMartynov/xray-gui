@@ -26,6 +26,7 @@ static partial class Program {
 
         if(AppConfig.TapMode) {
             TapModeAdapters.Refresh();
+            TapModeAdapters.SetTapParams(false);
             TapModeServerInfo.Refresh(uri.Host);
         }
 

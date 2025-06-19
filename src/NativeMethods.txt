@@ -12,16 +12,20 @@ ICMP_ECHO_REPLY
 IPPROTO
 SOCKADDR
 CreateIpForwardEntry2
+CreateUnicastIpAddressEntry
 DeleteIpForwardEntry2
+DeleteUnicastIpAddressEntry
 DnsQuery_W
 FreeMibTable
 GetAdaptersAddresses
 GetIpForwardTable2
+GetUnicastIpAddressTable
 IcmpCloseHandle
 IcmpCreateFile
 IcmpSendEcho
 InetNtop
 InetPton
+InitializeUnicastIpAddressEntry
 
 // Process
 

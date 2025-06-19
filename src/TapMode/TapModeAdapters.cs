@@ -8,8 +8,13 @@ static class TapModeAdapters {
     // https://github.com/eycorsican/go-tun2socks/blob/v1.16.11/tun/tun_windows.go#L23
     const string REQUIRED_TAP_COMPONENT_ID = "tap0901";
 
-    // https://github.com/eycorsican/go-tun2socks/blob/v1.16.11/cmd/tun2socks/main.go#L93
-    public static readonly NativeIPAddress TapGateway = new(10, 255, 0, 1);
+    const int TAP_PREFIX_LEN = 24;
+
+    // https://github.com/eycorsican/go-tun2socks/blob/v1.16.11/cmd/tun2socks/main.go#L92-L94
+    public static readonly NativeIPAddress
+        TapPrefix = new(10, 255, 0, 0),
+        TapAddr = TapPrefix | new NativeIPAddress(0, 0, 0, 2),
+        TapGateway = TapPrefix | new NativeIPAddress(0, 0, 0, 1);
 
     // https://github.com/Jigsaw-Code/outline-apps/blob/manager_windows/v1.17.2/client/electron/go_vpn_tunnel.ts#L35
     public static readonly string TapDns = "1.1.1.1,9.9.9.9";
@@ -17,12 +22,14 @@ static class TapModeAdapters {
     static readonly List<Guid> RegistryTapGuidList = [];
 
     public static string TapName { get; private set; } = "";
+    public static Guid TapGuid { get; private set; }
     public static uint TapIndex { get; private set; }
 
     public static uint IPv6LoopbackIndex { get; private set; }
 
     public static void Refresh() {
         TapName = "";
+        TapGuid = default;
         TapIndex = default;
         IPv6LoopbackIndex = default;
 
@@ -34,6 +41,7 @@ static class TapModeAdapters {
         NativeAdapters.Enumerate(info => {
             if(!tapFound && IsGoodTap(info)) {
                 TapName = info.Name.ToString();
+                TapGuid = info.Guid;
                 TapIndex = info.IPv4Index;
                 tapFound = true;
             }
@@ -53,6 +61,20 @@ static class TapModeAdapters {
 
         if(!ip6LoopbackFound) {
             IPv6LoopbackIndex = 1;
+        }
+    }
+
+    public static void SetTapParams(bool dhcp) {
+        var keyName = $@"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\{{{TapGuid}}}";
+
+        Registry.LocalMachine.DeleteSubKeyTree(keyName, false);
+
+        if(!dhcp) {
+            using(var key = Registry.LocalMachine.CreateSubKey(keyName, true)) {
+                key.SetValue("EnableDHCP", 0, RegistryValueKind.DWord);
+                key.SetValue("NameServer", TapDns, RegistryValueKind.String);
+            }
+            NativeUnicastAddressTable.AssignStatic(TapIndex, TapAddr, TAP_PREFIX_LEN);
         }
     }
 
