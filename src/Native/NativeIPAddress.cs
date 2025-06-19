@@ -45,8 +45,23 @@ readonly partial struct NativeIPAddress {
         return IsIPv4() ? ADDRESS_FAMILY.AF_INET : ADDRESS_FAMILY.AF_INET6;
     }
 
-    public bool TryWriteBytes(Span<byte> destination) {
-        return AsBytes().TryCopyTo(destination);
+    public void WriteTo(ref SOCKADDR_INET addr) {
+        var bytes = AsBytes();
+        if(bytes.Length == 4) {
+            addr.si_family = ADDRESS_FAMILY.AF_INET;
+            addr.Ipv4.sin_addr.S_un.S_addr = BitConverter.ToUInt32(bytes);
+        } else {
+            addr.si_family = ADDRESS_FAMILY.AF_INET6;
+            bytes.CopyTo(addr.Ipv6.sin6_addr.u.Byte.AsSpan());
+        }
+    }
+
+    public uint ToUInt32() {
+        var bytes = AsBytes();
+        if(bytes.Length != 4) {
+            throw new InvalidOperationException();
+        }
+        return BitConverter.ToUInt32(bytes);
     }
 
     public override unsafe string ToString() {

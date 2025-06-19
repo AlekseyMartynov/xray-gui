@@ -96,22 +96,9 @@ static class NativeRouting {
             }
         };
 
-        SetIPAddr(ref row.DestinationPrefix.Prefix, route.DestPrefix);
-        SetIPAddr(ref row.NextHop, route.Gateway);
+        route.DestPrefix.WriteTo(ref row.DestinationPrefix.Prefix);
+        route.Gateway.WriteTo(ref row.NextHop);
 
         return row;
-    }
-
-    static Span<byte> AsBytes(ref SOCKADDR_INET addr) {
-        if(addr.si_family == ADDRESS_FAMILY.AF_INET) {
-            return NativeUtils.Cast<uint, byte>(ref addr.Ipv4.sin_addr.S_un.S_addr);
-        } else {
-            return addr.Ipv6.sin6_addr.u.Byte.AsSpan();
-        }
-    }
-
-    static void SetIPAddr(ref SOCKADDR_INET addr, in NativeIPAddress value) {
-        addr.si_family = value.GetFamily();
-        value.TryWriteBytes(AsBytes(ref addr));
     }
 }

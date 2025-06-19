@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -19,8 +18,7 @@ class NativeIcmp : IDisposable {
             throw new NotSupportedException();
         }
 
-        var dest = default(uint);
-        ip.TryWriteBytes(NativeUtils.Cast<uint, byte>(ref dest));
+        var dest = ip.ToUInt32();
 
         var reqSize = 4;
         var resSize = Marshal.SizeOf<ICMP_ECHO_REPLY>() + reqSize;
