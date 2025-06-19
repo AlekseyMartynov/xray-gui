@@ -6,13 +6,14 @@ namespace Project;
 
 static class TapModeAdapters {
     // https://github.com/eycorsican/go-tun2socks/blob/v1.16.11/tun/tun_windows.go#L23
-    const string REQUIRED_TAP_COMPONENT_ID = "tap0901";
+    public const string REQUIRED_TAP_COMPONENT_ID = "tap0901";
 
     const int TAP_PREFIX_LEN = 24;
 
     // https://github.com/eycorsican/go-tun2socks/blob/v1.16.11/cmd/tun2socks/main.go#L92-L94
     public static readonly NativeIPAddress
         TapPrefix = new(10, 255, 0, 0),
+        TapMask = new(uint.MaxValue >> (32 - TAP_PREFIX_LEN)),
         TapAddr = TapPrefix | new NativeIPAddress(0, 0, 0, 2),
         TapGateway = TapPrefix | new NativeIPAddress(0, 0, 0, 1);
 

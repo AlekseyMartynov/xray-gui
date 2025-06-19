@@ -5,6 +5,7 @@ static class AppConfig {
         KEY_SELECTED_SERVER = "selected_server",
         KEY_PROC_CONSOLE = "proc_console",
         KEY_TAP_MODE = "tap_mode",
+        KEY_TAP_MODE_BADVPN = "tap_mode_badvpn",
         KEY_PROXY = "proxy",
         KEY_SIP003_PORT = "sip003_port";
 
@@ -18,6 +19,7 @@ static class AppConfig {
 
     public static bool ProcConsole { get; set; }
     public static bool TapMode { get; set; }
+    public static bool TapModeBadVpn { get; set; }
 
     public static string ProxyAddr { get; private set; } = "";
     public static int ProxyPort { get; private set; }
@@ -30,6 +32,7 @@ static class AppConfig {
         SelectedServerIndex = -1;
         ProcConsole = false;
         TapMode = false;
+        TapModeBadVpn = false;
         (ProxyAddr, ProxyPort) = ("127.0.0.1", 1080);
         (SIP003Addr, SIP003Port) = ("127.0.0.1", 1984);
     }
@@ -60,6 +63,10 @@ static class AppConfig {
                     TapMode = ParseFlag(value);
                     continue;
                 }
+                if(key.SequenceEqual(KEY_TAP_MODE_BADVPN)) {
+                    TapModeBadVpn = ParseFlag(value);
+                    continue;
+                }
                 if(key.SequenceEqual(KEY_PROXY)) {
                     if(value.TrySplit(':', out var addr, out var portText)) {
                         ProxyAddr = addr.ToString();
@@ -87,6 +94,7 @@ static class AppConfig {
             KEY_SELECTED_SERVER + " = " + SelectedServerIndex,
             KEY_PROC_CONSOLE + " = " + FormatFlag(ProcConsole),
             KEY_TAP_MODE + " = " + FormatFlag(TapMode),
+            KEY_TAP_MODE_BADVPN + " = " + FormatFlag(TapModeBadVpn),
             KEY_PROXY + " = " + Proxy,
             KEY_SIP003_PORT + " = " + SIP003Port,
         ]);
