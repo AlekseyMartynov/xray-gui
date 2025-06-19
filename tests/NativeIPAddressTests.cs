@@ -53,4 +53,12 @@ public class NativeIPAddressTests {
         Assert.True(NativeIPAddress.TryParse(slice, out var ip));
         Assert.Equal("3.0.0.1", ip.ToString());
     }
+
+    [Fact]
+    public void BitwiseOr() {
+        Assert.Equal(
+            new NativeIPAddress(192, 168, 1, 2),
+            new NativeIPAddress(192, 168, 0, 0) | new NativeIPAddress(0, 0, 1, 2)
+        );
+    }
 }
