@@ -39,6 +39,15 @@ ResumeThread
 SetInformationJobObject
 TerminateProcess
 
+// Registry
+
+HKEY_LOCAL_MACHINE
+RegCreateKeyEx
+RegDeleteTree
+RegEnumKeyEx
+RegGetValue
+RegSetValueEx
+
 // Security
 
 SAFER_LEVELID_*

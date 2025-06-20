@@ -1,6 +1,6 @@
-using Microsoft.Win32;
-using System.Security;
+using Windows.Win32;
 using Windows.Win32.NetworkManagement.Ndis;
+using Windows.Win32.System.Registry;
 
 namespace Project;
 
@@ -68,12 +68,15 @@ static class TapModeAdapters {
     public static void SetTapParams(bool dhcp) {
         var keyName = $@"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\{{{TapGuid}}}";
 
-        Registry.LocalMachine.DeleteSubKeyTree(keyName, false);
+        NativeRegistry.DeleteTree(HKEY.HKEY_LOCAL_MACHINE, keyName, false);
 
         if(!dhcp) {
-            using(var key = Registry.LocalMachine.CreateSubKey(keyName, true)) {
-                key.SetValue("EnableDHCP", 0, RegistryValueKind.DWord);
-                key.SetValue("NameServer", TapDns, RegistryValueKind.String);
+            var key = NativeRegistry.OpenOrCreateKey(HKEY.HKEY_LOCAL_MACHINE, keyName, true);
+            try {
+                NativeRegistry.SetValue(key, "EnableDHCP", 0);
+                NativeRegistry.SetValue(key, "NameServer", TapDns);
+            } finally {
+                PInvoke.RegCloseKey(key);
             }
             NativeUnicastAddressTable.AssignStatic(TapIndex, TapAddr, TAP_PREFIX_LEN);
         }
@@ -81,26 +84,22 @@ static class TapModeAdapters {
 
     static void ReadRegistryTapGuidList() {
         RegistryTapGuidList.Clear();
-        using var netKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}");
-        if(netKey is null) {
-            return;
-        }
-        foreach(var subKeyName in netKey.GetSubKeyNames()) {
-            try {
-                using var subKey = netKey.OpenSubKey(subKeyName);
-                if(subKey is null) {
+        var netKey = NativeRegistry.OpenOrCreateKey(HKEY.HKEY_LOCAL_MACHINE, @"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}");
+        try {
+            foreach(var subKeyName in NativeRegistry.GetSubKeyNames(netKey)) {
+                if(subKeyName.AsSpan().ContainsAnyExceptInRange('0', '9')) {
                     continue;
                 }
-                var componentId = subKey.GetValue("ComponentId") as string;
+                var componentId = NativeRegistry.GetValue(netKey, subKeyName, "ComponentId") as string;
                 if(componentId != REQUIRED_TAP_COMPONENT_ID) {
                     continue;
                 }
-                if(subKey.GetValue("NetCfgInstanceId") is string id) {
+                if(NativeRegistry.GetValue(netKey, subKeyName, "NetCfgInstanceId") is string id) {
                     RegistryTapGuidList.Add(Guid.Parse(id));
                 }
-            } catch(SecurityException) {
-                // Ignore
             }
+        } finally {
+            PInvoke.RegCloseKey(netKey);
         }
     }
 
