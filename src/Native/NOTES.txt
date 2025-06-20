@@ -1,0 +1,18 @@
+String marshalling
+
+.NET String includes a hidden null terminator:
+- https://stackoverflow.com/q/6293457
+- https://github.com/dotnet/runtime/blob/v9.0.6/src/libraries/System.Private.CoreLib/src/System/String.cs#L57
+- https://github.com/dotnet/runtime/blob/v9.0.6/src/coreclr/vm/object.cpp#L660
+
+✅ This is safe for W-suffixed calls:
+
+    fixed(char* p = string) {
+        PInvoke(p);
+    }
+
+❌ For memory views such as Span<char>, this is NOT valid without copying to a null-terminated buffer:
+
+    fixed(char* p = &MemoryMarshal.GetReference(span)) {
+        PInvoke(p);
+    }
