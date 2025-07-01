@@ -6,6 +6,7 @@ partial class XrayOutbound {
     const string ENCRYPTION_NONE = "none";
     const string SECURITY_TLS = "tls";
     const string NETWORK_TYPE_XHTTP = "xhttp";
+    const string XHTTP_MODE_PACKET_UP = "packet-up";
     const string XHTTP_MODE_STREAM_UP = "stream-up";
 
     static JsonObject FromVlessUri(Uri uri) {
@@ -90,7 +91,7 @@ partial class XrayOutbound {
         };
 
         if(type == NETWORK_TYPE_XHTTP) {
-            ValidateParam(CATEGORY_QUERY_STRING, nameof(mode), mode, XHTTP_MODE_STREAM_UP); // allow others?
+            ValidateParam(CATEGORY_QUERY_STRING, nameof(mode), mode, [XHTTP_MODE_PACKET_UP, XHTTP_MODE_STREAM_UP]);
             ValidateParamNotBlank(CATEGORY_QUERY_STRING, nameof(path), path);
 
             streamSettings["network"] = type;
