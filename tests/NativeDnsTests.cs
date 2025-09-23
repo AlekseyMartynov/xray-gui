@@ -14,7 +14,14 @@ public class NativeDnsTests {
 
     [Fact]
     public void Invalid() {
-        var ipList = NativeDns.QueryIP("example.invalid");
-        Assert.Empty(ipList);
+        var x = Record.Exception(delegate {
+            var ipList = NativeDns.QueryIP("example.invalid");
+            Assert.Empty(ipList);
+        });
+        if(x is not null) {
+            // GitHub actions runner image windows-2025
+            Assert.IsType<UIException>(x);
+            Assert.Contains("timeout", x.Message);
+        }
     }
 }
