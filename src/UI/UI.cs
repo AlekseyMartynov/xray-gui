@@ -17,6 +17,8 @@ static partial class UI {
     static readonly HWND MainWindow;
     static readonly Channel<Action> PendingActions;
 
+    static int MessageBoxCount;
+
     static UI() {
         var module = PInvoke.GetModuleHandle(default(PCWSTR));
         IconBlue = PInvoke.LoadIcon(module, NativeUtils.MAKEINTRESOURCE(102));
@@ -49,7 +51,12 @@ static partial class UI {
     public static void ShowMessageBox(string text) {
         PendingActions.Writer.TryWrite(delegate {
             PInvoke.SetForegroundWindow(MainWindow);
-            PInvoke.MessageBox(MainWindow, text, default, default);
+            MessageBoxCount++;
+            try {
+                PInvoke.MessageBox(MainWindow, text, default, default);
+            } finally {
+                MessageBoxCount--;
+            }
         });
         MustPostMessage(WM_PENDING_ACTIONS_DRAIN);
     }
@@ -84,10 +91,14 @@ static partial class UI {
     static LRESULT WndProc(HWND hwnd, uint msg, WPARAM wParam, LPARAM lParam) {
         switch(msg) {
             case WM_TRAY_ICON_CALLBACK:
-                if(lParam == PInvoke.WM_RBUTTONUP) {
-                    ShowMenu();
-                } else if(lParam == PInvoke.WM_LBUTTONDBLCLK) {
-                    HandleCommand(ID_TRAY_ICON_DBLCLK);
+                if(MessageBoxCount > 0) {
+                    PInvoke.SetForegroundWindow(MainWindow);
+                } else {
+                    if(lParam == PInvoke.WM_RBUTTONUP) {
+                        ShowMenu();
+                    } else if(lParam == PInvoke.WM_LBUTTONDBLCLK) {
+                        HandleCommand(ID_TRAY_ICON_DBLCLK);
+                    }
                 }
                 return LRESULT_OK;
             case WM_PENDING_ACTIONS_DRAIN:
@@ -117,6 +128,7 @@ static partial class UI {
     }
 
     static void HandleCommand(uint id) {
+        MustPostMessage(PInvoke.WM_CANCELMODE);
         try {
             HandleCommandCore(id);
         } catch(Exception x) {
