@@ -141,17 +141,16 @@ static partial class UI {
     static void UpdateTrayIcon(string? info = default, bool errorIcon = false, bool visible = true) {
         var data = new NOTIFYICONDATAW {
             cbSize = (uint)Marshal.SizeOf<NOTIFYICONDATAW>(),
-
-            // This pair is used as a system-wide ID
             hWnd = MainWindow,
-            uID = default,
+            guidItem = Program.AppGuid,
         };
 
         if(visible) {
             data.uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_MESSAGE
                         | NOTIFY_ICON_DATA_FLAGS.NIF_ICON
                         | NOTIFY_ICON_DATA_FLAGS.NIF_TIP
-                        | NOTIFY_ICON_DATA_FLAGS.NIF_INFO;
+                        | NOTIFY_ICON_DATA_FLAGS.NIF_INFO
+                        | NOTIFY_ICON_DATA_FLAGS.NIF_GUID;
 
             if(errorIcon) {
                 data.hIcon = IconError;
@@ -167,6 +166,7 @@ static partial class UI {
                 PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, in data);
             }
         } else {
+            data.uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_GUID;
             PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_DELETE, in data);
         }
     }

@@ -1,6 +1,8 @@
 namespace Project;
 
 static partial class Program {
+    public static readonly Guid AppGuid = new(0x3ae267c1, 0x4cc4, 0x4ead, 0xae, 0xf7, 0x4d, 0x8c, 0x12, 0xc5, 0xc4, 0x6f);
+
     internal static readonly object SingleInstanceLock = AcquireSingleInstanceLock();
 
     static CancellationTokenSource? WanInfoUpdateCancellation;
@@ -104,7 +106,7 @@ static partial class Program {
     }
 
     static Mutex AcquireSingleInstanceLock() {
-        var mutex = new Mutex(true, "Global\\3ae267c1-4cc4-4ead-aef7-4d8c12c5c46f", out var createdNew);
+        var mutex = new Mutex(true, "Global\\" + AppGuid, out var createdNew);
         if(!createdNew) {
             Windows.Win32.PInvoke.MessageBox(default, "Already running", default, default);
             Environment.Exit(default);
