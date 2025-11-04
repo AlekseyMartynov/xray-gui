@@ -15,6 +15,7 @@ CreateIpForwardEntry2
 CreateUnicastIpAddressEntry
 DeleteIpForwardEntry2
 DeleteUnicastIpAddressEntry
+DnsFree
 DnsQuery_W
 FreeMibTable
 GetAdaptersAddresses

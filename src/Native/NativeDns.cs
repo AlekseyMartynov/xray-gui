@@ -47,7 +47,7 @@ static class NativeDns {
             }
         } finally {
             if(resultsPtr != null) {
-                DnsRecordListFree(resultsPtr, DNS_FREE_TYPE.DnsFreeRecordList);
+                PInvoke.DnsFree(resultsPtr, DNS_FREE_TYPE.DnsFreeRecordList);
             }
         }
     }
@@ -62,10 +62,4 @@ static class NativeDns {
             default
         );
     }
-
-    // https://github.com/microsoft/CsWin32/issues/1425
-    [DllImport("dnsapi", CallingConvention = CallingConvention.Winapi)]
-    [SuppressMessage("", "SYSLIB1054")]
-    [SuppressMessage("", "IDE0079")]
-    static extern unsafe void DnsRecordListFree(DNS_RECORDA* p, in DNS_FREE_TYPE t);
 }
