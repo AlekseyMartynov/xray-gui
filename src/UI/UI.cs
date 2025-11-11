@@ -19,6 +19,7 @@ static partial class UI {
     static readonly Channel<Action> PendingActions;
 
     static int MessageBoxCount;
+    static bool UseErrorIcon;
 
     static UI() {
         var module = PInvoke.GetModuleHandle(default(PCWSTR));
@@ -45,7 +46,10 @@ static partial class UI {
 
     public static void ShowBalloon(string text, bool error = false) {
         PendingActions.Writer.TryWrite(delegate {
-            UpdateTrayIcon(text, error);
+            if(error) {
+                UseErrorIcon = true;
+            }
+            UpdateTrayIcon(text);
         });
         MustPostMessage(WM_PENDING_ACTIONS_DRAIN);
     }
@@ -134,6 +138,7 @@ static partial class UI {
     }
 
     static void HandleCommand(uint id) {
+        UseErrorIcon = false;
         MustPostMessage(PInvoke.WM_CANCELMODE);
         try {
             HandleCommandCore(id);
@@ -144,7 +149,7 @@ static partial class UI {
         }
     }
 
-    static void UpdateTrayIcon(string? info = default, bool errorIcon = false, bool visible = true) {
+    static void UpdateTrayIcon(string? info = default, bool visible = true) {
         var data = new NOTIFYICONDATAW {
             cbSize = (uint)Marshal.SizeOf<NOTIFYICONDATAW>(),
             hWnd = MainWindow,
@@ -158,7 +163,7 @@ static partial class UI {
                         | NOTIFY_ICON_DATA_FLAGS.NIF_INFO
                         | NOTIFY_ICON_DATA_FLAGS.NIF_GUID;
 
-            if(errorIcon) {
+            if(UseErrorIcon) {
                 data.hIcon = IconError;
             } else {
                 data.hIcon = Program.Started ? IconBlue : IconSilver;
