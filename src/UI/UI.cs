@@ -14,6 +14,7 @@ static partial class UI {
 
     static readonly LRESULT LRESULT_OK = (LRESULT)0;
     static readonly HICON IconBlue, IconSilver, IconError;
+    static readonly uint TaskbarCreatedMsgId;
     static readonly HWND MainWindow;
     static readonly Channel<Action> PendingActions;
 
@@ -24,6 +25,7 @@ static partial class UI {
         IconBlue = PInvoke.LoadIcon(module, NativeUtils.MAKEINTRESOURCE(102));
         IconSilver = PInvoke.LoadIcon(module, NativeUtils.MAKEINTRESOURCE(103));
         IconError = PInvoke.LoadIcon(default, PInvoke.IDI_ERROR);
+        TaskbarCreatedMsgId = PInvoke.RegisterWindowMessage("TaskbarCreated");
         MainWindow = CreateMainWindow();
         PendingActions = Channel.CreateUnbounded<Action>();
     }
@@ -111,6 +113,10 @@ static partial class UI {
                 return LRESULT_OK;
             case PInvoke.WM_ENTERIDLE:
                 return LRESULT_OK;
+        }
+        if(msg == TaskbarCreatedMsgId) {
+            UpdateTrayIcon();
+            return LRESULT_OK;
         }
         return PInvoke.DefWindowProc(hwnd, msg, wParam, lParam);
     }

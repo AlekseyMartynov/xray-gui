@@ -79,6 +79,7 @@ LoadIcon
 MessageBox
 PostMessage
 RegisterClass
+RegisterWindowMessage
 SetForegroundWindow
 SetMenuItemInfo
 Shell_NotifyIcon
