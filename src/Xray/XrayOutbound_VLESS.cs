@@ -15,6 +15,7 @@ partial class XrayOutbound {
         var fp = "";
         var mode = "";
         var path = "";
+        var pcs = "";
         var security = "";
         var sni = "";
         var type = "";
@@ -35,6 +36,9 @@ partial class XrayOutbound {
                     break;
                 case nameof(path):
                     path = value;
+                    break;
+                case nameof(pcs):
+                    pcs = value;
                     break;
                 case nameof(security):
                     security = value;
@@ -83,6 +87,10 @@ partial class XrayOutbound {
 
         if(allowInsecure == "1") {
             tlsSettings["allowInsecure"] = true;
+        }
+
+        if(!String.IsNullOrWhiteSpace(pcs)) {
+            tlsSettings["pinnedPeerCertSha256"] = pcs;
         }
 
         var streamSettings = new JsonObject {
