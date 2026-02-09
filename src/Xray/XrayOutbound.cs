@@ -13,13 +13,12 @@ static partial class XrayOutbound {
         if(uri.AbsolutePath != "/") {
             throw new UIException("URI path must be empty");
         }
-        if(uri.Scheme == "vless") {
-            return FromVlessUri(uri);
-        }
-        if(uri.Scheme == "ss") {
-            return FromShadowsocksUri(uri);
-        }
-        throw new UIException($"URI scheme '{uri.Scheme}' is not supported");
+        return uri.Scheme switch {
+            "vless" => FromVlessUri(uri),
+            "trojan" => FromTrojanUri(uri),
+            "ss" => FromShadowsocksUri(uri),
+            _ => throw new UIException($"URI scheme '{uri.Scheme}' is not supported"),
+        };
     }
 
     public static SIP003? ExtractSIP003(JsonObject outbound) {
