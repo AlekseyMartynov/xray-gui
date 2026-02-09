@@ -20,7 +20,7 @@ partial class XrayOutbound {
         var sni = "";
         var type = "";
 
-        foreach(var (key, value) in uri.Query.ParseQueryString()) {
+        uri.Query.ParseQueryString((key, value) => {
             switch(key) {
                 case nameof(allowInsecure):
                     allowInsecure = value;
@@ -53,7 +53,7 @@ partial class XrayOutbound {
                     ThrowParamNotSupported(CATEGORY_QUERY_STRING, key, value);
                     break;
             }
-        }
+        });
 
         ValidateParam(CATEGORY_QUERY_STRING, nameof(allowInsecure), allowInsecure, ["0", "1"]);
         ValidateParam(CATEGORY_QUERY_STRING, nameof(encryption), encryption, ENCRYPTION_NONE);

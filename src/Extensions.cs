@@ -42,14 +42,15 @@ static class Extensions {
         }
     }
 
-    public static IReadOnlyDictionary<string, string> ParseQueryString(this string text) {
-        var dict = new Dictionary<string, string>();
+    public static void ParseQueryString(this string text, Action<string, string> callback) {
         var span = text.AsSpan().TrimStart('?');
         foreach(var r in span.Split('&')) {
             span[r].TrySplit('=', out var name, out var value);
-            dict[Uri.UnescapeDataString(name)] = Uri.UnescapeDataString(value);
+            callback(
+                Uri.UnescapeDataString(name),
+                Uri.UnescapeDataString(value)
+            );
         }
-        return dict;
     }
 
     public static JsonObject GetChildObject(this JsonObject obj, params ReadOnlySpan<string> path) {

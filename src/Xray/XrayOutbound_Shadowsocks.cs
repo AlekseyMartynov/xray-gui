@@ -9,7 +9,7 @@ partial class XrayOutbound {
     static JsonObject FromShadowsocksUri(Uri uri) {
         var sip003 = default(SIP003);
 
-        foreach(var (key, value) in uri.Query.ParseQueryString()) {
+        uri.Query.ParseQueryString((key, value) => {
             if(key == "plugin") {
                 ValidateParamNotBlank(CATEGORY_QUERY_STRING, key, value);
                 var remoteAddr = uri.Host;
@@ -21,7 +21,7 @@ partial class XrayOutbound {
             } else {
                 ThrowParamNotSupported(CATEGORY_QUERY_STRING, key, value);
             }
-        }
+        });
 
         var userInfo = uri.UserInfo;
 
