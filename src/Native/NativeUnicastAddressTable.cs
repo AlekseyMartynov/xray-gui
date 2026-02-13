@@ -18,22 +18,27 @@ static class NativeUnicastAddressTable {
             var rows = tablePtr->Table.AsSpan(rowCount);
 
             foreach(var row in rows) {
-                if(row.InterfaceIndex != adapterIndex) {
-                    continue;
-                }
-                switch(row.PrefixOrigin) {
-                    case NL_PREFIX_ORIGIN.IpPrefixOriginManual:
-                    case NL_PREFIX_ORIGIN.IpPrefixOriginDhcp:
-                        NativeUtils.MustSucceed(
-                            PInvoke.DeleteUnicastIpAddressEntry(in row)
-                        );
-                        break;
+                if(ShouldDelete(in row)) {
+                    NativeUtils.MustSucceed(
+                        PInvoke.DeleteUnicastIpAddressEntry(in row)
+                    );
                 }
             }
         } finally {
             if(tablePtr != null) {
                 PInvoke.FreeMibTable(tablePtr);
             }
+        }
+
+        bool ShouldDelete(ref readonly MIB_UNICASTIPADDRESS_ROW row) {
+            if(row.InterfaceIndex == adapterIndex || NativeIPAddress.From(row.Address).Equals(ip)) {
+                switch(row.PrefixOrigin) {
+                    case NL_PREFIX_ORIGIN.IpPrefixOriginManual:
+                    case NL_PREFIX_ORIGIN.IpPrefixOriginDhcp:
+                        return true;
+                }
+            }
+            return false;
         }
 
         PInvoke.InitializeUnicastIpAddressEntry(out var newRow);

@@ -46,23 +46,23 @@ static class XrayConfig {
     }
 
     static JsonObject CreateInbound() {
-        var inbound = new JsonObject {
-            ["protocol"] = AppConfig.TapMode ? "socks" : "http",
-            ["listen"] = AppConfig.ProxyAddr,
-            ["port"] = AppConfig.ProxyPort
-        };
-
         if(AppConfig.TapMode) {
-            inbound["settings"] = new JsonObject {
-                ["udp"] = true
-
+            return new() {
+                ["protocol"] = "tun",
+                ["settings"] = new JsonObject {
+                    ["name"] = Wintun.Name
+                },
+                ["sniffing"] = new JsonObject {
+                    ["enabled"] = true
+                }
             };
-            inbound["sniffing"] = new JsonObject {
-                ["enabled"] = true
+        } else {
+            return new() {
+                ["protocol"] = "http",
+                ["listen"] = AppConfig.ProxyAddr,
+                ["port"] = AppConfig.ProxyPort
             };
         }
-
-        return inbound;
     }
 
     static JsonArray CreateTapModeRoutingRules() {

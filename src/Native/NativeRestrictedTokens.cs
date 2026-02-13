@@ -6,7 +6,7 @@ using Windows.Win32.Security;
 namespace Project;
 
 static class NativeRestrictedTokens {
-    public static readonly HANDLE Constrained, NormalUser;
+    public static readonly HANDLE Constrained, NormalUser, FullyTrusted;
 
     static unsafe NativeRestrictedTokens() {
         HANDLE currentProcToken;
@@ -21,6 +21,7 @@ static class NativeRestrictedTokens {
 
         Constrained = CreateRestrictedToken(currentProcToken, PInvoke.SAFER_LEVELID_CONSTRAINED);
         NormalUser = CreateRestrictedToken(currentProcToken, PInvoke.SAFER_LEVELID_NORMALUSER);
+        FullyTrusted = CreateRestrictedToken(currentProcToken, PInvoke.SAFER_LEVELID_FULLYTRUSTED);
 
         SetMediumIntegrity([
             Constrained,

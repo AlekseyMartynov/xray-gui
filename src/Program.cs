@@ -27,6 +27,7 @@ static partial class Program {
         var uri = SelectedServer.GetUri();
 
         if(AppConfig.TapMode) {
+            Wintun.EnsureCreated();
             TapModeAdapters.Refresh();
             TapModeAdapters.SetTapParams(false);
             TapModeServerInfo.Refresh(uri.Host);
@@ -45,13 +46,10 @@ static partial class Program {
             }
 
             ProcMan.StartXray();
-
-            if(AppConfig.TapMode) {
-                ProcMan.StartTun2Socks();
-            }
         } catch {
             ProcMan.StopAll();
             UndoTrafficRedirect();
+            Wintun.EnsureClosed();
             throw;
         }
 
@@ -72,6 +70,7 @@ static partial class Program {
 
         ProcMan.StopAll();
         UndoTrafficRedirect();
+        Wintun.EnsureClosed();
 
         Started = false;
     }

@@ -51,7 +51,7 @@ static class TapModeRouting {
                 TryAdd(new() {
                     DestPrefix = prefix,
                     DestPrefixLen = prefixLen,
-                    Gateway = TapModeAdapters.TapGateway,
+                    Gateway = NativeIPAddress.IPv4Zero,
                     AdapterIndex = TapModeAdapters.TapIndex,
                 });
             }
