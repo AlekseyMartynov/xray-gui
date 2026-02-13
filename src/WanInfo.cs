@@ -33,7 +33,7 @@ static class WanInfo {
                     continue;
                 }
                 if(AppConfig.TapMode) {
-                    await WhenTapGatewayReadyAsync(ct);
+                    await WhenTapDnsReadyAsync(ct);
                 }
                 Update(ct);
             }
@@ -46,9 +46,14 @@ static class WanInfo {
         PendingUpdateRequests.Writer.TryWrite(ct);
     }
 
-    static async Task WhenTapGatewayReadyAsync(CancellationToken ct) {
-        using var icmp = new NativeIcmp();
-        while(!ct.IsCancellationRequested && !icmp.Ping(TapModeAdapters.TapGateway)) {
+    static async Task WhenTapDnsReadyAsync(CancellationToken ct) {
+        while(!ct.IsCancellationRequested) {
+            try {
+                if(NativeDns.QueryIP("cp.cloudflare.com", true, false).Count > 0) {
+                    return;
+                }
+            } catch {
+            }
             await Task.Yield();
         }
     }

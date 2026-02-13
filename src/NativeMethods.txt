@@ -8,7 +8,6 @@ GlobalFree
 
 DNS_FREE_TYPE
 DNS_INFO_NO_RECORDS
-ICMP_ECHO_REPLY
 IPPROTO
 SOCKADDR
 CreateIpForwardEntry2
@@ -21,9 +20,6 @@ FreeMibTable
 GetAdaptersAddresses
 GetIpForwardTable2
 GetUnicastIpAddressTable
-IcmpCloseHandle
-IcmpCreateFile
-IcmpSendEcho
 InetNtop
 InetPton
 InitializeUnicastIpAddressEntry
