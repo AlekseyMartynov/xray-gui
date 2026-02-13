@@ -6,7 +6,7 @@ public class NativeAdaptersTests {
     public void Enumerate() {
         var loopbackFound = false;
 
-        NativeAdapters.Enumerate(info => {
+        NativeAdapters.Enumerate((ref readonly NativeAdapterInfo info) => {
             loopbackFound = loopbackFound || info.Unicast.Contains(NativeIPAddress.IPv4Loopback);
         });
 

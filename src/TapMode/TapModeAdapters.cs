@@ -39,14 +39,14 @@ static class TapModeAdapters {
         var tapFound = false;
         var ip6LoopbackFound = false;
 
-        NativeAdapters.Enumerate(info => {
-            if(!tapFound && IsGoodTap(info)) {
+        NativeAdapters.Enumerate((ref readonly NativeAdapterInfo info) => {
+            if(!tapFound && IsGoodTap(in info)) {
                 TapName = info.Name.ToString();
                 TapGuid = info.Guid;
                 TapIndex = info.IPv4Index;
                 tapFound = true;
             }
-            if(!ip6LoopbackFound && IsIPv6Loopback(info)) {
+            if(!ip6LoopbackFound && IsIPv6Loopback(in info)) {
                 IPv6LoopbackIndex = info.IPv6Index;
                 ip6LoopbackFound = true;
             }
@@ -103,14 +103,14 @@ static class TapModeAdapters {
         }
     }
 
-    static bool IsGoodTap(NativeAdapterInfo info) {
+    static bool IsGoodTap(ref readonly NativeAdapterInfo info) {
         return info.IPv4Enabled
             && info.Status == IF_OPER_STATUS.IfOperStatusDown
             && info.Description.StartsWith("TAP-Windows Adapter ")
             && RegistryTapGuidList.Contains(info.Guid);
     }
 
-    static bool IsIPv6Loopback(NativeAdapterInfo info) {
+    static bool IsIPv6Loopback(ref readonly NativeAdapterInfo info) {
         return info.IPv6Enabled
             && info.Unicast.Contains(NativeIPAddress.IPv6Loopback);
     }

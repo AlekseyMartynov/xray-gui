@@ -18,9 +18,11 @@ readonly ref struct NativeAdapterInfo {
     public required ReadOnlySpan<NativeIPAddress> Unicast { get; init; }
 }
 
+delegate void NativeAdapterCallback(ref readonly NativeAdapterInfo info);
+
 static class NativeAdapters {
 
-    public static unsafe void Enumerate(Action<NativeAdapterInfo> callback) {
+    public static unsafe void Enumerate(NativeAdapterCallback callback) {
         var family = (uint)ADDRESS_FAMILY.AF_UNSPEC;
 
         var flags = GET_ADAPTERS_ADDRESSES_FLAGS.GAA_FLAG_SKIP_ANYCAST
@@ -42,7 +44,7 @@ static class NativeAdapters {
                     unicastList.Add(NativeIPAddress.From(unicastPtr->Address.lpSockaddr));
                     unicastPtr = unicastPtr->Next;
                 }
-                callback(new NativeAdapterInfo {
+                var info = new NativeAdapterInfo {
                     Guid = NativeUtils.ParseGuid(itemPtr->AdapterName),
                     Name = itemPtr->FriendlyName.AsSpan(),
                     Description = itemPtr->Description.AsSpan(),
@@ -52,7 +54,8 @@ static class NativeAdapters {
                     IPv4Enabled = itemPtr->Anonymous2.Anonymous.Ipv4Enabled,
                     IPv6Enabled = itemPtr->Anonymous2.Anonymous.Ipv6Enabled,
                     Unicast = CollectionsMarshal.AsSpan(unicastList),
-                });
+                };
+                callback(in info);
                 itemPtr = itemPtr->Next;
             }
         } finally {
