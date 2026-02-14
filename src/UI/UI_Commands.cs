@@ -7,7 +7,7 @@ namespace Project;
 partial class UI {
     const uint IDM_START = 1000;
     const uint IDM_STOP = 1001;
-    const uint IDM_TAP_MODE = 1002;
+    const uint IDM_TUN_MODE = 1002;
     const uint IDM_RELOAD_CONFIG = 1003;
     const uint IDM_QUIT = 1004;
 
@@ -57,9 +57,9 @@ partial class UI {
 
         PInvoke.AppendMenu(
             menu,
-            GetMenuItemFlags(isDisabled: Program.Started, isChecked: AppConfig.TapMode),
-            IDM_TAP_MODE,
-            "TAP mode"
+            GetMenuItemFlags(isDisabled: Program.Started, isChecked: AppConfig.TunMode),
+            IDM_TUN_MODE,
+            "TUN mode"
         );
 
         PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_STRING, IDM_QUIT, "Quit");
@@ -98,9 +98,9 @@ partial class UI {
                 Program.Stop();
                 break;
 
-            case IDM_TAP_MODE:
+            case IDM_TUN_MODE:
                 Program.EnsureStopped();
-                AppConfig.TapMode = !AppConfig.TapMode;
+                AppConfig.TunMode = !AppConfig.TunMode;
                 AppConfig.Save();
                 break;
 

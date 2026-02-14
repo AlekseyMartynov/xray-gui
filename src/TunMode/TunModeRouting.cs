@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Project;
 
-static class TapModeRouting {
+static class TunModeRouting {
     static readonly IReadOnlyList<(NativeIPAddress, byte)>
         DefaultOverrideV4,
         DefaultOverrideV6;
@@ -11,7 +11,7 @@ static class TapModeRouting {
         DefaultOverrideUndoPath,
         TunnelUndoPath;
 
-    static TapModeRouting() {
+    static TunModeRouting() {
         // https://github.com/Jigsaw-Code/outline-apps/blob/manager_windows/v1.17.2/client/electron/windows/OutlineService/OutlineService/OutlineService.cs#L608
         // https://github.com/Jigsaw-Code/outline-apps/blob/manager_windows/v1.17.2/client/electron/windows/OutlineService/OutlineService/OutlineService.cs#L673
 
@@ -52,7 +52,7 @@ static class TapModeRouting {
                     DestPrefix = prefix,
                     DestPrefixLen = prefixLen,
                     Gateway = NativeIPAddress.IPv4Zero,
-                    AdapterIndex = TapModeAdapters.TapIndex,
+                    AdapterIndex = TunModeAdapters.TunIndex,
                 });
             }
             foreach(var (prefix, prefixLen) in DefaultOverrideV6) {
@@ -60,7 +60,7 @@ static class TapModeRouting {
                     DestPrefix = prefix,
                     DestPrefixLen = prefixLen,
                     Gateway = NativeIPAddress.IPv6Zero,
-                    AdapterIndex = TapModeAdapters.IPv6LoopbackIndex,
+                    AdapterIndex = TunModeAdapters.IPv6LoopbackIndex,
                 });
             }
         } finally {
@@ -74,7 +74,7 @@ static class TapModeRouting {
         var count = 0;
         var undo = LoadUndo(TunnelUndoPath);
         try {
-            foreach(var ip in TapModeServerInfo.IPList) {
+            foreach(var ip in TunModeServerInfo.IPList) {
                 var (gatewayRoute, destPrefixLen) = ip.IsIPv4()
                     ? (defaultV4, 32)
                     : (defaultV6, 128);

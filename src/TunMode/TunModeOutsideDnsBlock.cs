@@ -8,7 +8,7 @@ namespace Project;
 // https://github.com/eycorsican/go-tun2socks/blob/v1.16.11/common/dns/blocker/blocker_windows.go
 // https://github.com/Jigsaw-Code/outline-apps/blob/manager_windows/v1.17.2/client/electron/windows/smartdnsblock/smartdnsblock/smartdnsblock.cpp
 
-static class TapModeOutsideDnsBlock {
+static class TunModeOutsideDnsBlock {
     const string NAME = "xray-gui-outside-dns-block";
 
     static readonly Guid SubLayerKey = Guid.NewGuid();
@@ -51,7 +51,7 @@ static class TapModeOutsideDnsBlock {
             conditionValue = {
                 type = FWP_DATA_TYPE.FWP_UINT32,
                 Anonymous = {
-                    uint32 = TapModeAdapters.TapIndex
+                    uint32 = TunModeAdapters.TunIndex
                 }
             }
         };

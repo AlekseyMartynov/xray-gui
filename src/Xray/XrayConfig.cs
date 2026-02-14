@@ -19,11 +19,11 @@ static class XrayConfig {
             ["outbounds"] = outboundList
         };
 
-        if(AppConfig.TapMode) {
-            if(TapModeServerInfo.IsDomainName) {
+        if(AppConfig.TunMode) {
+            if(TunModeServerInfo.IsDomainName) {
                 root["dns"] = new JsonObject {
                     ["hosts"] = new JsonObject {
-                        [TapModeServerInfo.Host] = TapModeServerInfo.IPList.ConvertAll(i => i.ToString())
+                        [TunModeServerInfo.Host] = TunModeServerInfo.IPList.ConvertAll(i => i.ToString())
                     }
                 };
                 var sockopt = outbound.GetChildObject("streamSettings", "sockopt");
@@ -36,7 +36,7 @@ static class XrayConfig {
             });
 
             root["routing"] = new JsonObject {
-                ["rules"] = CreateTapModeRoutingRules()
+                ["rules"] = CreateTunModeRoutingRules()
             };
         }
 
@@ -46,7 +46,7 @@ static class XrayConfig {
     }
 
     static JsonObject CreateInbound() {
-        if(AppConfig.TapMode) {
+        if(AppConfig.TunMode) {
             return new() {
                 ["protocol"] = "tun",
                 ["settings"] = new JsonObject {
@@ -65,7 +65,7 @@ static class XrayConfig {
         }
     }
 
-    static JsonArray CreateTapModeRoutingRules() {
+    static JsonArray CreateTunModeRoutingRules() {
         return [
             new JsonObject {
                 // Disable QUIC – no benefit when proxied

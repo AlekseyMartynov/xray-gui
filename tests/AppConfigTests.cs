@@ -22,7 +22,7 @@ public sealed class AppConfigTests : IDisposable {
         File.WriteAllText(AppConfig.FilePath, $"""
             {tab} selected_server {tab} = {tab} 123 {tab}
             proxy = test:1234
-            tap_mode = nonsense
+            tun_mode = nonsense
             proc_console = 123
             """
         );
@@ -30,8 +30,18 @@ public sealed class AppConfigTests : IDisposable {
         Assert.Equal(123, AppConfig.SelectedServerIndex);
         Assert.Equal("test", AppConfig.ProxyAddr);
         Assert.Equal(1234, AppConfig.ProxyPort);
-        Assert.False(AppConfig.TapMode);
+        Assert.False(AppConfig.TunMode);
         Assert.True(AppConfig.ProcConsole);
+    }
+
+    [Fact]
+    public void Compat() {
+        File.WriteAllLines(AppConfig.FilePath, [
+            "tap_mode = 1",
+            "tap_mode_badvpn = 1",
+        ]);
+        AppConfig.Load();
+        Assert.True(AppConfig.TunMode);
     }
 
     void DeleteFileAndReset() {

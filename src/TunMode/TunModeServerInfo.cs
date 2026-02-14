@@ -1,6 +1,6 @@
 namespace Project;
 
-static class TapModeServerInfo {
+static class TunModeServerInfo {
     public static string Host { get; private set; } = "";
     public static bool IsDomainName { get; private set; }
     public static IReadOnlyList<NativeIPAddress> IPList { get; private set; } = [];

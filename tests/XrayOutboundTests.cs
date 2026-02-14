@@ -3,7 +3,7 @@ namespace Project.Tests;
 public class XrayOutboundTests {
 
     public XrayOutboundTests() {
-        Assert.False(AppConfig.TapMode);
+        Assert.False(AppConfig.TunMode);
     }
 
     [Fact]

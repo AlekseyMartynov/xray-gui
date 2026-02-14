@@ -35,7 +35,7 @@ static class ProcMan {
 
         var commandLine = XrayExePath.Quote() + " -c " + XrayConfig.FilePath.Quote();
 
-        var accessToken = AppConfig.TapMode
+        var accessToken = AppConfig.TunMode
             ? NativeRestrictedTokens.FullyTrusted
             : NativeRestrictedTokens.Constrained;
 

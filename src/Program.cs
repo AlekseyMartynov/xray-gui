@@ -26,11 +26,11 @@ static partial class Program {
 
         var uri = SelectedServer.GetUri();
 
-        if(AppConfig.TapMode) {
+        if(AppConfig.TunMode) {
             Wintun.EnsureCreated();
-            TapModeAdapters.Refresh();
-            TapModeAdapters.SetTapParams(false);
-            TapModeServerInfo.Refresh(uri.Host);
+            TunModeAdapters.Refresh();
+            TunModeAdapters.SetTunParams(false);
+            TunModeServerInfo.Refresh(uri.Host);
         }
 
         var outbound = XrayOutbound.FromUri(uri);
@@ -88,10 +88,10 @@ static partial class Program {
     }
 
     static void SetupTrafficRedirect() {
-        if(AppConfig.TapMode) {
-            TapModeOutsideDnsBlock.Start();
-            TapModeRouting.AddDefaultOverride();
-            TapModeRouting.AddTunnel();
+        if(AppConfig.TunMode) {
+            TunModeOutsideDnsBlock.Start();
+            TunModeRouting.AddDefaultOverride();
+            TunModeRouting.AddTunnel();
         } else {
             ProxyBackup.TrySave();
             NativeProxyManager.SetConfig(AppConfig.Proxy);
@@ -99,8 +99,8 @@ static partial class Program {
     }
 
     static void UndoTrafficRedirect() {
-        TapModeOutsideDnsBlock.Stop();
-        TapModeRouting.UndoAll();
+        TunModeOutsideDnsBlock.Stop();
+        TunModeRouting.UndoAll();
         ProxyBackup.TryRestore();
     }
 

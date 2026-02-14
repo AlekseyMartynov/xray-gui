@@ -32,8 +32,8 @@ static class WanInfo {
                 if(ct.IsCancellationRequested) {
                     continue;
                 }
-                if(AppConfig.TapMode) {
-                    await WhenTapDnsReadyAsync(ct);
+                if(AppConfig.TunMode) {
+                    await WhenTunDnsReadyAsync(ct);
                 }
                 Update(ct);
             }
@@ -46,7 +46,7 @@ static class WanInfo {
         PendingUpdateRequests.Writer.TryWrite(ct);
     }
 
-    static async Task WhenTapDnsReadyAsync(CancellationToken ct) {
+    static async Task WhenTunDnsReadyAsync(CancellationToken ct) {
         while(!ct.IsCancellationRequested) {
             try {
                 if(NativeDns.QueryIP("cp.cloudflare.com", true, false).Count > 0) {
