@@ -23,16 +23,13 @@ static class NativeUtils {
     }
 
     public static void MustSucceed(uint result) {
-        if(result == (uint)WIN32_ERROR.ERROR_ACCESS_DENIED) {
-            throw new UIException("Restart as Administrator");
-        }
         if(result != 0) {
-            throw new Win32Exception((int)result);
+            ThrowWin32Error((int)result);
         }
     }
 
-    public static unsafe void CheckHandle(HANDLE h) {
-        CheckHandle(h.Value);
+    public static unsafe void CheckHandle(nint h) {
+        CheckHandle(h.ToPointer());
     }
 
     public static unsafe void CheckHandle(void* h) {
@@ -42,7 +39,14 @@ static class NativeUtils {
     }
 
     static void ThrowLastWin32Error() {
-        throw new Win32Exception(Marshal.GetLastWin32Error());
+        ThrowWin32Error(Marshal.GetLastWin32Error());
+    }
+
+    static void ThrowWin32Error(int error) {
+        if(error == (int)WIN32_ERROR.ERROR_ACCESS_DENIED) {
+            throw new UIException("Restart as Administrator");
+        }
+        throw new Win32Exception(error);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

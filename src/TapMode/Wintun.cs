@@ -20,7 +20,7 @@ static class Wintun {
         fixed(char* namePtr = Name) {
             AdapterHandle = WintunCreateAdapter(namePtr, namePtr, &guid);
         }
-        NativeUtils.MustSucceed(AdapterHandle != 0);
+        NativeUtils.CheckHandle(AdapterHandle);
         Guid = guid;
     }
 
