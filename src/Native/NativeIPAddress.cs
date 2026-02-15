@@ -187,7 +187,7 @@ partial struct NativeIPAddress {
         };
     }
 
-    public static NativeIPAddress From(in SOCKADDR_INET addr) {
+    public static NativeIPAddress From(ref readonly SOCKADDR_INET addr) {
         if(addr.si_family == ADDRESS_FAMILY.AF_INET) {
             return From(in addr.Ipv4.sin_addr);
         } else {
@@ -205,11 +205,11 @@ partial struct NativeIPAddress {
         }
     }
 
-    static NativeIPAddress From(in IN_ADDR addr) {
+    static NativeIPAddress From(ref readonly IN_ADDR addr) {
         return new(addr.S_un.S_addr);
     }
 
-    static NativeIPAddress From(in IN6_ADDR addr) {
+    static NativeIPAddress From(ref readonly IN6_ADDR addr) {
         return new(addr.u.Word.AsReadOnlySpan(), true);
     }
 }
