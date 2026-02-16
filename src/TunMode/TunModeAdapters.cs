@@ -8,13 +8,10 @@ static class TunModeAdapters {
     const int TUN_PREFIX_LEN = 24;
 
     // https://github.com/eycorsican/go-tun2socks/blob/v1.16.11/cmd/tun2socks/main.go#L92-L94
-    public static readonly NativeIPAddress
-        TunPrefix = new(10, 255, 0, 0),
-        TunMask = new(uint.MaxValue >> (32 - TUN_PREFIX_LEN)),
-        TunAddr = TunPrefix | new NativeIPAddress(0, 0, 0, 2);
+    static readonly NativeIPAddress TunAddr = new(10, 255, 0, 2);
 
     // https://github.com/Jigsaw-Code/outline-apps/blob/manager_windows/v1.17.2/client/electron/go_vpn_tunnel.ts#L35
-    public static readonly string TunDns = "1.1.1.1,9.9.9.9";
+    static readonly string TunDns = "1.1.1.1,9.9.9.9";
 
     public static uint TunIndex { get; private set; }
 
