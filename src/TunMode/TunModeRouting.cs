@@ -60,7 +60,9 @@ static class TunModeRouting {
                     DestPrefix = prefix,
                     DestPrefixLen = prefixLen,
                     Gateway = NativeIPAddress.IPv6Zero,
-                    AdapterIndex = TunModeAdapters.IPv6LoopbackIndex,
+                    AdapterIndex = AppConfig.TunModeIPv6 && TunModeAdapters.IPv6TunEnabled
+                        ? TunModeAdapters.IPv6TunIndex
+                        : TunModeAdapters.IPv6LoopbackIndex,
                 });
             }
         } finally {

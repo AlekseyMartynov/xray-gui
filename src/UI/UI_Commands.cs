@@ -10,6 +10,7 @@ partial class UI {
     const uint IDM_TUN_MODE = 1002;
     const uint IDM_RELOAD_CONFIG = 1003;
     const uint IDM_QUIT = 1004;
+    const uint IDM_ENABLE_IPv6 = 1005;
 
     const uint ID_TRAY_ICON_DBLCLK = 1100;
     const uint ID_SERVER_LIST_START = 1200;
@@ -54,6 +55,15 @@ partial class UI {
             IDM_RELOAD_CONFIG,
             "Reload config"
         );
+
+        if(AppConfig.TunMode) {
+            PInvoke.AppendMenu(
+                menu,
+                GetMenuItemFlags(isDisabled: Program.Started, isChecked: AppConfig.TunModeIPv6),
+                IDM_ENABLE_IPv6,
+                "Enable IPv6"
+            );
+        }
 
         PInvoke.AppendMenu(
             menu,
@@ -101,6 +111,12 @@ partial class UI {
             case IDM_TUN_MODE:
                 Program.EnsureStopped();
                 AppConfig.TunMode = !AppConfig.TunMode;
+                AppConfig.Save();
+                break;
+
+            case IDM_ENABLE_IPv6:
+                Program.EnsureStopped();
+                AppConfig.TunModeIPv6 = !AppConfig.TunModeIPv6;
                 AppConfig.Save();
                 break;
 

@@ -5,6 +5,7 @@ static class AppConfig {
         KEY_SELECTED_SERVER = "selected_server",
         KEY_PROC_CONSOLE = "proc_console",
         KEY_TUN_MODE = "tun_mode",
+        KEY_TUN_MODE_IPv6 = "tun_mode_ipv6",
         KEY_PROXY = "proxy",
         KEY_SIP003_PORT = "sip003_port";
 
@@ -18,6 +19,7 @@ static class AppConfig {
 
     public static bool ProcConsole { get; set; }
     public static bool TunMode { get; set; }
+    public static bool TunModeIPv6 { get; set; }
 
     public static string ProxyAddr { get; private set; } = "";
     public static int ProxyPort { get; private set; }
@@ -30,6 +32,7 @@ static class AppConfig {
         SelectedServerIndex = -1;
         ProcConsole = false;
         TunMode = false;
+        TunModeIPv6 = false;
         (ProxyAddr, ProxyPort) = ("127.0.0.1", 1080);
         (SIP003Addr, SIP003Port) = ("127.0.0.1", 1984);
     }
@@ -58,6 +61,10 @@ static class AppConfig {
                 }
                 if(key.SequenceEqual(KEY_TUN_MODE) || key.SequenceEqual("tap_mode")) {
                     TunMode = ParseFlag(value);
+                    continue;
+                }
+                if(key.SequenceEqual(KEY_TUN_MODE_IPv6)) {
+                    TunModeIPv6 = ParseFlag(value);
                     continue;
                 }
                 if(key.SequenceEqual("tap_mode_badvpn")) {
@@ -91,6 +98,7 @@ static class AppConfig {
             KEY_SELECTED_SERVER + " = " + SelectedServerIndex,
             KEY_PROC_CONSOLE + " = " + FormatFlag(ProcConsole),
             KEY_TUN_MODE + " = " + FormatFlag(TunMode),
+            KEY_TUN_MODE_IPv6 + " = " + FormatFlag(TunModeIPv6),
             KEY_PROXY + " = " + Proxy,
             KEY_SIP003_PORT + " = " + SIP003Port,
         ]);

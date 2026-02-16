@@ -6,12 +6,12 @@ namespace Project;
 
 static class NativeUnicastAddressTable {
 
-    public static unsafe void AssignStatic(uint adapterIndex, NativeIPAddress ip, byte prefixLen) {
+    public static unsafe void AssignStatic(ADDRESS_FAMILY family, uint adapterIndex, NativeIPAddress ip, byte prefixLen) {
         var tablePtr = default(MIB_UNICASTIPADDRESS_TABLE*);
 
         try {
             NativeUtils.MustSucceed(
-                PInvoke.GetUnicastIpAddressTable(ADDRESS_FAMILY.AF_UNSPEC, out tablePtr)
+                PInvoke.GetUnicastIpAddressTable(family, out tablePtr)
             );
 
             var rowCount = (int)tablePtr->NumEntries;
@@ -39,6 +39,10 @@ static class NativeUnicastAddressTable {
                 }
             }
             return false;
+        }
+
+        if(family == ADDRESS_FAMILY.AF_INET6 && ip.Equals(NativeIPAddress.IPv6Zero)) {
+            return;
         }
 
         PInvoke.InitializeUnicastIpAddressEntry(out var newRow);
