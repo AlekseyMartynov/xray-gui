@@ -1,10 +1,8 @@
 using System.Runtime.InteropServices;
 
-#pragma warning disable SYSLIB1054
-
 namespace Project;
 
-static class Wintun {
+static partial class Wintun {
     public const string Name = "xray-gui";
 
     public static Guid Guid { get; private set; }
@@ -32,9 +30,9 @@ static class Wintun {
         AdapterHandle = 0;
     }
 
-    [DllImport("wintun", ExactSpelling = true, SetLastError = true)]
-    static extern unsafe nint WintunCreateAdapter(char* name, char* tunnelType, Guid* guid);
+    [LibraryImport("wintun", SetLastError = true)]
+    private static unsafe partial nint WintunCreateAdapter(char* name, char* tunnelType, Guid* guid);
 
-    [DllImport("wintun", ExactSpelling = true, SetLastError = true)]
-    static extern unsafe void WintunCloseAdapter(nint h);
+    [LibraryImport("wintun", SetLastError = true)]
+    private static unsafe partial void WintunCloseAdapter(nint h);
 }
