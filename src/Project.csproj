@@ -17,6 +17,8 @@
     <StripSymbols>true</StripSymbols>
     <IlcDisableReflection>true</IlcDisableReflection>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <OptimizationPreference>Size</OptimizationPreference>
+    <StackTraceSupport>false</StackTraceSupport>
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
   </PropertyGroup>
 
