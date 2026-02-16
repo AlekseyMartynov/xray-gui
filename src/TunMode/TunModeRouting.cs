@@ -52,7 +52,7 @@ static class TunModeRouting {
                     DestPrefix = prefix,
                     DestPrefixLen = prefixLen,
                     Gateway = NativeIPAddress.IPv4Zero,
-                    AdapterIndex = TunModeAdapters.TunIndex,
+                    AdapterIndex = TunModeAdapters.IPv4TunIndex,
                 });
             }
             foreach(var (prefix, prefixLen) in DefaultOverrideV6) {

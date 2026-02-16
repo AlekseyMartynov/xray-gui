@@ -51,7 +51,7 @@ static class TunModeOutsideDnsBlock {
             conditionValue = {
                 type = FWP_DATA_TYPE.FWP_UINT32,
                 Anonymous = {
-                    uint32 = TunModeAdapters.TunIndex
+                    uint32 = TunModeAdapters.IPv4TunIndex
                 }
             }
         };

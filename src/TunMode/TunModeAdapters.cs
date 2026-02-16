@@ -5,20 +5,20 @@ using Windows.Win32.System.Registry;
 namespace Project;
 
 static class TunModeAdapters {
-    const int TUN_PREFIX_LEN = 24;
+    const int IPv4TunPrefixLen = 24;
 
     // https://github.com/eycorsican/go-tun2socks/blob/v1.16.11/cmd/tun2socks/main.go#L92-L94
-    static readonly NativeIPAddress TunAddr = new(10, 255, 0, 2);
+    static readonly NativeIPAddress IPv4TunAddr = new(10, 255, 0, 2);
 
     // https://github.com/Jigsaw-Code/outline-apps/blob/manager_windows/v1.17.2/client/electron/go_vpn_tunnel.ts#L35
     static readonly string TunDns = "1.1.1.1,9.9.9.9";
 
-    public static uint TunIndex { get; private set; }
+    public static uint IPv4TunIndex { get; private set; }
 
     public static uint IPv6LoopbackIndex { get; private set; }
 
     public static void Refresh() {
-        TunIndex = default;
+        IPv4TunIndex = default;
         IPv6LoopbackIndex = default;
 
         var tunFound = false;
@@ -26,7 +26,7 @@ static class TunModeAdapters {
 
         NativeAdapters.Enumerate((ref readonly NativeAdapterInfo info) => {
             if(!tunFound && IsGoodTun(in info)) {
-                TunIndex = info.IPv4Index;
+                IPv4TunIndex = info.IPv4Index;
                 tunFound = true;
             }
             if(!ip6LoopbackFound && IsIPv6Loopback(in info)) {
@@ -57,7 +57,7 @@ static class TunModeAdapters {
             } finally {
                 PInvoke.RegCloseKey(key);
             }
-            NativeUnicastAddressTable.AssignStatic(TunIndex, TunAddr, TUN_PREFIX_LEN);
+            NativeUnicastAddressTable.AssignStatic(IPv4TunIndex, IPv4TunAddr, IPv4TunPrefixLen);
         }
     }
 
