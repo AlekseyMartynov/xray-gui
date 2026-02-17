@@ -12,6 +12,7 @@ partial class XrayOutbound {
 
         // WARNING names below are used as nameof
         string allowInsecure = "0";
+        string alpn = "";
         string fp = "";
         string mode = "";
         string path = "";
@@ -24,6 +25,9 @@ partial class XrayOutbound {
             switch(key) {
                 case nameof(allowInsecure):
                     allowInsecure = value;
+                    break;
+                case nameof(alpn):
+                    alpn = value;
                     break;
                 case nameof(fp):
                     fp = value;
@@ -76,6 +80,10 @@ partial class XrayOutbound {
 
             if(allowInsecure == "1") {
                 tlsSettings["allowInsecure"] = true;
+            }
+
+            if(!String.IsNullOrWhiteSpace(alpn)) {
+                tlsSettings["alpn"] = alpn.Split(',');
             }
 
             if(!String.IsNullOrWhiteSpace(pcs)) {
