@@ -42,7 +42,12 @@ static class NativeDns {
             var recordPtr = resultsPtr;
 
             while(recordPtr != null) {
-                results.Add(NativeIPAddress.From(recordPtr));
+                if((DNS_TYPE)recordPtr->wType == type) {
+                    results.Add(NativeIPAddress.From(recordPtr));
+                } else {
+                    // DNS_TYPE_CNAME
+                    // https://stackoverflow.com/a/52714251
+                }
                 recordPtr = recordPtr->pNext;
             }
         } finally {
