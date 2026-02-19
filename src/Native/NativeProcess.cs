@@ -1,6 +1,5 @@
 using Microsoft.Win32.SafeHandles;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.JobObjects;
@@ -20,7 +19,7 @@ class NativeProcess : IDisposable {
 
     public unsafe NativeProcess(string commandLine, string? workDir = null, string[]? env = null, Action? exitHandler = null, HANDLE accessToken = default) {
         var si = new STARTUPINFOW {
-            cb = (uint)Marshal.SizeOf<STARTUPINFOW>(),
+            cb = (uint)Unsafe.SizeOf<STARTUPINFOW>(),
         };
 
         var flags = PROCESS_CREATION_FLAGS.CREATE_SUSPENDED | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
@@ -110,7 +109,7 @@ class NativeProcess : IDisposable {
                 job,
                 JOBOBJECTINFOCLASS.JobObjectExtendedLimitInformation,
                 Unsafe.AsPointer(ref info),
-                (uint)Marshal.SizeOf<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>()
+                (uint)Unsafe.SizeOf<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>()
             )
         );
 

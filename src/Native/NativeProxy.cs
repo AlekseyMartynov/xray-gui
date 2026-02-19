@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Networking.WinInet;
@@ -23,7 +22,7 @@ static class NativeProxyManager {
             new() { dwOption = INTERNET_PER_CONN.INTERNET_PER_CONN_PROXY_BYPASS },
         };
 
-        var optionListSize = (uint)Marshal.SizeOf<INTERNET_PER_CONN_OPTION_LISTW>();
+        var optionListSize = (uint)Unsafe.SizeOf<INTERNET_PER_CONN_OPTION_LISTW>();
 
         var optionList = new INTERNET_PER_CONN_OPTION_LISTW {
             dwSize = optionListSize,
@@ -80,7 +79,7 @@ static class NativeProxyManager {
                 }
             };
 
-            var optionListSize = (uint)Marshal.SizeOf<INTERNET_PER_CONN_OPTION_LISTW>();
+            var optionListSize = (uint)Unsafe.SizeOf<INTERNET_PER_CONN_OPTION_LISTW>();
 
             var optionList = new INTERNET_PER_CONN_OPTION_LISTW {
                 dwSize = optionListSize,

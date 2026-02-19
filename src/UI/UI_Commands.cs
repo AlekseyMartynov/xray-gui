@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 using Windows.Win32;
 using Windows.Win32.UI.WindowsAndMessaging;
 
@@ -75,7 +75,7 @@ partial class UI {
         PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_STRING, IDM_QUIT, "Quit");
 
         var bold = new MENUITEMINFOW {
-            cbSize = (uint)Marshal.SizeOf<MENUITEMINFOW>(),
+            cbSize = (uint)Unsafe.SizeOf<MENUITEMINFOW>(),
             fMask = MENU_ITEM_MASK.MIIM_STATE,
             fState = MENU_ITEM_STATE.MFS_DEFAULT
         };

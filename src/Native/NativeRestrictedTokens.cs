@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -75,7 +76,7 @@ static class NativeRestrictedTokens {
                 PInvoke.CreateWellKnownSid(WELL_KNOWN_SID_TYPE.WinMediumLabelSid, default, sidPtr, ref sidSize)
             );
 
-            var tokenInfoSize = (uint)Marshal.SizeOf<TOKEN_MANDATORY_LABEL>();
+            var tokenInfoSize = (uint)Unsafe.SizeOf<TOKEN_MANDATORY_LABEL>();
 
             var tokenInfo = new TOKEN_MANDATORY_LABEL {
                 Label = {

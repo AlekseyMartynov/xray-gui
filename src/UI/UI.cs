@@ -151,7 +151,7 @@ static partial class UI {
 
     static void UpdateTrayIcon(string? info = default, bool visible = true) {
         var data = new NOTIFYICONDATAW {
-            cbSize = (uint)Marshal.SizeOf<NOTIFYICONDATAW>(),
+            cbSize = (uint)Unsafe.SizeOf<NOTIFYICONDATAW>(),
             hWnd = MainWindow,
             guidItem = Program.AppGuid,
         };
