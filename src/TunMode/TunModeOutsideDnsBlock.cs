@@ -19,31 +19,8 @@ static class TunModeOutsideDnsBlock {
         InitEngine();
         InitSubLayer();
 
-        ReadOnlySpan<FWPM_FILTER_CONDITION0> blockConditions = [
-            new() {
-                fieldKey = PInvoke.FWPM_CONDITION_IP_PROTOCOL,
-                matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
-                conditionValue = {
-                    type = FWP_DATA_TYPE.FWP_UINT8,
-                    Anonymous = {
-                        uint8 = (byte)IPPROTO.IPPROTO_UDP
-                    }
-                }
-            },
-            new() {
-                fieldKey = PInvoke.FWPM_CONDITION_IP_REMOTE_PORT,
-                matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
-                conditionValue = {
-                    type = FWP_DATA_TYPE.FWP_UINT16,
-                    Anonymous = {
-                        uint16 = 53
-                    }
-                }
-            }
-        ];
-
-        AddFilter(PInvoke.FWPM_LAYER_ALE_AUTH_CONNECT_V4, 1, blockConditions, FWP_ACTION_TYPE.FWP_ACTION_BLOCK);
-        AddFilter(PInvoke.FWPM_LAYER_ALE_AUTH_CONNECT_V6, 1, blockConditions, FWP_ACTION_TYPE.FWP_ACTION_BLOCK);
+        AddBlockFilter(PInvoke.FWPM_LAYER_ALE_AUTH_CONNECT_V4, 1, IPPROTO.IPPROTO_UDP, 53);
+        AddBlockFilter(PInvoke.FWPM_LAYER_ALE_AUTH_CONNECT_V6, 1, IPPROTO.IPPROTO_UDP, 53);
 
         var permitCondition = new FWPM_FILTER_CONDITION0() {
             fieldKey = PInvoke.FWPM_CONDITION_INTERFACE_INDEX,
@@ -100,6 +77,32 @@ static class TunModeOutsideDnsBlock {
             );
 
         }
+    }
+
+    static void AddBlockFilter(Guid layerKey, ulong weight, IPPROTO proto, ushort port) {
+        ReadOnlySpan<FWPM_FILTER_CONDITION0> blockConditions = [
+            new() {
+                fieldKey = PInvoke.FWPM_CONDITION_IP_PROTOCOL,
+                matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                conditionValue = {
+                    type = FWP_DATA_TYPE.FWP_UINT8,
+                    Anonymous = {
+                        uint8 = (byte)proto
+                    }
+                }
+            },
+            new() {
+                fieldKey = PInvoke.FWPM_CONDITION_IP_REMOTE_PORT,
+                matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
+                conditionValue = {
+                    type = FWP_DATA_TYPE.FWP_UINT16,
+                    Anonymous = {
+                        uint16 = port
+                    }
+                }
+            }
+        ];
+        AddFilter(layerKey, weight, blockConditions, FWP_ACTION_TYPE.FWP_ACTION_BLOCK);
     }
 
     static unsafe void AddFilter(Guid layerKey, ulong weight, ReadOnlySpan<FWPM_FILTER_CONDITION0> conditions, FWP_ACTION_TYPE actionType) {
