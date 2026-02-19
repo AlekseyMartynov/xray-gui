@@ -14,8 +14,7 @@ static class TunModeAdapters {
 
     static readonly NativeIPAddress IPv6TunAddr = new([0xfd00, 0x10, 0x255, 0, 0, 0, 0, 2]);
 
-    // https://github.com/Jigsaw-Code/outline-apps/blob/manager_windows/v1.17.2/client/electron/go_vpn_tunnel.ts#L35
-    static readonly string TunDns = "1.1.1.1,9.9.9.9";
+    public static readonly NativeIPAddress TunDns = new(10, 255, 0, 53);
 
     public static uint IPv4TunIndex { get; private set; }
     public static uint IPv6TunIndex { get; private set; }
@@ -64,7 +63,7 @@ static class TunModeAdapters {
             var key = NativeRegistry.OpenOrCreateKey(HKEY.HKEY_LOCAL_MACHINE, keyName, true);
             try {
                 NativeRegistry.SetValue(key, "EnableDHCP", 0);
-                NativeRegistry.SetValue(key, "NameServer", TunDns);
+                NativeRegistry.SetValue(key, "NameServer", TunDns.ToString());
             } finally {
                 PInvoke.RegCloseKey(key);
             }

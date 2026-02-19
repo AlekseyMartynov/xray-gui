@@ -3,6 +3,7 @@ namespace Project;
 static class XrayConfig {
     const string LOG_LEVEL = "warning";
     const string TAG_BLACKHOLE = "blackhole";
+    const string TAG_DNS = "dns";
 
     public static readonly string FilePath = Path.Join(AppContext.BaseDirectory, "xray_config.json");
 
@@ -20,11 +21,18 @@ static class XrayConfig {
         };
 
         if(AppConfig.TunMode) {
+            var dns = new JsonObject {
+                ["servers"] = new JsonArray {
+                    "https://1.1.1.1/dns-query",
+                    "https://9.9.9.9/dns-query",
+                }
+            };
+
+            root["dns"] = dns;
+
             if(TunModeServerInfo.IsDomainName) {
-                root["dns"] = new JsonObject {
-                    ["hosts"] = new JsonObject {
-                        [TunModeServerInfo.Host] = TunModeServerInfo.IPList.ConvertAll(i => i.ToString())
-                    }
+                dns["hosts"] = new JsonObject {
+                    [TunModeServerInfo.Host] = TunModeServerInfo.IPList.ConvertAll(i => i.ToString())
                 };
                 var sockopt = outbound.GetChildObject("streamSettings", "sockopt");
                 sockopt["domainStrategy"] = "UseIP";
@@ -33,6 +41,15 @@ static class XrayConfig {
             outboundList.Add(new() {
                 ["protocol"] = "blackhole",
                 ["tag"] = TAG_BLACKHOLE
+            });
+
+            // https://xtls.github.io/en/config/outbounds/dns.html
+            outboundList.Add(new() {
+                ["protocol"] = "dns",
+                ["settings"] = new JsonObject {
+                    ["nonIPQuery"] = "reject"
+                },
+                ["tag"] = TAG_DNS
             });
 
             root["routing"] = new JsonObject {
@@ -76,6 +93,13 @@ static class XrayConfig {
             new JsonObject {
                 ["protocol"] = new JsonArray { "bittorrent" },
                 ["outboundTag"] = TAG_BLACKHOLE
+            },
+            new JsonObject{
+                ["ip"] = new JsonArray {
+                    TunModeAdapters.TunDns.ToString()
+                },
+                ["port"] = 53,
+                ["outboundTag"] = TAG_DNS
             }
         ];
     }
