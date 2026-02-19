@@ -19,8 +19,21 @@ static class TunModeOutsideDnsBlock {
         InitEngine();
         InitSubLayer();
 
-        AddBlockFilter(PInvoke.FWPM_LAYER_ALE_AUTH_CONNECT_V4, 1, IPPROTO.IPPROTO_UDP, 53);
-        AddBlockFilter(PInvoke.FWPM_LAYER_ALE_AUTH_CONNECT_V6, 1, IPPROTO.IPPROTO_UDP, 53);
+        ReadOnlySpan<Guid> blockLayerList = [
+            PInvoke.FWPM_LAYER_ALE_AUTH_CONNECT_V4,
+            PInvoke.FWPM_LAYER_ALE_AUTH_CONNECT_V6,
+        ];
+
+        ReadOnlySpan<IPPROTO> block53ProtoList = [
+            IPPROTO.IPPROTO_UDP,
+            IPPROTO.IPPROTO_TCP,
+        ];
+
+        foreach(var layer in blockLayerList) {
+            foreach(var proto in block53ProtoList) {
+                AddBlockFilter(layer, 1, proto, 53);
+            }
+        }
 
         var permitCondition = new FWPM_FILTER_CONDITION0() {
             fieldKey = PInvoke.FWPM_CONDITION_INTERFACE_INDEX,
