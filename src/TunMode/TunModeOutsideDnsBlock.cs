@@ -33,6 +33,9 @@ static class TunModeOutsideDnsBlock {
             foreach(var proto in block53ProtoList) {
                 AddBlockFilter(layer, 1, proto, 53);
             }
+            // DNS over TLS
+            // https://techcommunity.microsoft.com/blog/-/-/3565859
+            AddBlockFilter(layer, 1, IPPROTO.IPPROTO_TCP, 853);
         }
 
         var permitCondition = new FWPM_FILTER_CONDITION0() {
