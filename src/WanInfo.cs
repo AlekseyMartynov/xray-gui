@@ -49,7 +49,7 @@ static class WanInfo {
     static async Task WhenTunDnsReadyAsync(CancellationToken ct) {
         while(!ct.IsCancellationRequested) {
             try {
-                if(NativeDns.QueryIP("cp.cloudflare.com", true, false).Count > 0) {
+                if(NativeDns.QueryIP("cp.cloudflare.com", true, false, [TunModeAdapters.TunDns]).Count > 0) {
                     return;
                 }
             } catch {

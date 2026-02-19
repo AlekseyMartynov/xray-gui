@@ -8,22 +8,29 @@ namespace Project;
 
 static class NativeDns {
 
-    public static IReadOnlyList<NativeIPAddress> QueryIP(string domain, bool v4 = true, bool v6 = true) {
+    public static IReadOnlyList<NativeIPAddress> QueryIP(string domain, bool v4 = true, bool v6 = true, ReadOnlySpan<NativeIPAddress> servers = default) {
+        // https://stackoverflow.com/a/9628315
+        var extra = (stackalloc uint[1 + servers.Length]);
+        extra[0] = (uint)servers.Length;
+        for(var i = 0; i < servers.Length; i++) {
+            extra[1 + i] = servers[i].ToUInt32();
+        }
+
         var results = new List<NativeIPAddress>();
         if(v4) {
-            QueryIP(domain, DNS_TYPE.DNS_TYPE_A, results);
+            QueryIP(domain, DNS_TYPE.DNS_TYPE_A, extra, results);
         }
         if(v6) {
-            QueryIP(domain, DNS_TYPE.DNS_TYPE_AAAA, results);
+            QueryIP(domain, DNS_TYPE.DNS_TYPE_AAAA, extra, results);
         }
         return results;
     }
 
-    static unsafe void QueryIP(string domain, DNS_TYPE type, List<NativeIPAddress> results) {
+    static unsafe void QueryIP(string domain, DNS_TYPE type, ReadOnlySpan<uint> extra, List<NativeIPAddress> results) {
         var resultsPtr = default(DNS_RECORDA*);
 
         try {
-            var queryResult = Query(domain, type, out resultsPtr);
+            var queryResult = Query(domain, type, extra, out resultsPtr);
 
             if(queryResult == WIN32_ERROR.DNS_ERROR_RCODE_NAME_ERROR) {
                 return;
@@ -57,14 +64,16 @@ static class NativeDns {
         }
     }
 
-    static unsafe WIN32_ERROR Query(string domain, DNS_TYPE type, out DNS_RECORDA* results) {
-        return PInvoke.DnsQuery_W(
-            domain,
-            type,
-            DNS_QUERY_OPTIONS.DNS_QUERY_STANDARD,
-            default,
-            out results,
-            default
-        );
+    static unsafe WIN32_ERROR Query(string domain, DNS_TYPE type, ReadOnlySpan<uint> extra, out DNS_RECORDA* results) {
+        fixed(void* extraPtr = extra) {
+            return PInvoke.DnsQuery_W(
+                domain,
+                type,
+                DNS_QUERY_OPTIONS.DNS_QUERY_STANDARD,
+                extraPtr,
+                out results,
+                default
+            );
+        }
     }
 }
