@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.System.Registry;
@@ -35,84 +33,6 @@ static class NativeRegistry {
         );
 
         return result;
-    }
-
-    public static unsafe IReadOnlyList<string> GetSubKeyNames(HKEY parent) {
-        var result = new List<string>();
-        var index = default(uint);
-        var keyNameLen = default(uint);
-        var keyNameBuf = (stackalloc char[KEY_NAME_CHAR_BUF_LEN]);
-        while(true) {
-            keyNameLen = KEY_NAME_CHAR_BUF_LEN;
-            var error = PInvoke.RegEnumKeyEx(
-                parent,
-                index,
-                keyNameBuf,
-                // https://learn.microsoft.com/windows/win32/api/winreg/nf-winreg-regenumkeyexw#parameters
-                // in  - should include the terminating null character
-                // out -  not including the terminating null character
-                ref keyNameLen,
-                default,
-                default,
-                default
-            );
-            if(error == WIN32_ERROR.ERROR_NO_MORE_ITEMS) {
-                break;
-            }
-            NativeUtils.MustSucceed(error);
-            result.Add(keyNameBuf.Slice(0, (int)keyNameLen).ToString());
-            index++;
-        }
-        return result;
-    }
-
-    public static object? GetValue(HKEY parent, string subKey, string name) {
-        uint size = MAX_ON_STACK_BYTES;
-
-        var ok = TryGetValue(parent, subKey, name, out var result, ref size);
-
-        if(!ok) {
-            ok = TryGetValue(parent, subKey, name, out result, ref size);
-        }
-
-        if(!ok) {
-            throw new InvalidOperationException();
-        }
-
-        return result;
-    }
-
-    static unsafe bool TryGetValue(HKEY parent, string subKey, string name, out object? result, ref uint size) {
-        var buf = size <= MAX_ON_STACK_BYTES ? stackalloc byte[(int)size] : new byte[size];
-        var type = default(REG_VALUE_TYPE);
-        fixed(uint* sizePtr = &size) {
-            var error = PInvoke.RegGetValue(
-                parent,
-                subKey,
-                name,
-                REG_ROUTINE_FLAGS.RRF_RT_ANY,
-                &type,
-                Unsafe.AsPointer(ref buf[0]),
-                sizePtr
-            );
-            if(error == WIN32_ERROR.ERROR_MORE_DATA) {
-                result = default;
-                return false;
-            }
-            if(error == WIN32_ERROR.ERROR_FILE_NOT_FOUND) {
-                result = default;
-                return true;
-            }
-            NativeUtils.MustSucceed(error);
-        }
-        if(type == REG_VALUE_TYPE.REG_SZ) {
-            var charCount = (int)size / 2 - 1;
-            result = MemoryMarshal.Cast<byte, char>(buf)
-                .Slice(0, charCount)
-                .ToString();
-            return true;
-        }
-        throw new NotSupportedException();
     }
 
     public static void SetValue(HKEY key, string name, uint value) {

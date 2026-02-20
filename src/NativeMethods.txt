@@ -41,8 +41,6 @@ TerminateProcess
 HKEY_LOCAL_MACHINE
 RegCreateKeyEx
 RegDeleteTree
-RegEnumKeyEx
-RegGetValue
 RegSetValueEx
 
 // Security
