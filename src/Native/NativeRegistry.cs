@@ -12,7 +12,6 @@ static class NativeRegistry {
 
     public static unsafe HKEY OpenOrCreateKey(HKEY parent, string subKey, bool writable = false) {
         var result = default(HKEY);
-        var disposition = default(REG_CREATE_KEY_DISPOSITION);
 
         var sam = REG_SAM_FLAGS.KEY_READ;
         if(writable) {
@@ -27,8 +26,7 @@ static class NativeRegistry {
                 REG_OPEN_CREATE_OPTIONS.REG_OPTION_NON_VOLATILE,
                 sam,
                 default,
-                &result,
-                &disposition
+                &result
             )
         );
 

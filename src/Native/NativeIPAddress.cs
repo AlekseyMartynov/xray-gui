@@ -180,9 +180,9 @@ partial struct NativeIPAddress {
     }
 
     public static unsafe NativeIPAddress From(DNS_RECORDA* p) {
-        return (DNS_TYPE)p->wType switch {
-            DNS_TYPE.DNS_TYPE_A => new(p->Data.A.IpAddress),
-            DNS_TYPE.DNS_TYPE_AAAA => new(p->Data.AAAA.Ip6Address.IP6Word.AsReadOnlySpan(), true),
+        return (uint)p->wType switch {
+            PInvoke.DNS_TYPE_A => new(p->Data.A.IpAddress),
+            PInvoke.DNS_TYPE_AAAA => new(p->Data.AAAA.Ip6Address.IP6Word.AsReadOnlySpan(), true),
             _ => throw new NotSupportedException()
         };
     }

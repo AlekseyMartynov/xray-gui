@@ -30,13 +30,13 @@ static class NativeAdapters {
             | GET_ADAPTERS_ADDRESSES_FLAGS.GAA_FLAG_SKIP_DNS_SERVER;
 
         uint bufSize = 0;
-        PInvoke.GetAdaptersAddresses(family, flags, null, ref bufSize);
+        _ = PInvoke.GetAdaptersAddresses(family, flags, default, null, &bufSize);
 
         var buf = Marshal.AllocHGlobal((int)bufSize);
         try {
             var unicastList = new List<NativeIPAddress>();
             var itemPtr = (IP_ADAPTER_ADDRESSES_LH*)buf;
-            NativeUtils.MustSucceed(PInvoke.GetAdaptersAddresses(family, flags, itemPtr, ref bufSize));
+            NativeUtils.MustSucceed(PInvoke.GetAdaptersAddresses(family, flags, default, itemPtr, &bufSize));
             while(itemPtr != null) {
                 unicastList.Clear();
                 var unicastPtr = itemPtr->FirstUnicastAddress;

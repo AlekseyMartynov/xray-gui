@@ -13,7 +13,7 @@ static class TunModeOutsideDnsBlock {
 
     static readonly Guid SubLayerKey = Guid.NewGuid();
 
-    static HANDLE Engine;
+    static FWPM_ENGINE_HANDLE Engine;
 
     public static void Start() {
         InitEngine();
@@ -57,7 +57,7 @@ static class TunModeOutsideDnsBlock {
             NativeUtils.MustSucceed(
                 PInvoke.FwpmEngineClose0(Engine)
             );
-            Engine = HANDLE.Null;
+            Engine = FWPM_ENGINE_HANDLE.Null;
         }
     }
 
@@ -72,9 +72,9 @@ static class TunModeOutsideDnsBlock {
 
         const uint RPC_C_AUTHN_DEFAULT = uint.MaxValue;
 
-        fixed(HANDLE* enginePtr = &Engine) {
+        fixed(FWPM_ENGINE_HANDLE* enginePtr = &Engine) {
             NativeUtils.MustSucceed(
-                PInvoke.FwpmEngineOpen0(default, RPC_C_AUTHN_DEFAULT, default, session, enginePtr)
+                PInvoke.FwpmEngineOpen0(default, RPC_C_AUTHN_DEFAULT, default, &session, enginePtr)
             );
         }
     }
@@ -147,10 +147,8 @@ static class TunModeOutsideDnsBlock {
                 }
             };
 
-            ulong id = default;
-
             NativeUtils.MustSucceed(
-                PInvoke.FwpmFilterAdd0(Engine, in filter, default, &id)
+                PInvoke.FwpmFilterAdd0(Engine, in filter, default, out _)
             );
         }
     }

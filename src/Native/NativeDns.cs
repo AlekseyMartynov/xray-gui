@@ -18,15 +18,15 @@ static class NativeDns {
 
         var results = new List<NativeIPAddress>();
         if(v4) {
-            QueryIP(domain, DNS_TYPE.DNS_TYPE_A, extra, results);
+            QueryIP(domain, (ushort)PInvoke.DNS_TYPE_A, extra, results);
         }
         if(v6) {
-            QueryIP(domain, DNS_TYPE.DNS_TYPE_AAAA, extra, results);
+            QueryIP(domain, (ushort)PInvoke.DNS_TYPE_AAAA, extra, results);
         }
         return results;
     }
 
-    static unsafe void QueryIP(string domain, DNS_TYPE type, ReadOnlySpan<uint> extra, List<NativeIPAddress> results) {
+    static unsafe void QueryIP(string domain, ushort type, ReadOnlySpan<uint> extra, List<NativeIPAddress> results) {
         var resultsPtr = default(DNS_RECORDA*);
 
         try {
@@ -49,7 +49,7 @@ static class NativeDns {
             var recordPtr = resultsPtr;
 
             while(recordPtr != null) {
-                if((DNS_TYPE)recordPtr->wType == type) {
+                if(recordPtr->wType == type) {
                     results.Add(NativeIPAddress.From(recordPtr));
                 } else {
                     // DNS_TYPE_CNAME
@@ -64,7 +64,7 @@ static class NativeDns {
         }
     }
 
-    static unsafe WIN32_ERROR Query(string domain, DNS_TYPE type, ReadOnlySpan<uint> extra, out DNS_RECORDA* results) {
+    static unsafe WIN32_ERROR Query(string domain, ushort type, ReadOnlySpan<uint> extra, out DNS_RECORDA* results) {
         fixed(void* extraPtr = extra) {
             return PInvoke.DnsQuery_W(
                 domain,
@@ -72,7 +72,7 @@ static class NativeDns {
                 DNS_QUERY_OPTIONS.DNS_QUERY_STANDARD,
                 extraPtr,
                 out results,
-                default
+                out _
             );
         }
     }

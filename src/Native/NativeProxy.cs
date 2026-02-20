@@ -35,7 +35,7 @@ static class NativeProxyManager {
                 default,
                 PInvoke.INTERNET_OPTION_PER_CONNECTION_OPTION,
                 Unsafe.AsPointer(ref optionList),
-                ref optionListSize
+                &optionListSize
             )
         );
 

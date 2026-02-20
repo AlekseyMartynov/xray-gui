@@ -47,18 +47,17 @@ static class NativeHttpClient {
                     uint statusCodeSize = 4;
 
                     NativeUtils.MustSucceed(
-                        PInvoke.HttpQueryInfo(hReq, PInvoke.HTTP_QUERY_STATUS_CODE | PInvoke.HTTP_QUERY_FLAG_NUMBER, &statusCode, ref statusCodeSize, default)
+                        PInvoke.HttpQueryInfo(hReq, PInvoke.HTTP_QUERY_STATUS_CODE | PInvoke.HTTP_QUERY_FLAG_NUMBER, &statusCode, &statusCodeSize, default)
                     );
 
                     req.StatusCode = statusCode;
 
                     var bufLen = 1024;
                     var buf = (stackalloc byte[bufLen]);
-                    var bufPtr = Unsafe.AsPointer(ref buf[0]);
 
                     while(true) {
                         NativeUtils.MustSucceed(
-                            PInvoke.InternetReadFile(hReq, bufPtr, (uint)bufLen, out var readLen)
+                            PInvoke.InternetReadFile(hReq, buf, out var readLen)
                         );
                         if(readLen < 1) {
                             break;
