@@ -27,10 +27,12 @@ static partial class Program {
         var uri = SelectedServer.GetUri();
 
         if(AppConfig.TunMode) {
+            TunModeRouting.FindDefaults();
+            TunModeServerInfo.Refresh(uri.Host);
+
             Wintun.EnsureCreated();
             TunModeAdapters.Refresh();
             TunModeAdapters.SetTunParams(false);
-            TunModeServerInfo.Refresh(uri.Host);
         }
 
         var outbound = XrayOutbound.FromUri(uri);

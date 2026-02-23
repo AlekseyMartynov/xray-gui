@@ -31,6 +31,14 @@ static class TunModeRouting {
         TunnelUndoPath = Path.Join(dir, "routing_undo_tunnel.cmd");
     }
 
+    public static NativeRoute? DefaultV4 { get; private set; }
+    public static NativeRoute? DefaultV6 { get; private set; }
+
+    public static void FindDefaults() {
+        DefaultV4 = NativeRouting.FindRoute(NativeIPAddress.IPv4Zero, 0);
+        DefaultV6 = NativeRouting.FindRoute(NativeIPAddress.IPv6Zero, 0);
+    }
+
     public static void AddDefaultOverride() {
         // Outline also adds bypass routes for Special-Purpose IPv4 ranges (RFC6890)
         // https://github.com/Jigsaw-Code/outline-apps/blob/manager_windows/v1.17.2/client/electron/windows/OutlineService/OutlineService/OutlineService.cs#L693
@@ -71,15 +79,13 @@ static class TunModeRouting {
     }
 
     public static void AddTunnel() {
-        var defaultV4 = NativeRouting.FindRoute(NativeIPAddress.IPv4Zero, 0);
-        var defaultV6 = NativeRouting.FindRoute(NativeIPAddress.IPv6Zero, 0);
         var count = 0;
         var undo = LoadUndo(TunnelUndoPath);
         try {
             foreach(var ip in TunModeServerInfo.IPList) {
                 var (gatewayRoute, destPrefixLen) = ip.IsIPv4()
-                    ? (defaultV4, 32)
-                    : (defaultV6, 128);
+                    ? (DefaultV4, 32)
+                    : (DefaultV6, 128);
                 if(gatewayRoute == null) {
                     continue;
                 }
