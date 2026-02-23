@@ -3,6 +3,7 @@ namespace Project;
 static class XrayConfig {
     const string LOG_LEVEL = "warning";
     const string TAG_BLACKHOLE = "blackhole";
+    const string TAG_BYPASS = "bypass";
     const string TAG_DNS = "dns";
 
     public static readonly string FilePath = Path.Join(AppContext.BaseDirectory, "xray_config.json");
@@ -41,6 +42,19 @@ static class XrayConfig {
             outboundList.Add(new() {
                 ["protocol"] = "blackhole",
                 ["tag"] = TAG_BLACKHOLE
+            });
+
+            outboundList.Add(new() {
+                ["protocol"] = "freedom",
+                ["streamSettings"] = new JsonObject {
+                    ["sockopt"] = new JsonObject {
+                        // https://github.com/XTLS/Xray-core/blob/v26.2.6/transport/internet/sockopt_windows.go#L36
+                        // https://github.com/golang/go/blob/go1.26.0/src/net/interface.go#L169
+                        // https://github.com/golang/go/blob/go1.26.0/src/net/interface_windows.go#L62
+                        ["interface"] = TunModeAdapters.IPv4BypassName
+                    }
+                },
+                ["tag"] = TAG_BYPASS
             });
 
             // https://xtls.github.io/en/config/outbounds/dns.html
@@ -100,7 +114,15 @@ static class XrayConfig {
                 },
                 ["port"] = 53,
                 ["outboundTag"] = TAG_DNS
+            },
+#if FALSE
+            new JsonObject {
+                ["ip"] = new JsonArray {
+                    "geoip:ru"
+                },
+                ["outboundTag"] = TAG_BYPASS
             }
+#endif
         ];
     }
 }

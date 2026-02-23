@@ -23,14 +23,18 @@ static class TunModeAdapters {
 
     public static uint IPv6LoopbackIndex { get; private set; }
 
+    public static string IPv4BypassName { get; private set; } = "";
+
     public static void Refresh() {
         IPv4TunIndex = default;
         IPv6TunIndex = default;
         IPv6TunEnabled = default;
         IPv6LoopbackIndex = default;
+        IPv4BypassName = "";
 
         var tunFound = false;
         var ip6LoopbackFound = false;
+        var bypassFound = false;
 
         NativeAdapters.Enumerate((ref readonly NativeAdapterInfo info) => {
             if(!tunFound && IsGoodTun(in info)) {
@@ -42,6 +46,10 @@ static class TunModeAdapters {
             if(!ip6LoopbackFound && IsIPv6Loopback(in info)) {
                 IPv6LoopbackIndex = info.IPv6Index;
                 ip6LoopbackFound = true;
+            }
+            if(!bypassFound && IsIPv4Bypass(in info)) {
+                IPv4BypassName = info.Name.ToString();
+                bypassFound = true;
             }
         });
 
@@ -89,5 +97,10 @@ static class TunModeAdapters {
     static bool IsIPv6Loopback(ref readonly NativeAdapterInfo info) {
         return info.IPv6Enabled
             && info.Unicast.Contains(NativeIPAddress.IPv6Loopback);
+    }
+
+    static bool IsIPv4Bypass(ref readonly NativeAdapterInfo info) {
+        return TunModeRouting.DefaultV4 != null
+            && TunModeRouting.DefaultV4.AdapterIndex == info.IPv4Index;
     }
 }
