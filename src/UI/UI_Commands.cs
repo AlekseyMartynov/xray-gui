@@ -59,7 +59,7 @@ partial class UI {
         if(AppConfig.TunMode) {
             PInvoke.AppendMenu(
                 menu,
-                GetMenuItemFlags(isDisabled: Program.Started, isChecked: AppConfig.TunModeIPv6),
+                GetMenuItemFlags(isChecked: AppConfig.TunModeIPv6),
                 IDM_ENABLE_IPv6,
                 "Enable IPv6"
             );
@@ -67,7 +67,7 @@ partial class UI {
 
         PInvoke.AppendMenu(
             menu,
-            GetMenuItemFlags(isDisabled: Program.Started, isChecked: AppConfig.TunMode),
+            GetMenuItemFlags(isChecked: AppConfig.TunMode),
             IDM_TUN_MODE,
             "TUN mode"
         );
@@ -109,15 +109,17 @@ partial class UI {
                 break;
 
             case IDM_TUN_MODE:
-                Program.EnsureStopped();
-                AppConfig.TunMode = !AppConfig.TunMode;
-                AppConfig.Save();
+                WithRestart(delegate {
+                    AppConfig.TunMode = !AppConfig.TunMode;
+                    AppConfig.Save();
+                });
                 break;
 
             case IDM_ENABLE_IPv6:
-                Program.EnsureStopped();
-                AppConfig.TunModeIPv6 = !AppConfig.TunModeIPv6;
-                AppConfig.Save();
+                WithRestart(delegate {
+                    AppConfig.TunModeIPv6 = !AppConfig.TunModeIPv6;
+                    AppConfig.Save();
+                });
                 break;
 
             case IDM_RELOAD_CONFIG: {
@@ -150,21 +152,28 @@ partial class UI {
             case >= ID_SERVER_LIST_START: {
                     var newIndex = (int)(id - ID_SERVER_LIST_START);
                     if(newIndex != AppConfig.SelectedServerIndex) {
-                        var restart = Program.Started;
-                        if(restart) {
-                            Program.Stop();
-                        }
-                        AppConfig.SelectedServerIndex = newIndex;
-                        AppConfig.Save();
-                        if(restart) {
-                            Program.Start();
-                        }
+                        WithRestart(delegate {
+                            AppConfig.SelectedServerIndex = newIndex;
+                            AppConfig.Save();
+                        });
                     }
                 }
                 break;
 
             default:
                 throw new NotSupportedException();
+        }
+    }
+
+    static void WithRestart(Action action) {
+        var restart = Program.Started;
+        if(restart) {
+            ShowBalloon("Restarting...");
+            Program.Stop();
+        }
+        action();
+        if(restart) {
+            Program.Start();
         }
     }
 }
