@@ -94,7 +94,7 @@ static class TunModeRouting {
                     undo.Add(route);
                 }
             }
-            if(count < 0) {
+            if(count < 1) {
                 throw new Exception("Failed to add tunnel route");
             }
         } finally {
