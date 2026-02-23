@@ -32,7 +32,7 @@ partial class UI {
                     menu,
                     GetMenuItemFlags(isChecked: i == AppConfig.SelectedServerIndex),
                     ID_SERVER_LIST_START + (uint)i,
-                    ServerList.DisplayName[i]
+                    ServerList.DisplayName[i].Replace("&", "&&")
                 );
                 if(i < serverCount - 1 && ServerList.Separator[i]) {
                     AppendSeparator(menu);
