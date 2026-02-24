@@ -7,10 +7,11 @@ namespace Project;
 partial class UI {
     const uint IDM_START = 1000;
     const uint IDM_STOP = 1001;
-    const uint IDM_TUN_MODE = 1002;
-    const uint IDM_RELOAD_CONFIG = 1003;
-    const uint IDM_QUIT = 1004;
-    const uint IDM_ENABLE_IPv6 = 1005;
+    const uint IDM_RELOAD_CONFIG = 1002;
+    const uint IDM_QUIT = 1003;
+
+    const uint IDM_TUN_ENABLE = 1004;
+    const uint IDM_TUN_IPv6 = 1005;
 
     const uint ID_TRAY_ICON_DBLCLK = 1100;
     const uint ID_SERVER_LIST_START = 1200;
@@ -22,54 +23,34 @@ partial class UI {
             PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_STRING, IDM_START, "Start");
         }
 
-        AppendSeparator(menu);
-
-        var serverCount = ServerList.Count;
-
-        if(serverCount > 0) {
-            for(var i = 0; i < serverCount; i++) {
-                PInvoke.AppendMenu(
-                    menu,
-                    GetMenuItemFlags(isChecked: i == AppConfig.SelectedServerIndex),
-                    ID_SERVER_LIST_START + (uint)i,
-                    ServerList.DisplayName[i].Replace("&", "&&")
-                );
-                if(i < serverCount - 1 && ServerList.Separator[i]) {
-                    AppendSeparator(menu);
-                }
-            }
+        if(ServerList.Count > 0) {
+            PInvoke.AppendMenu(
+                menu,
+                MENU_ITEM_FLAGS.MF_POPUP,
+                (nuint)(nint)CreateServersSubMenu(),
+                "Server: " + EscapeApmersand(SelectedServer.GetDisplayName("(none)"))
+            );
         } else {
             PInvoke.AppendMenu(
                 menu,
                 MENU_ITEM_FLAGS.MF_STRING | MENU_ITEM_FLAGS.MF_DISABLED,
                 ID_SERVER_LIST_START,
-                "No items in " + Path.GetFileName(ServerList.FilePath)
+                "No items in " + EscapeApmersand(Path.GetFileName(ServerList.FilePath))
             );
         }
 
-        AppendSeparator(menu);
+        PInvoke.AppendMenu(
+            menu,
+            MENU_ITEM_FLAGS.MF_POPUP | GetMenuItemFlags(isChecked: AppConfig.TunMode),
+            (nuint)(nint)CreateTunModeSubMenu(),
+            "TUN mode"
+        );
 
         PInvoke.AppendMenu(
             menu,
             GetMenuItemFlags(isDisabled: Program.Started),
             IDM_RELOAD_CONFIG,
             "Reload config"
-        );
-
-        if(AppConfig.TunMode) {
-            PInvoke.AppendMenu(
-                menu,
-                GetMenuItemFlags(isChecked: AppConfig.TunModeIPv6),
-                IDM_ENABLE_IPv6,
-                "Enable IPv6"
-            );
-        }
-
-        PInvoke.AppendMenu(
-            menu,
-            GetMenuItemFlags(isChecked: AppConfig.TunMode),
-            IDM_TUN_MODE,
-            "TUN mode"
         );
 
         PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_STRING, IDM_QUIT, "Quit");
@@ -81,6 +62,49 @@ partial class UI {
         };
 
         PInvoke.SetMenuItemInfo(menu, Program.Started ? IDM_STOP : IDM_START, false, in bold);
+    }
+
+    static HMENU CreateServersSubMenu() {
+        var subMenu = PInvoke.CreatePopupMenu();
+        var serverCount = ServerList.Count;
+        for(var i = 0; i < serverCount; i++) {
+            PInvoke.AppendMenu(
+                subMenu,
+                GetMenuItemFlags(isChecked: i == AppConfig.SelectedServerIndex),
+                ID_SERVER_LIST_START + (uint)i,
+                EscapeApmersand(ServerList.DisplayName[i])
+            );
+            if(i < serverCount - 1 && ServerList.Separator[i]) {
+                AppendSeparator(subMenu);
+            }
+        }
+        return subMenu;
+    }
+
+    static HMENU CreateTunModeSubMenu() {
+        var subMenu = PInvoke.CreatePopupMenu();
+        PInvoke.AppendMenu(
+            subMenu,
+            GetMenuItemFlags(
+                isChecked: AppConfig.TunMode
+            ),
+            IDM_TUN_ENABLE,
+            "Enable"
+        );
+        PInvoke.AppendMenu(
+            subMenu,
+            GetMenuItemFlags(
+                isChecked: AppConfig.TunModeIPv6,
+                isDisabled: !AppConfig.TunMode
+            ),
+            IDM_TUN_IPv6,
+            "IPv6"
+        );
+        return subMenu;
+    }
+
+    static string EscapeApmersand(string text) {
+        return text.Replace("&", "&&");
     }
 
     static void AppendSeparator(HMENU menu) {
@@ -108,14 +132,14 @@ partial class UI {
                 Program.Stop();
                 break;
 
-            case IDM_TUN_MODE:
+            case IDM_TUN_ENABLE:
                 WithRestart(delegate {
                     AppConfig.TunMode = !AppConfig.TunMode;
                     AppConfig.Save();
                 });
                 break;
 
-            case IDM_ENABLE_IPv6:
+            case IDM_TUN_IPv6:
                 WithRestart(delegate {
                     AppConfig.TunModeIPv6 = !AppConfig.TunModeIPv6;
                     AppConfig.Save();

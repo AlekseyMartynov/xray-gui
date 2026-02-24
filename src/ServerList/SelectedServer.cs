@@ -10,12 +10,12 @@ static class SelectedServer {
         throw new UIException("No server selected");
     }
 
-    public static string GetDisplayName() {
+    public static string GetDisplayName(string emptyText = "") {
         var index = AppConfig.SelectedServerIndex;
         if(CheckBounds(index)) {
             return ServerList.DisplayName[index];
         }
-        return "";
+        return emptyText;
     }
 
     static bool CheckBounds(int index) {
