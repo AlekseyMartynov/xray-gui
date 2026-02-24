@@ -76,7 +76,7 @@ PostMessage
 RegisterClass
 RegisterWindowMessage
 SetForegroundWindow
-SetMenuItemInfo
+SetMenuDefaultItem
 Shell_NotifyIcon
 TrackPopupMenu
 TranslateMessage

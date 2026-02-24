@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using Windows.Win32;
 using Windows.Win32.UI.WindowsAndMessaging;
 
@@ -22,6 +21,8 @@ partial class UI {
         } else {
             PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_STRING, IDM_START, "Start");
         }
+
+        PInvoke.SetMenuDefaultItem(menu, 0, 1);
 
         if(ServerList.Count > 0) {
             PInvoke.AppendMenu(
@@ -54,14 +55,6 @@ partial class UI {
         );
 
         PInvoke.AppendMenu(menu, MENU_ITEM_FLAGS.MF_STRING, IDM_QUIT, "Quit");
-
-        var bold = new MENUITEMINFOW {
-            cbSize = (uint)Unsafe.SizeOf<MENUITEMINFOW>(),
-            fMask = MENU_ITEM_MASK.MIIM_STATE,
-            fState = MENU_ITEM_STATE.MFS_DEFAULT
-        };
-
-        PInvoke.SetMenuItemInfo(menu, Program.Started ? IDM_STOP : IDM_START, false, in bold);
     }
 
     static HMENU CreateServersSubMenu() {
