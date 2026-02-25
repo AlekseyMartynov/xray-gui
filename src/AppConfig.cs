@@ -1,5 +1,12 @@
 namespace Project;
 
+[Flags]
+enum AppConfigFlags {
+    ProcConsole = 1,
+    TunMode = 2,
+    TunModeIPv6 = 4,
+}
+
 static class AppConfig {
     const string
         KEY_SELECTED_SERVER = "selected_server",
@@ -17,9 +24,11 @@ static class AppConfig {
 
     public static int SelectedServerIndex { get; set; }
 
-    public static bool ProcConsole { get; set; }
-    public static bool TunMode { get; set; }
-    public static bool TunModeIPv6 { get; set; }
+    public static bool ProcConsole => HasFlag(AppConfigFlags.ProcConsole);
+    public static bool TunMode => HasFlag(AppConfigFlags.TunMode);
+    public static bool TunModeIPv6 => HasFlag(AppConfigFlags.TunModeIPv6);
+
+    static AppConfigFlags Flags;
 
     public static string ProxyAddr { get; private set; } = "";
     public static int ProxyPort { get; private set; }
@@ -30,9 +39,7 @@ static class AppConfig {
 
     public static void Reset() {
         SelectedServerIndex = -1;
-        ProcConsole = false;
-        TunMode = false;
-        TunModeIPv6 = false;
+        Flags = 0;
         (ProxyAddr, ProxyPort) = ("127.0.0.1", 1080);
         (SIP003Addr, SIP003Port) = ("127.0.0.1", 1984);
     }
@@ -49,26 +56,19 @@ static class AppConfig {
             if(line.TrySplit('=', out var key, out var value)) {
                 key = key.Trim();
                 value = value.Trim();
+                if(TryParseFlag(key, out var flag)) {
+                    _ = int.TryParse(value, out var n);
+                    if(n != 0) {
+                        Flags |= flag;
+                    } else {
+                        Flags &= ~flag;
+                    }
+                    continue;
+                }
                 if(key.SequenceEqual(KEY_SELECTED_SERVER)) {
                     if(int.TryParse(value, out var index)) {
                         SelectedServerIndex = index;
                     }
-                    continue;
-                }
-                if(key.SequenceEqual(KEY_PROC_CONSOLE)) {
-                    ProcConsole = ParseFlag(value);
-                    continue;
-                }
-                if(key.SequenceEqual(KEY_TUN_MODE) || key.SequenceEqual("tap_mode")) {
-                    TunMode = ParseFlag(value);
-                    continue;
-                }
-                if(key.SequenceEqual(KEY_TUN_MODE_IPv6)) {
-                    TunModeIPv6 = ParseFlag(value);
-                    continue;
-                }
-                if(key.SequenceEqual("tap_mode_badvpn")) {
-                    // Removed
                     continue;
                 }
                 if(key.SequenceEqual(KEY_PROXY)) {
@@ -96,20 +96,41 @@ static class AppConfig {
     public static void Save() {
         File.WriteAllLines(FilePath, [
             KEY_SELECTED_SERVER + " = " + SelectedServerIndex,
-            KEY_PROC_CONSOLE + " = " + FormatFlag(ProcConsole),
-            KEY_TUN_MODE + " = " + FormatFlag(TunMode),
-            KEY_TUN_MODE_IPv6 + " = " + FormatFlag(TunModeIPv6),
+            KEY_PROC_CONSOLE + " = " + FormatFlag(AppConfigFlags.ProcConsole),
+            KEY_TUN_MODE + " = " + FormatFlag(AppConfigFlags.TunMode),
+            KEY_TUN_MODE_IPv6 + " = " + FormatFlag(AppConfigFlags.TunModeIPv6),
             KEY_PROXY + " = " + Proxy,
             KEY_SIP003_PORT + " = " + SIP003Port,
         ]);
     }
 
-    static string FormatFlag(bool value) {
-        return value ? "1" : "0";
+    public static bool HasFlag(AppConfigFlags flag) {
+        return Flags.HasFlag(flag);
     }
 
-    static bool ParseFlag(ReadOnlySpan<char> text) {
-        _ = int.TryParse(text, out var n);
-        return n != 0;
+    public static void ToggleFlag(AppConfigFlags flag) {
+        Flags ^= flag;
+    }
+
+    static bool TryParseFlag(ReadOnlySpan<char> text, out AppConfigFlags result) {
+        ReadOnlySpan<(string, AppConfigFlags)> known = [
+            (KEY_PROC_CONSOLE, AppConfigFlags.ProcConsole),
+            (KEY_TUN_MODE, AppConfigFlags.TunMode),
+            (KEY_TUN_MODE_IPv6, AppConfigFlags.TunModeIPv6),
+            ("tap_mode", AppConfigFlags.TunMode),
+            ("tap_mode_badvpn", default),
+        ];
+        foreach(var (key, flag) in known) {
+            if(text.SequenceEqual(key)) {
+                result = flag;
+                return true;
+            }
+        }
+        result = default;
+        return false;
+    }
+
+    static string FormatFlag(AppConfigFlags flag) {
+        return HasFlag(flag) ? "1" : "0";
     }
 }

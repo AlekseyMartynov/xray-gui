@@ -76,23 +76,15 @@ partial class UI {
 
     static HMENU CreateTunModeSubMenu() {
         var subMenu = PInvoke.CreatePopupMenu();
-        PInvoke.AppendMenu(
-            subMenu,
-            GetMenuItemFlags(
-                isChecked: AppConfig.TunMode
-            ),
-            IDM_TUN_ENABLE,
-            "Enable"
-        );
-        PInvoke.AppendMenu(
-            subMenu,
-            GetMenuItemFlags(
-                isChecked: AppConfig.TunModeIPv6,
-                isDisabled: !AppConfig.TunMode
-            ),
-            IDM_TUN_IPv6,
-            "IPv6"
-        );
+        ReadOnlySpan<(AppConfigFlags, uint, string)> items = [
+            (AppConfigFlags.TunMode, IDM_TUN_ENABLE, "Enable"),
+            (AppConfigFlags.TunModeIPv6, IDM_TUN_IPv6, "IPv6"),
+        ];
+        foreach(var (flag, id, text) in items) {
+            var isDisabled = !AppConfig.TunMode && flag != AppConfigFlags.TunMode;
+            var isChecked = AppConfig.HasFlag(flag);
+            PInvoke.AppendMenu(subMenu, GetMenuItemFlags(isDisabled, isChecked), id, text);
+        }
         return subMenu;
     }
 
@@ -116,6 +108,13 @@ partial class UI {
     }
 
     static void HandleCommandCore(uint id) {
+        if(TryConvertToFlag(id, out var flag)) {
+            WithRestart(delegate {
+                AppConfig.ToggleFlag(flag);
+                AppConfig.Save();
+            });
+            return;
+        }
         switch(id) {
             case IDM_START:
                 Program.Start();
@@ -123,20 +122,6 @@ partial class UI {
 
             case IDM_STOP:
                 Program.Stop();
-                break;
-
-            case IDM_TUN_ENABLE:
-                WithRestart(delegate {
-                    AppConfig.TunMode = !AppConfig.TunMode;
-                    AppConfig.Save();
-                });
-                break;
-
-            case IDM_TUN_IPv6:
-                WithRestart(delegate {
-                    AppConfig.TunModeIPv6 = !AppConfig.TunModeIPv6;
-                    AppConfig.Save();
-                });
                 break;
 
             case IDM_RELOAD_CONFIG: {
@@ -180,6 +165,15 @@ partial class UI {
             default:
                 throw new NotSupportedException();
         }
+    }
+
+    static bool TryConvertToFlag(uint id, out AppConfigFlags result) {
+        result = id switch {
+            IDM_TUN_ENABLE => AppConfigFlags.TunMode,
+            IDM_TUN_IPv6 => AppConfigFlags.TunModeIPv6,
+            _ => default
+        };
+        return result != default;
     }
 
     static void WithRestart(Action action) {
