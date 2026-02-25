@@ -23,6 +23,7 @@ static partial class Program {
 
     public static void Start() {
         EnsureStopped();
+        EnsureGeoIP();
 
         var uri = SelectedServer.GetUri();
 
@@ -91,6 +92,10 @@ static partial class Program {
 
     static void SetupTrafficRedirect() {
         if(AppConfig.TunMode) {
+            if(AppConfig.TunModeBypassProxy) {
+                ProxyBackup.TrySave();
+                NativeProxyManager.SetDirectOnly();
+            }
             TunModeOutsideDnsBlock.Start();
             TunModeRouting.AddDefaultOverride();
             TunModeRouting.AddTunnel();
@@ -127,6 +132,16 @@ static partial class Program {
             UI.ShowBalloon($"{e.IP} ({e.CountryCode})");
         } else {
             UI.ShowBalloon("Failed to detect WAN IP", true);
+        }
+    }
+
+    static void EnsureGeoIP() {
+        if(!AppConfig.TunModeBypassRU) {
+            return;
+        }
+        var filePath = Path.Join(AppContext.BaseDirectory, "geoip.dat");
+        if(!File.Exists(filePath)) {
+            throw new UIException("Missing " + filePath);
         }
     }
 }

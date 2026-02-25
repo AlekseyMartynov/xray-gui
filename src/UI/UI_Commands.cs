@@ -11,6 +11,8 @@ partial class UI {
 
     const uint IDM_TUN_ENABLE = 1004;
     const uint IDM_TUN_IPv6 = 1005;
+    const uint IDM_TUN_BYPASS_PROXY = 1006;
+    const uint IDM_TUN_BYPASS_RU = 1007;
 
     const uint ID_TRAY_ICON_DBLCLK = 1100;
     const uint ID_SERVER_LIST_START = 1200;
@@ -79,6 +81,8 @@ partial class UI {
         ReadOnlySpan<(AppConfigFlags, uint, string)> items = [
             (AppConfigFlags.TunMode, IDM_TUN_ENABLE, "Enable"),
             (AppConfigFlags.TunModeIPv6, IDM_TUN_IPv6, "IPv6"),
+            (AppConfigFlags.TunModeBypassProxy, IDM_TUN_BYPASS_PROXY, "Bypass system proxy"),
+            (AppConfigFlags.TunModeBypassRU, IDM_TUN_BYPASS_RU, "Bypass geoip:ru"),
         ];
         foreach(var (flag, id, text) in items) {
             var isDisabled = !AppConfig.TunMode && flag != AppConfigFlags.TunMode;
@@ -171,6 +175,8 @@ partial class UI {
         result = id switch {
             IDM_TUN_ENABLE => AppConfigFlags.TunMode,
             IDM_TUN_IPv6 => AppConfigFlags.TunModeIPv6,
+            IDM_TUN_BYPASS_PROXY => AppConfigFlags.TunModeBypassProxy,
+            IDM_TUN_BYPASS_RU => AppConfigFlags.TunModeBypassRU,
             _ => default
         };
         return result != default;

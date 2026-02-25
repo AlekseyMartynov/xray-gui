@@ -24,6 +24,8 @@ public sealed class AppConfigTests : IDisposable {
             proxy = test:1234
             tun_mode = nonsense
             tun_mode_ipv6 = 1
+            tun_mode_bypass_proxy = 1
+            tun_mode_bypass_ru = 1
             proc_console = 123
             """
         );
@@ -33,6 +35,8 @@ public sealed class AppConfigTests : IDisposable {
         Assert.Equal(1234, AppConfig.ProxyPort);
         Assert.False(AppConfig.TunMode);
         Assert.True(AppConfig.TunModeIPv6);
+        Assert.True(AppConfig.TunModeBypassProxy);
+        Assert.True(AppConfig.TunModeBypassRU);
         Assert.True(AppConfig.ProcConsole);
     }
 

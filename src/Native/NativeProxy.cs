@@ -110,6 +110,15 @@ static class NativeProxyManager {
         });
     }
 
+    public static void SetDirectOnly() {
+        SetConfig(new() {
+            Flags = PInvoke.PROXY_TYPE_DIRECT,
+            PacUrl = "",
+            ProxyUrl = "",
+            ProxyBypass = ""
+        });
+    }
+
     static unsafe string ReadStringAndFree(INTERNET_PER_CONN_OPTIONW option) {
         var p = option.Value.pszValue;
         if(p != null) {

@@ -5,6 +5,8 @@ enum AppConfigFlags {
     ProcConsole = 1,
     TunMode = 2,
     TunModeIPv6 = 4,
+    TunModeBypassProxy = 8,
+    TunModeBypassRU = 16
 }
 
 static class AppConfig {
@@ -13,6 +15,8 @@ static class AppConfig {
         KEY_PROC_CONSOLE = "proc_console",
         KEY_TUN_MODE = "tun_mode",
         KEY_TUN_MODE_IPv6 = "tun_mode_ipv6",
+        KEY_TUN_MODE_BYPASS_PROXY = "tun_mode_bypass_proxy",
+        KEY_TUN_MODE_BYPASS_RU = "tun_mode_bypass_ru",
         KEY_PROXY = "proxy",
         KEY_SIP003_PORT = "sip003_port";
 
@@ -27,6 +31,8 @@ static class AppConfig {
     public static bool ProcConsole => HasFlag(AppConfigFlags.ProcConsole);
     public static bool TunMode => HasFlag(AppConfigFlags.TunMode);
     public static bool TunModeIPv6 => HasFlag(AppConfigFlags.TunModeIPv6);
+    public static bool TunModeBypassProxy => HasFlag(AppConfigFlags.TunModeBypassProxy);
+    public static bool TunModeBypassRU => HasFlag(AppConfigFlags.TunModeBypassRU);
 
     static AppConfigFlags Flags;
 
@@ -99,6 +105,8 @@ static class AppConfig {
             KEY_PROC_CONSOLE + " = " + FormatFlag(AppConfigFlags.ProcConsole),
             KEY_TUN_MODE + " = " + FormatFlag(AppConfigFlags.TunMode),
             KEY_TUN_MODE_IPv6 + " = " + FormatFlag(AppConfigFlags.TunModeIPv6),
+            KEY_TUN_MODE_BYPASS_PROXY + " = " + FormatFlag(AppConfigFlags.TunModeBypassProxy),
+            KEY_TUN_MODE_BYPASS_RU + " = " + FormatFlag(AppConfigFlags.TunModeBypassRU),
             KEY_PROXY + " = " + Proxy,
             KEY_SIP003_PORT + " = " + SIP003Port,
         ]);
@@ -117,6 +125,8 @@ static class AppConfig {
             (KEY_PROC_CONSOLE, AppConfigFlags.ProcConsole),
             (KEY_TUN_MODE, AppConfigFlags.TunMode),
             (KEY_TUN_MODE_IPv6, AppConfigFlags.TunModeIPv6),
+            (KEY_TUN_MODE_BYPASS_PROXY, AppConfigFlags.TunModeBypassProxy),
+            (KEY_TUN_MODE_BYPASS_RU, AppConfigFlags.TunModeBypassRU),
             ("tap_mode", AppConfigFlags.TunMode),
             ("tap_mode_badvpn", default),
         ];

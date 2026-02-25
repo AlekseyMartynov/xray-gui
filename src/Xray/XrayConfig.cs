@@ -44,18 +44,20 @@ static class XrayConfig {
                 ["tag"] = TAG_BLACKHOLE
             });
 
-            outboundList.Add(new() {
-                ["protocol"] = "freedom",
-                ["streamSettings"] = new JsonObject {
-                    ["sockopt"] = new JsonObject {
-                        // https://github.com/XTLS/Xray-core/blob/v26.2.6/transport/internet/sockopt_windows.go#L36
-                        // https://github.com/golang/go/blob/go1.26.0/src/net/interface.go#L169
-                        // https://github.com/golang/go/blob/go1.26.0/src/net/interface_windows.go#L62
-                        ["interface"] = TunModeAdapters.IPv4BypassName
-                    }
-                },
-                ["tag"] = TAG_BYPASS
-            });
+            if(AppConfig.TunModeBypassRU) {
+                outboundList.Add(new() {
+                    ["protocol"] = "freedom",
+                    ["streamSettings"] = new JsonObject {
+                        ["sockopt"] = new JsonObject {
+                            // https://github.com/XTLS/Xray-core/blob/v26.2.6/transport/internet/sockopt_windows.go#L36
+                            // https://github.com/golang/go/blob/go1.26.0/src/net/interface.go#L169
+                            // https://github.com/golang/go/blob/go1.26.0/src/net/interface_windows.go#L62
+                            ["interface"] = TunModeAdapters.IPv4BypassName
+                        }
+                    },
+                    ["tag"] = TAG_BYPASS
+                });
+            }
 
             // https://xtls.github.io/en/config/outbounds/dns.html
             outboundList.Add(new() {
@@ -97,7 +99,7 @@ static class XrayConfig {
     }
 
     static JsonArray CreateTunModeRoutingRules() {
-        return [
+        var list = new JsonArray {
             new JsonObject {
                 // Disable QUIC – no benefit when proxied
                 ["network"] = "udp",
@@ -114,15 +116,16 @@ static class XrayConfig {
                 },
                 ["port"] = 53,
                 ["outboundTag"] = TAG_DNS
-            },
-#if FALSE
-            new JsonObject {
+            }
+        };
+        if(AppConfig.TunModeBypassRU) {
+            list.Add(new JsonObject {
                 ["ip"] = new JsonArray {
                     "geoip:ru"
                 },
                 ["outboundTag"] = TAG_BYPASS
-            }
-#endif
-        ];
+            });
+        }
+        return list;
     }
 }
