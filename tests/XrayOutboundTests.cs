@@ -45,6 +45,65 @@ public class XrayOutboundTests {
         AssertJson(expectedJson, outbound);
     }
 
+    [Theory]
+    [InlineData("trojan")]
+    [InlineData("vless")]
+    public void TlsSettings(string scheme) {
+        var builder = new UriBuilder(scheme, "192.0.2.1", 443) {
+            Query = String.Join('&', "type=xhttp", "path=/", "mode=stream-up")
+        };
+
+        {
+            var error = Record.Exception(delegate {
+                XrayOutbound.FromUri(builder.Uri);
+            });
+            Assert.Contains("'security' must be set to 'tls'", error.Message);
+        }
+
+        builder.Query += "&security=tls";
+
+        {
+            var error = Record.Exception(delegate {
+                XrayOutbound.FromUri(builder.Uri);
+            });
+            Assert.Contains("'fp' must not be blank", error.Message);
+        }
+
+        builder.Query += "&fp=android";
+
+        {
+            var error = Record.Exception(delegate {
+                XrayOutbound.FromUri(builder.Uri);
+            });
+            Assert.Contains("'sni' must not be blank", error.Message);
+        }
+
+        builder.Query += '&' + String.Join('&',
+            "sni=example.net",
+            "allowInsecure=1",
+            "alpn=h3,h2",
+            "pcs=abc"
+        );
+
+        var outbound = XrayOutbound.FromUri(builder.Uri);
+        var tlsSettings = outbound.GetChildObject("streamSettings", "tlsSettings");
+
+        var expectedTlsSettingsJson = """
+        {
+            "fingerprint": "android",
+            "allowInsecure": true,
+            "alpn": [
+                "h3",
+                "h2"
+            ],
+            "pinnedPeerCertSha256": "abc",
+            "serverName": "example.net"
+        }
+        """;
+
+        AssertJson(expectedTlsSettingsJson, tlsSettings);
+    }
+
     [Fact]
     public void ShadowsocksWithPlugin() {
         var uri = new Uri("ss://YWVzLTI1Ni1nY206ajEyMw==@example.net:8388?plugin=plugin1;a=1;b=2");
