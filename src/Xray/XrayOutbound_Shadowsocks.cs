@@ -39,14 +39,10 @@ partial class XrayOutbound {
         var result = new JsonObject {
             ["protocol"] = "shadowsocks",
             ["settings"] = new JsonObject {
-                ["servers"] = new JsonArray {
-                    new JsonObject{
-                        ["address"] = sip003 != null ? AppConfig.SIP003Addr : uri.Host,
-                        ["port"] = sip003 != null ? AppConfig.SIP003Port : uri.Port,
-                        ["method"] = method,
-                        ["password"] = password
-                    }
-                }
+                ["address"] = sip003 != null ? AppConfig.SIP003Addr : uri.Host,
+                ["port"] = sip003 != null ? AppConfig.SIP003Port : uri.Port,
+                ["method"] = method,
+                ["password"] = password
             }
         };
 

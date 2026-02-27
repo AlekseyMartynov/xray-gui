@@ -15,18 +15,10 @@ public class XrayOutboundTests {
         {
             "protocol": "vless",
             "settings": {
-                "vnext": [
-                    {
-                        "address": "host",
-                        "port": 443,
-                        "users": [
-                            {
-                                "id": "user",
-                                "encryption": "none"
-                            }
-                        ]
-                    }
-                ]
+                "address": "host",
+                "port": 443,
+                "id": "user",
+                "encryption": "none"
             },
             "streamSettings": {
                 "security": "tls",
@@ -144,14 +136,10 @@ public class XrayOutboundTests {
         {
             "protocol": "shadowsocks",
             "settings": {
-                "servers": [
-                    {
-                        "address": "127.0.0.1",
-                        "port": 1984,
-                        "method": "aes-256-gcm",
-                        "password": "j123"
-                    }
-                ]
+                "address": "127.0.0.1",
+                "port": 1984,
+                "method": "aes-256-gcm",
+                "password": "j123"
             }
         }
         """;

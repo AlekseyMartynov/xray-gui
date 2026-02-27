@@ -21,24 +21,16 @@ partial class XrayOutbound {
 
         streamSettings.Validate(uri.Host);
 
-        var vnext = new JsonArray {
-            new JsonObject {
-                ["address"] =  uri.Host,
-                ["port"] = uri.Port,
-                ["users"] = new JsonArray {
-                    new JsonObject {
-                        ["id"] = uri.UserInfo,
-                        ["encryption"] = encryption
-                    }
-                }
-            }
+        var settings = new JsonObject {
+            ["address"] = uri.Host,
+            ["port"] = uri.Port,
+            ["id"] = uri.UserInfo,
+            ["encryption"] = encryption
         };
 
         return new JsonObject {
             ["protocol"] = "vless",
-            ["settings"] = new JsonObject {
-                ["vnext"] = vnext
-            },
+            ["settings"] = settings,
             ["streamSettings"] = streamSettings.ToJson()
         };
     }
