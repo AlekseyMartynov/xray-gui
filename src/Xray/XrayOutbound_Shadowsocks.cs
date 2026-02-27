@@ -37,21 +37,28 @@ partial class XrayOutbound {
             }
         }
 
-        var isGoodMethodAlgo = method.StartsWith("2022-blake3-") || method.StartsWith("aes-") || method.Contains("chacha20-");
+        var is2022 = method.StartsWith("2022-blake3-");
+        var isGoodMethodAlgo = is2022 || method.StartsWith("aes-") || method.Contains("chacha20-");
         var isGoodMethodScheme = method.EndsWith("-gcm") || method.EndsWith("-poly1305");
 
         if(!isGoodMethodAlgo || !isGoodMethodScheme) {
             ThrowParamNotSupported(CATEGORY_USERINFO_PARAM, nameof(method), method);
         }
 
+        var settings = new JsonObject {
+            ["address"] = sip003 != null ? AppConfig.SIP003Addr : uri.Host,
+            ["port"] = sip003 != null ? AppConfig.SIP003Port : uri.Port,
+            ["method"] = method,
+            ["password"] = password
+        };
+
+        if(is2022) {
+            settings["uot"] = true;
+        }
+
         var result = new JsonObject {
             ["protocol"] = "shadowsocks",
-            ["settings"] = new JsonObject {
-                ["address"] = sip003 != null ? AppConfig.SIP003Addr : uri.Host,
-                ["port"] = sip003 != null ? AppConfig.SIP003Port : uri.Port,
-                ["method"] = method,
-                ["password"] = password
-            }
+            ["settings"] = settings
         };
 
         if(sip003 != null) {
