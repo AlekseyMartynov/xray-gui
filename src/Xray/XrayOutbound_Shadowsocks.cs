@@ -37,10 +37,12 @@ partial class XrayOutbound {
             }
         }
 
-        ValidateParam(CATEGORY_USERINFO_PARAM, nameof(method), method, [
-            "chacha20-ietf-poly1305",
-            "aes-256-gcm"
-        ]);
+        var isGoodMethodAlgo = method.StartsWith("2022-blake3-") || method.StartsWith("aes-") || method.Contains("chacha20-");
+        var isGoodMethodScheme = method.EndsWith("-gcm") || method.EndsWith("-poly1305");
+
+        if(!isGoodMethodAlgo || !isGoodMethodScheme) {
+            ThrowParamNotSupported(CATEGORY_USERINFO_PARAM, nameof(method), method);
+        }
 
         var result = new JsonObject {
             ["protocol"] = "shadowsocks",
