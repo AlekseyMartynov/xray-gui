@@ -54,7 +54,11 @@ public class XrayOutboundTests {
             var error = Record.Exception(delegate {
                 XrayOutbound.FromUri(builder.Uri);
             });
-            Assert.Contains("'security' must be set to 'tls'", error.Message);
+            if(scheme == "ss") {
+                Assert.Null(error);
+            } else {
+                Assert.Contains("'security' must be set to 'tls'", error.Message);
+            }
         }
 
         builder.Query += "&security=tls";
@@ -150,6 +154,38 @@ public class XrayOutboundTests {
         """;
 
         AssertJson(expectedJson, outbound);
+    }
+
+    [Fact]
+    public void ShadowsocksOverWebSocketNoTLS() {
+        var builder = new UriBuilder("ss://aes-256-gcm:abc@192.0.2.1:8080?type=ws");
+
+        AssertJson(
+            """
+            {
+                "network": "ws"
+            }
+            """,
+            XrayOutbound.FromUri(builder.Uri).GetChildObject("streamSettings")
+        );
+
+        builder.Query += '&' + String.Join('&',
+            "host=example.net",
+            "path=/ws"
+        );
+
+        AssertJson(
+            """
+            {
+                "network": "ws",
+                "wsSettings": {
+                    "host": "example.net",
+                    "path": "/ws"
+                }
+            }
+            """,
+            XrayOutbound.FromUri(builder.Uri).GetChildObject("streamSettings")
+        );
     }
 
     static void AssertJson(string expected, object obj) {

@@ -5,7 +5,7 @@ partial class XrayOutbound {
     static JsonObject FromTrojanUri(Uri uri) {
         var streamSettings = new StreamSettings();
         uri.Query.ParseQueryString(streamSettings.Set);
-        streamSettings.Validate(uri.Host);
+        streamSettings.Validate(uri.Host, true);
 
         return new JsonObject {
             ["protocol"] = "trojan",

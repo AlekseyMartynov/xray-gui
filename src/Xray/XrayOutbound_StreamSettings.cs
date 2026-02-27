@@ -6,6 +6,7 @@ partial class XrayOutbound {
         public const string SAMPLE = $"type={TYPE_XHTTP}&path=/path&mode={MODE_STREAM_UP}&security={SECURITY_TLS}&fp=chrome";
 
         const string TYPE_XHTTP = "xhttp";
+        const string TYPE_WS = "ws";
         const string MODE_PACKET_UP = "packet-up";
         const string MODE_STREAM_UP = "stream-up";
         const string SECURITY_TLS = "tls";
@@ -60,61 +61,86 @@ partial class XrayOutbound {
             }
         }
 
-        public void Validate(string uriHost) {
+        public void Validate(string uriHost, bool requireTLS) {
             if(type == TYPE_XHTTP) {
                 ValidateParamNotBlank(CATEGORY_QUERY_STRING, nameof(path), path);
                 ValidateParam(CATEGORY_QUERY_STRING, nameof(mode), mode, [MODE_PACKET_UP, MODE_STREAM_UP]);
-            } else {
+            } else if(type != TYPE_WS) {
                 ThrowParamNotSupported(CATEGORY_QUERY_STRING, nameof(type), type);
             }
 
-            ValidateParam(CATEGORY_QUERY_STRING, nameof(allowInsecure), allowInsecure, ["0", "1"]);
-            ValidateParam(CATEGORY_QUERY_STRING, nameof(security), security, SECURITY_TLS);
-            ValidateParamNotBlank(CATEGORY_QUERY_STRING, nameof(fp), fp);
+            ValidateParam(CATEGORY_QUERY_STRING, nameof(security), security, requireTLS
+                ? [SECURITY_TLS]
+                : [SECURITY_TLS, ""]
+            );
 
-            if(String.IsNullOrWhiteSpace(host) && NativeIPAddress.TryParse(uriHost, out _)) {
-                ValidateParamNotBlank(CATEGORY_QUERY_STRING, nameof(sni), sni);
+            if(security == SECURITY_TLS) {
+                ValidateParam(CATEGORY_QUERY_STRING, nameof(allowInsecure), allowInsecure, ["0", "1"]);
+                ValidateParamNotBlank(CATEGORY_QUERY_STRING, nameof(fp), fp);
+
+                if(String.IsNullOrWhiteSpace(host) && NativeIPAddress.TryParse(uriHost, out _)) {
+                    ValidateParamNotBlank(CATEGORY_QUERY_STRING, nameof(sni), sni);
+                }
             }
         }
 
         public JsonObject ToJson() {
-            var tlsSettings = new JsonObject {
-                ["fingerprint"] = fp
-            };
+            var result = new JsonObject();
 
-            if(allowInsecure == "1") {
-                tlsSettings["allowInsecure"] = true;
+            if(security != "") {
+                result["security"] = security;
             }
 
-            if(!String.IsNullOrWhiteSpace(alpn)) {
-                tlsSettings["alpn"] = alpn.Split(',');
-            }
+            if(security == SECURITY_TLS) {
+                var tlsSettings = new JsonObject {
+                    ["fingerprint"] = fp
+                };
 
-            if(!String.IsNullOrWhiteSpace(pcs)) {
-                tlsSettings["pinnedPeerCertSha256"] = pcs;
-            }
-
-            foreach(var candidate in (ReadOnlySpan<string>)[host, sni]) {
-                if(!String.IsNullOrWhiteSpace(candidate)) {
-                    tlsSettings["serverName"] = candidate;
+                if(allowInsecure == "1") {
+                    tlsSettings["allowInsecure"] = true;
                 }
+
+                if(!String.IsNullOrWhiteSpace(alpn)) {
+                    tlsSettings["alpn"] = alpn.Split(',');
+                }
+
+                if(!String.IsNullOrWhiteSpace(pcs)) {
+                    tlsSettings["pinnedPeerCertSha256"] = pcs;
+                }
+
+                foreach(var candidate in (ReadOnlySpan<string>)[host, sni]) {
+                    if(!String.IsNullOrWhiteSpace(candidate)) {
+                        tlsSettings["serverName"] = candidate;
+                    }
+                }
+
+                result["tlsSettings"] = tlsSettings;
             }
+
+            result["network"] = type;
 
             var networkSettings = new JsonObject();
 
-            if(!String.IsNullOrWhiteSpace(host)) {
-                networkSettings["host"] = host;
+            if(type == TYPE_XHTTP) {
+                if(!String.IsNullOrWhiteSpace(host)) {
+                    networkSettings["host"] = host;
+                }
+                networkSettings["mode"] = mode;
+                networkSettings["path"] = path;
+            } else if(type == TYPE_WS) {
+                if(!String.IsNullOrWhiteSpace(host)) {
+                    networkSettings["host"] = host;
+                }
+                if(!String.IsNullOrWhiteSpace(path)) {
+                    networkSettings["path"] = path;
+                }
             }
 
-            networkSettings["mode"] = mode;
-            networkSettings["path"] = path;
+            if(networkSettings.Count > 0) {
+                result[type + "Settings"] = networkSettings;
+            }
 
-            return new() {
-                ["security"] = security,
-                ["tlsSettings"] = tlsSettings,
-                ["network"] = type,
-                ["xhttpSettings"] = networkSettings,
-            };
+            return result;
         }
     }
 }

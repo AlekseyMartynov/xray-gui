@@ -55,7 +55,7 @@ partial class XrayOutbound {
         if(sip003 != null) {
             result[SIP003.KEY] = sip003;
         } else if(streamSettings != null) {
-            streamSettings.Validate(uri.Host);
+            streamSettings.Validate(uri.Host, false);
             result["streamSettings"] = streamSettings.ToJson();
         } else {
             throw new UIException("Raw Shadowsocks is disabled");

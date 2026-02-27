@@ -19,7 +19,7 @@ partial class XrayOutbound {
 
         ValidateParam(CATEGORY_QUERY_STRING, nameof(encryption), encryption, ENCRYPTION_NONE);
 
-        streamSettings.Validate(uri.Host);
+        streamSettings.Validate(uri.Host, true);
 
         var settings = new JsonObject {
             ["address"] = uri.Host,
