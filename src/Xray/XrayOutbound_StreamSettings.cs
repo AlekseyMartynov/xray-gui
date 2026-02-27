@@ -14,6 +14,7 @@ partial class XrayOutbound {
         string allowInsecure = "0";
         string alpn = "";
         string fp = "";
+        string host = "";
         string mode = "";
         string path = "";
         string pcs = "";
@@ -31,6 +32,9 @@ partial class XrayOutbound {
                     break;
                 case nameof(fp):
                     fp = value;
+                    break;
+                case nameof(host):
+                    host = value;
                     break;
                 case nameof(mode):
                     mode = value;
@@ -56,7 +60,7 @@ partial class XrayOutbound {
             }
         }
 
-        public void Validate(string host) {
+        public void Validate(string uriHost) {
             if(type == TYPE_XHTTP) {
                 ValidateParamNotBlank(CATEGORY_QUERY_STRING, nameof(path), path);
                 ValidateParam(CATEGORY_QUERY_STRING, nameof(mode), mode, [MODE_PACKET_UP, MODE_STREAM_UP]);
@@ -68,7 +72,7 @@ partial class XrayOutbound {
             ValidateParam(CATEGORY_QUERY_STRING, nameof(security), security, SECURITY_TLS);
             ValidateParamNotBlank(CATEGORY_QUERY_STRING, nameof(fp), fp);
 
-            if(NativeIPAddress.TryParse(host, out _)) {
+            if(String.IsNullOrWhiteSpace(host) && NativeIPAddress.TryParse(uriHost, out _)) {
                 ValidateParamNotBlank(CATEGORY_QUERY_STRING, nameof(sni), sni);
             }
         }
@@ -90,18 +94,26 @@ partial class XrayOutbound {
                 tlsSettings["pinnedPeerCertSha256"] = pcs;
             }
 
-            if(!String.IsNullOrWhiteSpace(sni)) {
-                tlsSettings["serverName"] = sni;
+            foreach(var candidate in (ReadOnlySpan<string>)[host, sni]) {
+                if(!String.IsNullOrWhiteSpace(candidate)) {
+                    tlsSettings["serverName"] = candidate;
+                }
             }
+
+            var networkSettings = new JsonObject();
+
+            if(!String.IsNullOrWhiteSpace(host)) {
+                networkSettings["host"] = host;
+            }
+
+            networkSettings["mode"] = mode;
+            networkSettings["path"] = path;
 
             return new() {
                 ["security"] = security,
                 ["tlsSettings"] = tlsSettings,
                 ["network"] = type,
-                ["xhttpSettings"] = new JsonObject {
-                    ["mode"] = mode,
-                    ["path"] = path
-                },
+                ["xhttpSettings"] = networkSettings,
             };
         }
     }

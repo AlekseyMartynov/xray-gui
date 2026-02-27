@@ -105,6 +105,29 @@ public class XrayOutboundTests {
     }
 
     [Fact]
+    public void HostParam() {
+        var builder = new UriBuilder(XrayOutbound.VLESS_SAMPLE) {
+            Host = "192.0.2.1"
+        };
+
+        var sniError = Record.Exception(delegate {
+            XrayOutbound.FromUri(builder.Uri);
+        });
+
+        Assert.Contains("'sni'", sniError.Message);
+
+        builder.Query += "&host=example.net";
+
+        var outbound = XrayOutbound.FromUri(builder.Uri);
+        var streamSettings = outbound.GetChildObject("streamSettings");
+        var tlsSettings = streamSettings.GetChildObject("tlsSettings");
+        var xhttpSettings = streamSettings.GetChildObject("xhttpSettings");
+
+        Assert.Equal("example.net", tlsSettings["serverName"]);
+        Assert.Equal("example.net", xhttpSettings["host"]);
+    }
+
+    [Fact]
     public void ShadowsocksWithPlugin() {
         var uri = new Uri("ss://YWVzLTI1Ni1nY206ajEyMw==@example.net:8388?plugin=plugin1;a=1;b=2");
         var outbound = XrayOutbound.FromUri(uri);
