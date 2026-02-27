@@ -8,6 +8,7 @@ partial class XrayOutbound {
 
     static JsonObject FromShadowsocksUri(Uri uri) {
         var sip003 = default(SIP003);
+        var streamSettings = default(StreamSettings);
 
         uri.Query.ParseQueryString((key, value) => {
             if(key == "plugin") {
@@ -19,9 +20,14 @@ partial class XrayOutbound {
                 }
                 sip003 = new SIP003(remoteAddr, remotePort, value);
             } else {
-                ThrowParamNotSupported(CATEGORY_QUERY_STRING, key, value);
+                streamSettings ??= new();
+                streamSettings.Set(key, value);
             }
         });
+
+        if(sip003 != null && streamSettings != null) {
+            throw new InvalidOperationException();
+        }
 
         var userInfo = uri.UserInfo;
 
@@ -48,8 +54,11 @@ partial class XrayOutbound {
 
         if(sip003 != null) {
             result[SIP003.KEY] = sip003;
+        } else if(streamSettings != null) {
+            streamSettings.Validate(uri.Host);
+            result["streamSettings"] = streamSettings.ToJson();
         } else {
-            throw new UIException("Shadowsocks without plugin is disabled");
+            throw new UIException("Raw Shadowsocks is disabled");
         }
 
         return result;

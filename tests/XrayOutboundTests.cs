@@ -38,12 +38,17 @@ public class XrayOutboundTests {
     }
 
     [Theory]
+    [InlineData("ss")]
     [InlineData("trojan")]
     [InlineData("vless")]
     public void TlsSettings(string scheme) {
         var builder = new UriBuilder(scheme, "192.0.2.1", 443) {
             Query = String.Join('&', "type=xhttp", "path=/", "mode=stream-up")
         };
+
+        if(scheme == "ss") {
+            builder.UserName = "aes-256-gcm:abc";
+        }
 
         {
             var error = Record.Exception(delegate {
