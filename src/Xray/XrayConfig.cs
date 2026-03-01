@@ -8,8 +8,8 @@ static class XrayConfig {
 
     public static readonly string FilePath = Path.Join(AppContext.BaseDirectory, "xray_config.json");
 
-    public static void WriteFile(JsonObject outbound) {
-        var outboundList = new List<JsonObject> { outbound };
+    public static void WriteFile(object outbound) {
+        var outboundList = new JsonArray { outbound };
 
         var root = new JsonObject {
             ["log"] = new JsonObject {
@@ -35,17 +35,15 @@ static class XrayConfig {
                 dns["hosts"] = new JsonObject {
                     [TunModeServerInfo.Host] = TunModeServerInfo.IPList.ConvertAll(i => i.ToString())
                 };
-                var sockopt = outbound.GetChildObject("streamSettings", "sockopt");
-                sockopt["domainStrategy"] = "UseIP";
             }
 
-            outboundList.Add(new() {
+            outboundList.Add(new JsonObject {
                 ["protocol"] = "blackhole",
                 ["tag"] = TAG_BLACKHOLE
             });
 
             if(AppConfig.TunModeBypassRU) {
-                outboundList.Add(new() {
+                outboundList.Add(new JsonObject {
                     ["protocol"] = "freedom",
                     ["streamSettings"] = new JsonObject {
                         ["sockopt"] = new JsonObject {
@@ -60,7 +58,7 @@ static class XrayConfig {
             }
 
             // https://xtls.github.io/en/config/outbounds/dns.html
-            outboundList.Add(new() {
+            outboundList.Add(new JsonObject {
                 ["protocol"] = "dns",
                 ["settings"] = new JsonObject {
                     ["nonIPQuery"] = "reject"

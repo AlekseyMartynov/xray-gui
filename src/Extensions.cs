@@ -55,17 +55,10 @@ static class Extensions {
 
     public static JsonObject GetChildObject(this JsonObject obj, params ReadOnlySpan<string> path) {
         foreach(var key in path) {
-            if(obj.TryGetValue(key, out var value)) {
-                if(value is JsonObject childObj) {
-                    obj = childObj;
-                } else {
-                    throw new InvalidOperationException();
-                }
-            } else {
-                var newChild = new JsonObject();
-                obj[key] = newChild;
-                obj = newChild;
+            if(!obj.TryGetValue(key, out var value) || value is not JsonObject childObj) {
+                throw new InvalidOperationException();
             }
+            obj = childObj;
         }
         return obj;
     }
