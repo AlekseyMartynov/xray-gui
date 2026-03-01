@@ -13,12 +13,14 @@ static partial class XrayOutbound {
         if(uri.AbsolutePath != "/") {
             throw new UIException("URI path must be empty");
         }
-        return uri.Scheme switch {
+        var outbound = uri.Scheme switch {
             "vless" => FromVlessUri(uri),
             "trojan" => FromTrojanUri(uri),
             "ss" => FromShadowsocksUri(uri),
             _ => throw new UIException($"URI scheme '{uri.Scheme}' is not supported"),
         };
+        AddMux(outbound);
+        return outbound;
     }
 
     public static SIP003? ExtractSIP003(JsonObject outbound) {
@@ -33,6 +35,23 @@ static partial class XrayOutbound {
         }
 
         return sip003;
+    }
+
+    static void AddMux(JsonObject outbound) {
+        if(!outbound.TryGetValue("streamSettings", out var value)) {
+            return;
+        }
+        var streamSettings = (JsonObject)value;
+        if(!streamSettings.TryGetValue("network", out var network)) {
+            return;
+        }
+        if(TYPE_XHTTP.Equals(network)) {
+            // Uses native mux of HTTP/2 and QUIC
+            return;
+        }
+        outbound["mux"] = new JsonObject {
+            ["enabled"] = true,
+        };
     }
 
     [DoesNotReturn]

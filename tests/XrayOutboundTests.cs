@@ -163,10 +163,22 @@ public class XrayOutboundTests {
         AssertJson(
             """
             {
-                "network": "ws"
+                "protocol": "shadowsocks",
+                "settings": {
+                    "address": "192.0.2.1",
+                    "port": 8080,
+                    "method": "aes-256-gcm",
+                    "password": "abc"
+                },
+                "streamSettings": {
+                    "network": "ws"
+                },
+                "mux": {
+                    "enabled": true
+                }
             }
             """,
-            XrayOutbound.FromUri(builder.Uri).GetChildObject("streamSettings")
+            XrayOutbound.FromUri(builder.Uri)
         );
 
         builder.Query += '&' + String.Join('&',

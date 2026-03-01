@@ -1,12 +1,12 @@
 namespace Project;
 
 partial class XrayOutbound {
+    public const string TYPE_XHTTP = "xhttp";
+    public const string TYPE_WS = "ws";
 
     class StreamSettings {
         public const string SAMPLE = $"type={TYPE_XHTTP}&path=/path&mode={MODE_STREAM_UP}&security={SECURITY_TLS}&fp=chrome";
 
-        const string TYPE_XHTTP = "xhttp";
-        const string TYPE_WS = "ws";
         const string MODE_PACKET_UP = "packet-up";
         const string MODE_STREAM_UP = "stream-up";
         const string SECURITY_TLS = "tls";
