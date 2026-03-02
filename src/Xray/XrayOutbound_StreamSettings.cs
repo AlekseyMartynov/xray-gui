@@ -121,19 +121,16 @@ partial class XrayOutbound {
 
             var networkSettings = new JsonObject();
 
+            if(!String.IsNullOrWhiteSpace(host)) {
+                networkSettings["host"] = host;
+            }
+
             if(type == TYPE_XHTTP) {
-                if(!String.IsNullOrWhiteSpace(host)) {
-                    networkSettings["host"] = host;
-                }
                 networkSettings["mode"] = mode;
+            }
+
+            if(!String.IsNullOrWhiteSpace(path)) {
                 networkSettings["path"] = path;
-            } else if(type == TYPE_WS) {
-                if(!String.IsNullOrWhiteSpace(host)) {
-                    networkSettings["host"] = host;
-                }
-                if(!String.IsNullOrWhiteSpace(path)) {
-                    networkSettings["path"] = path;
-                }
             }
 
             if(networkSettings.Count > 0) {
