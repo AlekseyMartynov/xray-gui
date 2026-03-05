@@ -37,6 +37,58 @@ public class XrayOutboundTests {
         AssertJson(expectedJson, outbound);
     }
 
+    [Fact]
+    public void VlessEncOverWebSocketNoTLS() {
+        var uri = new Uri("vless://123@host:443?type=ws&encryption=mlkem768x25519plus.xyz");
+        AssertJson(
+            """
+            {
+                "protocol": "vless",
+                "settings": {
+                    "address": "host",
+                    "port": 443,
+                    "id": "123",
+                    "encryption": "mlkem768x25519plus.xyz"
+                },
+                "streamSettings": {
+                    "network": "ws"
+                },
+                "mux": {
+                    "enabled": true
+                }
+            }
+            """,
+            XrayOutbound.FromUri(uri)
+        );
+    }
+
+    [Fact]
+    public void VlessVisionDisablesMux() {
+        var uri = new Uri("vless://123@host:443?type=ws&flow=xtls-rprx-vision&security=tls&fp=any");
+        AssertJson(
+            """
+            {
+                "protocol": "vless",
+                "settings": {
+                    "address": "host",
+                    "port": 443,
+                    "id": "123",
+                    "encryption": "none",
+                    "flow": "xtls-rprx-vision"
+                },
+                "streamSettings": {
+                    "security": "tls",
+                    "tlsSettings": {
+                        "fingerprint": "any"
+                    },
+                    "network": "ws"
+                }
+            }
+            """,
+            XrayOutbound.FromUri(uri)
+        );
+    }
+
     [Theory]
     [InlineData("ss")]
     [InlineData("trojan")]

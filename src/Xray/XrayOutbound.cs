@@ -39,6 +39,11 @@ static partial class XrayOutbound {
     }
 
     static void AddMux(JsonObject outbound) {
+        var settings = (JsonObject)outbound["settings"];
+        if(settings.TryGetValue("flow", out var flow) && FLOW_VISION.Equals(flow)) {
+            // https://github.com/XTLS/Xray-core/discussions/5481#discussioncomment-15377500
+            return;
+        }
         if(!outbound.TryGetValue("streamSettings", out var value)) {
             return;
         }
