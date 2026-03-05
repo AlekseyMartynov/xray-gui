@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 namespace Project;
 
@@ -63,16 +64,32 @@ static partial class XrayOutbound {
         ThrowParamException(category, name, $"with the value '{value}' is not supported");
     }
 
-    static void ValidateParam(string category, string name, string? value, params ReadOnlySpan<string?> allowedValues) {
+    static void ValidateParam(string category, string name, string value, params ReadOnlySpan<string> allowedValues) {
         if(allowedValues.Length == 1) {
             if(value != allowedValues[0]) {
                 ThrowParamException(category, name, $"must be set to '{allowedValues[0]}'");
             }
         } else {
-            if(allowedValues.IndexOf(value) < 0) {
-                ThrowParamException(category, name, "must be one of: " + String.Join(", ", allowedValues));
+            if(!allowedValues.Contains(value)) {
+                ThrowParamException(category, name, FormatMustBeOneOfMessage(allowedValues));
             }
         }
+    }
+
+    static string FormatMustBeOneOfMessage(ReadOnlySpan<string> values) {
+        var builder = new StringBuilder();
+        foreach(var value in values) {
+            if(builder.Length > 0) {
+                builder.Append(", ");
+            }
+            if(value == "") {
+                builder.Append("<blank>");
+            } else {
+                builder.Append('\'').Append(value).Append('\'');
+            }
+        }
+        builder.Insert(0, "must be one of: ");
+        return builder.ToString();
     }
 
     static void ValidateParamNotBlank(string category, string name, [NotNull] string? value) {
