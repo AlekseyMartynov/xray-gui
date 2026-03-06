@@ -9,9 +9,9 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - uses: editorconfig-checker/action-editorconfig-checker@v2
-    - uses: actions/setup-dotnet@v4
+    - uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 9
     - run: dotnet format Project.slnx --verify-no-changes
@@ -20,8 +20,8 @@ jobs:
   unit-test:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-dotnet@v4
+    - uses: actions/checkout@v6
+    - uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 9
     - run: dotnet test --logger "console;verbosity=detailed"
@@ -29,12 +29,12 @@ jobs:
   publish:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-dotnet@v4
+    - uses: actions/checkout@v6
+    - uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 9
     - run: dotnet publish src -c Release
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v6
       with:
         path: src/bin/Release/net9-windows/win-x64/native/*
         retention-days: 1
