@@ -10,6 +10,7 @@ static class XrayConfig {
 
     public static void WriteFile(object outbound) {
         var outboundList = new JsonArray { outbound };
+        var routingRules = new JsonArray();
 
         var root = new JsonObject {
             ["log"] = new JsonObject {
@@ -22,53 +23,20 @@ static class XrayConfig {
         };
 
         if(AppConfig.TunMode) {
-            var dns = new JsonObject {
-                ["servers"] = new JsonArray {
-                    "https://1.1.1.1/dns-query",
-                    "https://9.9.9.9/dns-query",
-                }
-            };
-
-            root["dns"] = dns;
-
-            if(TunModeServerInfo.IsDomainName) {
-                dns["hosts"] = new JsonObject {
-                    [TunModeServerInfo.Host] = TunModeServerInfo.IPList.ConvertAll(i => i.ToString())
-                };
-            }
-
-            outboundList.Add(new JsonObject {
-                ["protocol"] = "blackhole",
-                ["tag"] = TAG_BLACKHOLE
-            });
-
+            outboundList.AddRange(
+                CreateBlackholeOutbound(),
+                CreateDnsOutbound()
+            );
             if(AppConfig.TunModeBypassRU) {
-                outboundList.Add(new JsonObject {
-                    ["protocol"] = "freedom",
-                    ["streamSettings"] = new JsonObject {
-                        ["sockopt"] = new JsonObject {
-                            // https://github.com/XTLS/Xray-core/blob/v26.2.6/transport/internet/sockopt_windows.go#L36
-                            // https://github.com/golang/go/blob/go1.26.0/src/net/interface.go#L169
-                            // https://github.com/golang/go/blob/go1.26.0/src/net/interface_windows.go#L62
-                            ["interface"] = TunModeAdapters.IPv4BypassName
-                        }
-                    },
-                    ["tag"] = TAG_BYPASS
-                });
+                outboundList.Add(CreateBypassOutbound());
             }
+            root["dns"] = CreateDnsModule();
+        }
 
-            // https://xtls.github.io/en/config/outbounds/dns.html
-            outboundList.Add(new JsonObject {
-                ["protocol"] = "dns",
-                ["settings"] = new JsonObject {
-                    ["nonIPQuery"] = "reject"
-                },
-                ["tag"] = TAG_DNS
-            });
+        PopulateRoutingRules(routingRules);
 
-            root["routing"] = new JsonObject {
-                ["rules"] = CreateTunModeRoutingRules()
-            };
+        if(routingRules.Count > 0) {
+            root["routing"] = CreateRoutingModule(routingRules);
         }
 
         using var stream = File.OpenWrite(FilePath);
@@ -96,34 +64,91 @@ static class XrayConfig {
         }
     }
 
-    static JsonArray CreateTunModeRoutingRules() {
-        var list = new JsonArray {
-            new JsonObject {
-                // Disable QUIC – no benefit when proxied
-                ["network"] = "udp",
-                ["port"] = 443,
-                ["outboundTag"] = TAG_BLACKHOLE
-            },
-            new JsonObject {
-                ["protocol"] = new JsonArray { "bittorrent" },
-                ["outboundTag"] = TAG_BLACKHOLE
-            },
-            new JsonObject{
-                ["ip"] = new JsonArray {
-                    TunModeAdapters.TunDns.ToString()
-                },
-                ["port"] = 53,
-                ["outboundTag"] = TAG_DNS
+    static JsonObject CreateBlackholeOutbound() {
+        return CreateTaggedOutbound("blackhole", TAG_BLACKHOLE);
+    }
+
+    static JsonObject CreateDnsOutbound() {
+        // https://xtls.github.io/en/config/outbounds/dns.html
+        var obj = CreateTaggedOutbound("dns", TAG_DNS);
+        obj["settings"] = new JsonObject {
+            ["nonIPQuery"] = "reject"
+        };
+        return obj;
+    }
+
+    static JsonObject CreateBypassOutbound() {
+        var obj = CreateTaggedOutbound("freedom", TAG_BYPASS);
+        obj["streamSettings"] = new JsonObject {
+            ["sockopt"] = new JsonObject {
+                // https://github.com/XTLS/Xray-core/blob/v26.2.6/transport/internet/sockopt_windows.go#L36
+                // https://github.com/golang/go/blob/go1.26.0/src/net/interface.go#L169
+                // https://github.com/golang/go/blob/go1.26.0/src/net/interface_windows.go#L62
+                ["interface"] = TunModeAdapters.IPv4BypassName
             }
         };
-        if(AppConfig.TunModeBypassRU) {
-            list.Add(new JsonObject {
-                ["ip"] = new JsonArray {
-                    "geoip:ru"
-                },
-                ["outboundTag"] = TAG_BYPASS
-            });
+        return obj;
+    }
+
+    static JsonObject CreateTaggedOutbound(string protocol, string tag) {
+        return new() {
+            ["protocol"] = protocol,
+            ["tag"] = tag
+        };
+    }
+
+    static JsonObject CreateDnsModule() {
+        var obj = new JsonObject {
+            ["servers"] = new JsonArray {
+                "https://1.1.1.1/dns-query",
+                "https://9.9.9.9/dns-query",
+            }
+        };
+
+        if(TunModeServerInfo.IsDomainName) {
+            obj["hosts"] = new JsonObject {
+                [TunModeServerInfo.Host] = TunModeServerInfo.IPList.ConvertAll(i => i.ToString())
+            };
         }
-        return list;
+
+        return obj;
+    }
+
+    static JsonObject CreateRoutingModule(JsonArray rules) {
+        return new() {
+            ["rules"] = rules
+        };
+    }
+
+    static void PopulateRoutingRules(JsonArray rules) {
+        if(AppConfig.TunMode) {
+            rules.AddRange(
+                new JsonObject {
+                    // Disable QUIC – no benefit when proxied
+                    ["network"] = "udp",
+                    ["port"] = 443,
+                    ["outboundTag"] = TAG_BLACKHOLE
+                },
+                new JsonObject {
+                    ["protocol"] = new JsonArray { "bittorrent" },
+                    ["outboundTag"] = TAG_BLACKHOLE
+                },
+                new JsonObject{
+                    ["ip"] = new JsonArray {
+                        TunModeAdapters.TunDns.ToString()
+                    },
+                    ["port"] = 53,
+                    ["outboundTag"] = TAG_DNS
+                }
+            );
+            if(AppConfig.TunModeBypassRU) {
+                rules.Add(new JsonObject {
+                    ["ip"] = new JsonArray {
+                        "geoip:ru"
+                    },
+                    ["outboundTag"] = TAG_BYPASS
+                });
+            }
+        }
     }
 }
