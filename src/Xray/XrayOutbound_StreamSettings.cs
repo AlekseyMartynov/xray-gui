@@ -137,7 +137,7 @@ partial class XrayOutbound {
                 result[type + "Settings"] = networkSettings;
             }
 
-            if(TunModeServerInfo.IsDomainName) {
+            if(AppConfig.TunMode && TunModeServerInfo.IsDomainName) {
                 result["sockopt"] = new JsonObject {
                     ["domainStrategy"] = "UseIP"
                 };
