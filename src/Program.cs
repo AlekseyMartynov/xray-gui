@@ -92,7 +92,7 @@ static partial class Program {
 
     static void SetupTrafficRedirect() {
         if(AppConfig.TunMode) {
-            if(AppConfig.TunModeBypassProxy) {
+            if(AppConfig.TunModeUnsetProxy) {
                 ProxyBackup.TrySave();
                 NativeProxyManager.SetDirectOnly();
             }
@@ -136,7 +136,7 @@ static partial class Program {
     }
 
     static void EnsureGeoIP() {
-        if(!AppConfig.TunModeBypassRU) {
+        if(!AppConfig.BypassRU) {
             return;
         }
         var filePath = Path.Join(AppContext.BaseDirectory, "geoip.dat");

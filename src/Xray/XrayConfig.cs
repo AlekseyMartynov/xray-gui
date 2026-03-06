@@ -27,10 +27,11 @@ static class XrayConfig {
                 CreateBlackholeOutbound(),
                 CreateDnsOutbound()
             );
-            if(AppConfig.TunModeBypassRU) {
-                outboundList.Add(CreateBypassOutbound());
-            }
             root["dns"] = CreateDnsModule();
+        }
+
+        if(AppConfig.BypassRU) {
+            outboundList.Add(CreateBypassOutbound());
         }
 
         PopulateRoutingRules(routingRules);
@@ -79,14 +80,16 @@ static class XrayConfig {
 
     static JsonObject CreateBypassOutbound() {
         var obj = CreateTaggedOutbound("freedom", TAG_BYPASS);
-        obj["streamSettings"] = new JsonObject {
-            ["sockopt"] = new JsonObject {
-                // https://github.com/XTLS/Xray-core/blob/v26.2.6/transport/internet/sockopt_windows.go#L36
-                // https://github.com/golang/go/blob/go1.26.0/src/net/interface.go#L169
-                // https://github.com/golang/go/blob/go1.26.0/src/net/interface_windows.go#L62
-                ["interface"] = TunModeAdapters.IPv4BypassName
-            }
-        };
+        if(AppConfig.TunMode) {
+            obj["streamSettings"] = new JsonObject {
+                ["sockopt"] = new JsonObject {
+                    // https://github.com/XTLS/Xray-core/blob/v26.2.6/transport/internet/sockopt_windows.go#L36
+                    // https://github.com/golang/go/blob/go1.26.0/src/net/interface.go#L169
+                    // https://github.com/golang/go/blob/go1.26.0/src/net/interface_windows.go#L62
+                    ["interface"] = TunModeAdapters.IPv4BypassName
+                }
+            };
+        }
         return obj;
     }
 
@@ -116,6 +119,7 @@ static class XrayConfig {
 
     static JsonObject CreateRoutingModule(JsonArray rules) {
         return new() {
+            ["domainStrategy"] = "IPOnDemand",
             ["rules"] = rules
         };
     }
@@ -133,7 +137,7 @@ static class XrayConfig {
                     ["protocol"] = new JsonArray { "bittorrent" },
                     ["outboundTag"] = TAG_BLACKHOLE
                 },
-                new JsonObject{
+                new JsonObject {
                     ["ip"] = new JsonArray {
                         TunModeAdapters.TunDns.ToString()
                     },
@@ -141,14 +145,14 @@ static class XrayConfig {
                     ["outboundTag"] = TAG_DNS
                 }
             );
-            if(AppConfig.TunModeBypassRU) {
-                rules.Add(new JsonObject {
-                    ["ip"] = new JsonArray {
-                        "geoip:ru"
-                    },
-                    ["outboundTag"] = TAG_BYPASS
-                });
-            }
+        }
+        if(AppConfig.BypassRU) {
+            rules.Add(new JsonObject {
+                ["ip"] = new JsonArray {
+                    "geoip:ru"
+                },
+                ["outboundTag"] = TAG_BYPASS
+            });
         }
     }
 }
