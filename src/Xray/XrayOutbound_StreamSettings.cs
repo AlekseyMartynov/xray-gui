@@ -2,6 +2,7 @@ namespace Project;
 
 partial class XrayOutbound {
     public const string TYPE_XHTTP = "xhttp";
+    public const string TYPE_RAW = "raw";
     public const string TYPE_WS = "ws";
 
     class StreamSettings {
@@ -21,7 +22,7 @@ partial class XrayOutbound {
         string pcs = "";
         string security = "";
         string sni = "";
-        string type = "";
+        string type = TYPE_RAW;
 
         public void Set(string key, string value) {
             switch(key) {
@@ -65,6 +66,9 @@ partial class XrayOutbound {
             if(type == TYPE_XHTTP) {
                 ValidateParamNotBlank(CATEGORY_QUERY_STRING, nameof(path), path);
                 ValidateParam(CATEGORY_QUERY_STRING, nameof(mode), mode, [MODE_PACKET_UP, MODE_STREAM_UP]);
+            } else if(type == TYPE_RAW) {
+                ValidateParam(CATEGORY_QUERY_STRING, nameof(host), host, "");
+                ValidateParam(CATEGORY_QUERY_STRING, nameof(path), path, "");
             } else if(type != TYPE_WS) {
                 ThrowParamNotSupported(CATEGORY_QUERY_STRING, nameof(type), type);
             }

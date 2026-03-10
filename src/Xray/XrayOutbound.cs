@@ -18,6 +18,7 @@ static partial class XrayOutbound {
             "vless" => FromVlessUri(uri),
             "trojan" => FromTrojanUri(uri),
             "ss" => FromShadowsocksUri(uri),
+            "https" => FromHttpsUri(uri),
             _ => throw new UIException($"URI scheme '{uri.Scheme}' is not supported"),
         };
         AddMux(outbound);
