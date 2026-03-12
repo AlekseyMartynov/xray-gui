@@ -20,6 +20,7 @@ static partial class UI {
 
     static int MessageBoxCount;
     static bool UseErrorIcon;
+    static bool MenuVisible;
 
     static UI() {
         var module = PInvoke.GetModuleHandle(default(PCWSTR));
@@ -49,6 +50,7 @@ static partial class UI {
             if(error) {
                 UseErrorIcon = true;
             }
+            DismissActiveBalloon();
             UpdateTrayIcon(text);
         });
         MustPostMessage(WM_PENDING_ACTIONS_DRAIN);
@@ -101,15 +103,19 @@ static partial class UI {
                     PInvoke.SetForegroundWindow(MainWindow);
                 } else {
                     if(lParam == PInvoke.WM_RBUTTONUP) {
+                        DismissActiveBalloon();
                         ShowMenu();
+                        MustPostMessage(WM_PENDING_ACTIONS_DRAIN);
                     } else if(lParam == PInvoke.WM_LBUTTONDBLCLK) {
                         HandleCommand(ID_TRAY_ICON_DBLCLK);
                     }
                 }
                 return LRESULT_OK;
             case WM_PENDING_ACTIONS_DRAIN:
-                while(PendingActions.Reader.TryRead(out var action)) {
-                    action();
+                if(!MenuVisible) {
+                    while(PendingActions.Reader.TryRead(out var action)) {
+                        action();
+                    }
                 }
                 return LRESULT_OK;
             case PInvoke.WM_COMMAND:
@@ -128,11 +134,13 @@ static partial class UI {
     static void ShowMenu() {
         var menu = PInvoke.CreatePopupMenu();
         try {
+            MenuVisible = true;
             AddMenuItems(menu);
             PInvoke.GetCursorPos(out var cursorPos);
             PInvoke.SetForegroundWindow(MainWindow);
             PInvoke.TrackPopupMenu(menu, TRACK_POPUP_MENU_FLAGS.TPM_RIGHTALIGN, cursorPos.X, cursorPos.Y, MainWindow, default);
         } finally {
+            MenuVisible = false;
             PInvoke.DestroyMenu(menu);
         }
     }
@@ -182,6 +190,10 @@ static partial class UI {
             data.uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_GUID;
             PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_DELETE, in data);
         }
+    }
+
+    static void DismissActiveBalloon() {
+        UpdateTrayIcon("");
     }
 
     static void MustPostMessage(uint msg) {
