@@ -163,6 +163,8 @@ static partial class UI {
                         | NOTIFY_ICON_DATA_FLAGS.NIF_INFO
                         | NOTIFY_ICON_DATA_FLAGS.NIF_GUID;
 
+            data.dwInfoFlags = NOTIFY_ICON_INFOTIP_FLAGS.NIIF_NOSOUND;
+
             if(UseErrorIcon) {
                 data.hIcon = IconError;
             } else {
