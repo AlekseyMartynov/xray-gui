@@ -73,13 +73,20 @@ static partial class XrayOutbound {
     static void ValidateParam(string category, string name, string value, params ReadOnlySpan<string> allowedValues) {
         if(allowedValues.Length == 1) {
             if(value != allowedValues[0]) {
-                ThrowParamException(category, name, $"must be set to '{allowedValues[0]}'");
+                ThrowParamException(category, name, FormatMustBeSetToMessage(allowedValues[0]));
             }
         } else {
             if(!allowedValues.Contains(value)) {
                 ThrowParamException(category, name, FormatMustBeOneOfMessage(allowedValues));
             }
         }
+    }
+
+    static string FormatMustBeSetToMessage(string value) {
+        if(value.Length < 1) {
+            return "must be blank";
+        }
+        return $"must be set to '{value}'";
     }
 
     static string FormatMustBeOneOfMessage(ReadOnlySpan<string> values) {
