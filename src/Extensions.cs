@@ -46,6 +46,9 @@ static class Extensions {
         var span = text.AsSpan().TrimStart('?');
         foreach(var r in span.Split('&')) {
             span[r].TrySplit('=', out var name, out var value);
+            if(name.IsEmpty) {
+                continue;
+            }
             callback(
                 Uri.UnescapeDataString(name),
                 Uri.UnescapeDataString(value)
