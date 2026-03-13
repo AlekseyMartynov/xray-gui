@@ -73,6 +73,10 @@ partial class XrayOutbound {
                 ThrowParamNotSupported(CATEGORY_QUERY_STRING, nameof(type), type);
             }
 
+            if(type == TYPE_RAW) {
+                requireTLS = true;
+            }
+
             ValidateParam(CATEGORY_QUERY_STRING, nameof(security), security, requireTLS
                 ? [SECURITY_TLS]
                 : [SECURITY_TLS, ""]
