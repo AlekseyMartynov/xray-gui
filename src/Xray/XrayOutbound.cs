@@ -21,7 +21,9 @@ static partial class XrayOutbound {
             "https" => FromHttpsUri(uri),
             _ => throw new UIException($"URI scheme '{uri.Scheme}' is not supported"),
         };
-        AddMux(outbound);
+        if(AppConfig.Mux > 0) {
+            AddMux(outbound);
+        }
         return outbound;
     }
 
@@ -58,6 +60,7 @@ static partial class XrayOutbound {
         }
         outbound["mux"] = new JsonObject {
             ["enabled"] = true,
+            ["concurrency"] = AppConfig.Mux,
         };
     }
 

@@ -54,7 +54,8 @@ public class XrayOutboundTests {
                     "network": "ws"
                 },
                 "mux": {
-                    "enabled": true
+                    "enabled": true,
+                    "concurrency": 4
                 }
             }
             """,
@@ -226,7 +227,8 @@ public class XrayOutboundTests {
                     "network": "ws"
                 },
                 "mux": {
-                    "enabled": true
+                    "enabled": true,
+                    "concurrency": 4
                 }
             }
             """,

@@ -27,6 +27,7 @@ public sealed class AppConfigTests : IDisposable {
             tun_mode_unset_proxy = 1
             bypass_ru = 1
             proc_console = 123
+            mux = 1
             """
         );
         AppConfig.Load();
@@ -38,6 +39,7 @@ public sealed class AppConfigTests : IDisposable {
         Assert.True(AppConfig.TunModeUnsetProxy);
         Assert.True(AppConfig.BypassRU);
         Assert.True(AppConfig.ProcConsole);
+        Assert.Equal(1, AppConfig.Mux);
     }
 
     [Fact]

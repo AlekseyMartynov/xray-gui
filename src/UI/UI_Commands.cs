@@ -17,6 +17,7 @@ partial class UI {
 
     const uint ID_TRAY_ICON_DBLCLK = 1100;
     const uint ID_SERVER_LIST_START = 1200;
+    const uint ID_MUX_START = 1300;
 
     static void AddMenuItems(HMENU menu) {
         if(Program.Started) {
@@ -55,6 +56,13 @@ partial class UI {
             MENU_ITEM_FLAGS.MF_POPUP,
             (nuint)(nint)CreateBypassSubMenu(),
             "Bypass"
+        );
+
+        PInvoke.AppendMenu(
+            menu,
+            MENU_ITEM_FLAGS.MF_POPUP,
+            (nuint)(nint)CreateMuxSubMenu(),
+            "Mux: " + GetMuxText(AppConfig.Mux, true)
         );
 
         PInvoke.AppendMenu(
@@ -107,6 +115,19 @@ partial class UI {
             IDM_BYPASS_RU,
             "geoip:ru"
         );
+        return subMenu;
+    }
+
+    static HMENU CreateMuxSubMenu() {
+        var subMenu = PInvoke.CreatePopupMenu();
+        foreach(var i in AppConfig.MUX_OPTIONS) {
+            PInvoke.AppendMenu(
+                subMenu,
+                GetMenuItemFlags(isChecked: i == AppConfig.Mux),
+                ID_MUX_START + (uint)i,
+                GetMuxText(i, false)
+            );
+        }
         return subMenu;
     }
 
@@ -173,7 +194,7 @@ partial class UI {
                 }
                 break;
 
-            case >= ID_SERVER_LIST_START: {
+            case >= ID_SERVER_LIST_START and < ID_MUX_START: {
                     var newIndex = (int)(id - ID_SERVER_LIST_START);
                     if(newIndex != AppConfig.SelectedServerIndex) {
                         WithRestart(delegate {
@@ -184,8 +205,31 @@ partial class UI {
                 }
                 break;
 
+            case >= ID_MUX_START: {
+                    var newMux = (int)(id - ID_MUX_START);
+                    if(newMux != AppConfig.Mux) {
+                        WithRestart(delegate {
+                            AppConfig.Mux = newMux;
+                            AppConfig.Save();
+                        });
+                    }
+                }
+                break;
+
             default:
                 throw new NotSupportedException();
+        }
+    }
+
+    static string GetMuxText(int mux, bool compact) {
+        if(mux > 0) {
+            if(compact) {
+                return mux.ToString();
+            } else {
+                return "Concurrency " + mux;
+            }
+        } else {
+            return "Off";
         }
     }
 

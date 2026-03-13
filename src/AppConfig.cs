@@ -18,9 +18,12 @@ static class AppConfig {
         KEY_TUN_MODE_UNSET_PROXY = "tun_mode_unset_proxy",
         KEY_BYPASS_RU = "bypass_ru",
         KEY_PROXY = "proxy",
-        KEY_SIP003_PORT = "sip003_port";
+        KEY_SIP003_PORT = "sip003_port",
+        KEY_MUX = "mux";
 
     public static readonly string FilePath = Path.Join(AppContext.BaseDirectory, "xray-gui.ini");
+
+    public static readonly int[] MUX_OPTIONS = [0, 1, 4];
 
     static AppConfig() {
         Reset();
@@ -43,11 +46,14 @@ static class AppConfig {
     public static string SIP003Addr { get; private set; } = "";
     public static int SIP003Port { get; private set; }
 
+    public static int Mux { get; set; }
+
     public static void Reset() {
         SelectedServerIndex = -1;
         Flags = 0;
         (ProxyAddr, ProxyPort) = ("127.0.0.1", 1080);
         (SIP003Addr, SIP003Port) = ("127.0.0.1", 1984);
+        Mux = MUX_OPTIONS[^1];
     }
 
     public static void Load() {
@@ -94,6 +100,14 @@ static class AppConfig {
                     }
                     continue;
                 }
+                if(key.SequenceEqual(KEY_MUX)) {
+                    if(int.TryParse(value, out var mux)) {
+                        if(Array.IndexOf(MUX_OPTIONS, mux) > -1) {
+                            Mux = mux;
+                        }
+                    }
+                    continue;
+                }
             }
             throw new NotSupportedException();
         }
@@ -109,6 +123,7 @@ static class AppConfig {
             KEY_BYPASS_RU + " = " + FormatFlag(AppConfigFlags.BypassRU),
             KEY_PROXY + " = " + Proxy,
             KEY_SIP003_PORT + " = " + SIP003Port,
+            KEY_MUX + " = " + Mux,
         ]);
     }
 
