@@ -65,13 +65,17 @@ partial class XrayOutbound {
         public void Validate(string uriHost, bool requireTLS) {
             if(type == TYPE_XHTTP) {
                 ValidateParamNotBlank(CATEGORY_QUERY_STRING, nameof(path), path);
-                ValidateParam(CATEGORY_QUERY_STRING, nameof(mode), mode, [MODE_PACKET_UP, MODE_STREAM_UP]);
             } else if(type == TYPE_RAW) {
                 ValidateParam(CATEGORY_QUERY_STRING, nameof(host), host, "");
                 ValidateParam(CATEGORY_QUERY_STRING, nameof(path), path, "");
             } else if(type != TYPE_WS) {
                 ThrowParamNotSupported(CATEGORY_QUERY_STRING, nameof(type), type);
             }
+
+            ValidateParam(CATEGORY_QUERY_STRING, nameof(mode), mode, type == TYPE_XHTTP
+                ? [MODE_PACKET_UP, MODE_STREAM_UP]
+                : [""]
+            );
 
             if(type == TYPE_RAW) {
                 requireTLS = true;
@@ -133,7 +137,7 @@ partial class XrayOutbound {
                 networkSettings["host"] = host;
             }
 
-            if(type == TYPE_XHTTP) {
+            if(!String.IsNullOrWhiteSpace(mode)) {
                 networkSettings["mode"] = mode;
             }
 
