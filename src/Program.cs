@@ -15,6 +15,12 @@ static partial class Program {
 
         UndoTrafficRedirect();
 
+        AppConfig.SetSource(
+            new AppConfigFile(
+                Path.Join(AppContext.BaseDirectory, "xray-gui.ini")
+            )
+        );
+
         AppConfig.Load();
         ServerList.Load();
 

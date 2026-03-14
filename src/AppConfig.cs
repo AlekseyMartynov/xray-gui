@@ -10,6 +10,53 @@ enum AppConfigFlags {
 }
 
 static class AppConfig {
+    static IAppConfigSource Source = IAppConfigSource.Default;
+
+    public static int SelectedServerIndex {
+        get => Source.SelectedServerIndex;
+        set => Source.SelectedServerIndex = value;
+    }
+
+    public static bool ProcConsole => HasFlag(AppConfigFlags.ProcConsole);
+    public static bool TunMode => HasFlag(AppConfigFlags.TunMode);
+    public static bool TunModeIPv6 => HasFlag(AppConfigFlags.TunModeIPv6);
+    public static bool TunModeUnsetProxy => HasFlag(AppConfigFlags.TunModeUnsetProxy);
+    public static bool BypassRU => HasFlag(AppConfigFlags.BypassRU);
+
+    public static string ProxyAddr => Source.ProxyAddr;
+    public static int ProxyPort => Source.ProxyPort;
+    public static string Proxy => ProxyAddr + ':' + ProxyPort;
+
+    public static string SIP003Addr => Source.SIP003Addr;
+    public static int SIP003Port => Source.SIP003Port;
+
+    public static int Mux {
+        get => Source.Mux;
+        set => Source.Mux = value;
+    }
+
+    public static void SetSource(IAppConfigSource source) {
+        Source = source;
+    }
+
+    public static void Load() {
+        Source.Load();
+    }
+
+    public static void Save() {
+        Source.Save();
+    }
+
+    public static bool HasFlag(AppConfigFlags flag) {
+        return Source.Flags.HasFlag(flag);
+    }
+
+    public static void ToggleFlag(AppConfigFlags flag) {
+        Source.Flags ^= flag;
+    }
+}
+
+class AppConfigFile(string filePath) : IAppConfigSource {
     const string
         KEY_SELECTED_SERVER = "selected_server",
         KEY_PROC_CONSOLE = "proc_console",
@@ -21,42 +68,21 @@ static class AppConfig {
         KEY_SIP003_PORT = "sip003_port",
         KEY_MUX = "mux";
 
-    public static readonly string FilePath = Path.Join(AppContext.BaseDirectory, "xray-gui.ini");
+    readonly string FilePath = filePath;
 
-    public static readonly int[] MUX_OPTIONS = [0, 1, 4];
+    public int SelectedServerIndex { get; set; } = IAppConfigSource.Default.SelectedServerIndex;
 
-    static AppConfig() {
-        Reset();
-    }
+    public AppConfigFlags Flags { get; set; } = IAppConfigSource.Default.Flags;
 
-    public static int SelectedServerIndex { get; set; }
+    public string ProxyAddr { get; private set; } = IAppConfigSource.Default.ProxyAddr;
+    public int ProxyPort { get; private set; } = IAppConfigSource.Default.ProxyPort;
 
-    public static bool ProcConsole => HasFlag(AppConfigFlags.ProcConsole);
-    public static bool TunMode => HasFlag(AppConfigFlags.TunMode);
-    public static bool TunModeIPv6 => HasFlag(AppConfigFlags.TunModeIPv6);
-    public static bool TunModeUnsetProxy => HasFlag(AppConfigFlags.TunModeUnsetProxy);
-    public static bool BypassRU => HasFlag(AppConfigFlags.BypassRU);
+    public string SIP003Addr { get; private set; } = IAppConfigSource.Default.SIP003Addr;
+    public int SIP003Port { get; private set; } = IAppConfigSource.Default.SIP003Port;
 
-    static AppConfigFlags Flags;
+    public int Mux { get; set; } = IAppConfigSource.Default.Mux;
 
-    public static string ProxyAddr { get; private set; } = "";
-    public static int ProxyPort { get; private set; }
-    public static string Proxy => ProxyAddr + ':' + ProxyPort;
-
-    public static string SIP003Addr { get; private set; } = "";
-    public static int SIP003Port { get; private set; }
-
-    public static int Mux { get; set; }
-
-    public static void Reset() {
-        SelectedServerIndex = -1;
-        Flags = 0;
-        (ProxyAddr, ProxyPort) = ("127.0.0.1", 1080);
-        (SIP003Addr, SIP003Port) = ("127.0.0.1", 1984);
-        Mux = MUX_OPTIONS[^1];
-    }
-
-    public static void Load() {
+    public void Load() {
         if(!File.Exists(FilePath)) {
             Save();
         }
@@ -102,7 +128,7 @@ static class AppConfig {
                 }
                 if(key.SequenceEqual(KEY_MUX)) {
                     if(int.TryParse(value, out var mux)) {
-                        if(Array.IndexOf(MUX_OPTIONS, mux) > -1) {
+                        if(Array.IndexOf(IAppConfigSource.MuxOptions, mux) > -1) {
                             Mux = mux;
                         }
                     }
@@ -113,7 +139,7 @@ static class AppConfig {
         }
     }
 
-    public static void Save() {
+    public void Save() {
         File.WriteAllLines(FilePath, [
             KEY_SELECTED_SERVER + " = " + SelectedServerIndex,
             KEY_PROC_CONSOLE + " = " + FormatFlag(AppConfigFlags.ProcConsole),
@@ -121,18 +147,10 @@ static class AppConfig {
             KEY_TUN_MODE_IPv6 + " = " + FormatFlag(AppConfigFlags.TunModeIPv6),
             KEY_TUN_MODE_UNSET_PROXY + " = " + FormatFlag(AppConfigFlags.TunModeUnsetProxy),
             KEY_BYPASS_RU + " = " + FormatFlag(AppConfigFlags.BypassRU),
-            KEY_PROXY + " = " + Proxy,
+            KEY_PROXY + " = " + ProxyAddr + ':' + ProxyPort,
             KEY_SIP003_PORT + " = " + SIP003Port,
             KEY_MUX + " = " + Mux,
         ]);
-    }
-
-    public static bool HasFlag(AppConfigFlags flag) {
-        return Flags.HasFlag(flag);
-    }
-
-    public static void ToggleFlag(AppConfigFlags flag) {
-        Flags ^= flag;
     }
 
     static bool TryParseFlag(ReadOnlySpan<char> text, out AppConfigFlags result) {
@@ -157,7 +175,62 @@ static class AppConfig {
         return false;
     }
 
-    static string FormatFlag(AppConfigFlags flag) {
-        return HasFlag(flag) ? "1" : "0";
+    string FormatFlag(AppConfigFlags flag) {
+        return Flags.HasFlag(flag) ? "1" : "0";
+    }
+}
+
+interface IAppConfigSource {
+    public static readonly int[] MuxOptions = [0, 1, 4];
+    public static readonly IAppConfigSource Default = new DefaultImpl();
+
+    int SelectedServerIndex { get; set; }
+
+    AppConfigFlags Flags { get; set; }
+
+    string ProxyAddr { get; }
+    int ProxyPort { get; }
+
+    string SIP003Addr { get; }
+    int SIP003Port { get; }
+
+    int Mux { get; set; }
+
+    void Load();
+    void Save();
+
+    class DefaultImpl : IAppConfigSource {
+
+        public int SelectedServerIndex {
+            get => -1;
+            set => Throw();
+        }
+
+        public AppConfigFlags Flags {
+            get => default;
+            set => Throw();
+        }
+
+        public string ProxyAddr => "127.0.0.1";
+        public int ProxyPort => 1080;
+
+        public string SIP003Addr => "127.0.0.1";
+        public int SIP003Port => 1984;
+
+        public int Mux {
+            get => MuxOptions[^1];
+            set => Throw();
+        }
+
+        public void Load() {
+        }
+
+        public void Save() {
+            Throw();
+        }
+
+        void Throw() {
+            throw new NotSupportedException();
+        }
     }
 }

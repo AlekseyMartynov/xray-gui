@@ -1,25 +1,28 @@
 namespace Project.Tests;
 
 public sealed class AppConfigTests : IDisposable {
+    static readonly string ConfigFilePath = Path.Join(AppContext.BaseDirectory, nameof(AppConfigTests) + ".ini");
+
+    readonly AppConfigFile ConfigFile = new(ConfigFilePath);
 
     public AppConfigTests() {
-        DeleteFileAndReset();
+        DeleteFile();
     }
 
     public void Dispose() {
-        DeleteFileAndReset();
+        DeleteFile();
     }
 
     [Fact]
     public void CreateFileOnLoad() {
-        AppConfig.Load();
-        Assert.True(File.Exists(AppConfig.FilePath));
+        ConfigFile.Load();
+        Assert.True(File.Exists(ConfigFilePath));
     }
 
     [Fact]
     public void Load() {
         var tab = '\t';
-        File.WriteAllText(AppConfig.FilePath, $"""
+        File.WriteAllText(ConfigFilePath, $"""
             {tab} selected_server {tab} = {tab} 123 {tab}
             proxy = test:1234
             tun_mode = nonsense
@@ -30,36 +33,39 @@ public sealed class AppConfigTests : IDisposable {
             mux = 1
             """
         );
-        AppConfig.Load();
-        Assert.Equal(123, AppConfig.SelectedServerIndex);
-        Assert.Equal("test", AppConfig.ProxyAddr);
-        Assert.Equal(1234, AppConfig.ProxyPort);
-        Assert.False(AppConfig.TunMode);
-        Assert.True(AppConfig.TunModeIPv6);
-        Assert.True(AppConfig.TunModeUnsetProxy);
-        Assert.True(AppConfig.BypassRU);
-        Assert.True(AppConfig.ProcConsole);
-        Assert.Equal(1, AppConfig.Mux);
+        ConfigFile.Load();
+        Assert.Equal(123, ConfigFile.SelectedServerIndex);
+        Assert.Equal("test", ConfigFile.ProxyAddr);
+        Assert.Equal(1234, ConfigFile.ProxyPort);
+        AssertFlag(false, AppConfigFlags.TunMode);
+        AssertFlag(true, AppConfigFlags.TunModeIPv6);
+        AssertFlag(true, AppConfigFlags.TunModeUnsetProxy);
+        AssertFlag(true, AppConfigFlags.BypassRU);
+        AssertFlag(true, AppConfigFlags.ProcConsole);
+        Assert.Equal(1, ConfigFile.Mux);
     }
 
     [Fact]
     public void Compat() {
-        File.WriteAllLines(AppConfig.FilePath, [
+        File.WriteAllLines(ConfigFilePath, [
             "tap_mode = 1",
             "tap_mode_badvpn = 1",
             "tun_mode_bypass_proxy = 1",
             "tun_mode_bypass_ru = 1",
         ]);
-        AppConfig.Load();
-        Assert.True(AppConfig.TunMode);
-        Assert.True(AppConfig.TunModeUnsetProxy);
-        Assert.True(AppConfig.BypassRU);
+        ConfigFile.Load();
+        AssertFlag(true, AppConfigFlags.TunMode);
+        AssertFlag(true, AppConfigFlags.TunModeUnsetProxy);
+        AssertFlag(true, AppConfigFlags.BypassRU);
     }
 
-    void DeleteFileAndReset() {
-        if(File.Exists(AppConfig.FilePath)) {
-            File.Delete(AppConfig.FilePath);
+    static void DeleteFile() {
+        if(File.Exists(ConfigFilePath)) {
+            File.Delete(ConfigFilePath);
         }
-        AppConfig.Reset();
+    }
+
+    void AssertFlag(bool expected, AppConfigFlags flag) {
+        Assert.Equal(expected, ConfigFile.Flags.HasFlag(flag));
     }
 }

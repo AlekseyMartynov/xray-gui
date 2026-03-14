@@ -120,7 +120,7 @@ partial class UI {
 
     static HMENU CreateMuxSubMenu() {
         var subMenu = PInvoke.CreatePopupMenu();
-        foreach(var i in AppConfig.MUX_OPTIONS) {
+        foreach(var i in IAppConfigSource.MuxOptions) {
             PInvoke.AppendMenu(
                 subMenu,
                 GetMenuItemFlags(isChecked: i == AppConfig.Mux),
