@@ -37,7 +37,7 @@ static class ProcMan {
 
         var accessToken = AppConfig.TunMode
             ? NativeRestrictedTokens.FullyTrusted
-            : NativeRestrictedTokens.Constrained;
+            : NativeRestrictedTokens.NormalUser;
 
         NotifyXrayExit = true;
         XrayProc = new(commandLine, WorkDir, default, Xray_Exited, accessToken);
