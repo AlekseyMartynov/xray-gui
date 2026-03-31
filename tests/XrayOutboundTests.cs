@@ -28,7 +28,12 @@ public class XrayOutboundTests {
                 "network": "xhttp",
                 "xhttpSettings": {
                     "mode": "stream-up",
-                    "path": "/path"
+                    "path": "/path",
+                    "extra": {
+                        "xmux": {
+                            "maxConcurrency": 4
+                        }
+                    }
                 }
             }
         }

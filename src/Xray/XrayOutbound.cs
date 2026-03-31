@@ -55,13 +55,20 @@ static partial class XrayOutbound {
             return;
         }
         if(TYPE_XHTTP.Equals(network)) {
-            // Uses native mux of HTTP/2 and QUIC
-            return;
+            // Since 25.10.15, default has been changed from 16-32 to 1
+            // https://github.com/XTLS/Xray-core/commit/9cc7907
+            var xhttpSettings = (JsonObject)streamSettings["xhttpSettings"];
+            xhttpSettings["extra"] = new JsonObject {
+                ["xmux"] = new JsonObject {
+                    ["maxConcurrency"] = AppConfig.Mux,
+                }
+            };
+        } else {
+            outbound["mux"] = new JsonObject {
+                ["enabled"] = true,
+                ["concurrency"] = AppConfig.Mux,
+            };
         }
-        outbound["mux"] = new JsonObject {
-            ["enabled"] = true,
-            ["concurrency"] = AppConfig.Mux,
-        };
     }
 
     [DoesNotReturn]
