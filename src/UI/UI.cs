@@ -121,6 +121,11 @@ static partial class UI {
             case PInvoke.WM_COMMAND:
                 HandleCommand((uint)wParam);
                 return LRESULT_OK;
+            case PInvoke.WM_ENDSESSION:
+                if(wParam == 1 && Program.Started) {
+                    Program.Stop();
+                }
+                return LRESULT_OK;
             case PInvoke.WM_ENTERIDLE:
                 return LRESULT_OK;
         }
