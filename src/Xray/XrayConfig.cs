@@ -110,7 +110,7 @@ static class XrayConfig {
 
         if(TunModeServerInfo.IsDomainName) {
             obj["hosts"] = new JsonObject {
-                [TunModeServerInfo.Host] = TunModeServerInfo.IPList.ConvertAll(i => i.ToString())
+                [TunModeServerInfo.Address] = TunModeServerInfo.IPList.ConvertAll(i => i.ToString())
             };
         }
 

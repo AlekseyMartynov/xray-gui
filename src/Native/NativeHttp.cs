@@ -24,7 +24,7 @@ static class NativeHttpClient {
         try {
             SetTimeouts(hInet, req.Timeouts);
 
-            var hConn = PInvoke.InternetConnect(hInet, uri.Host, GetPort(uri), default, default, PInvoke.INTERNET_SERVICE_HTTP, default, default);
+            var hConn = PInvoke.InternetConnect(hInet, uri.GetAddress(), GetPort(uri), default, default, PInvoke.INTERNET_SERVICE_HTTP, default, default);
             NativeUtils.CheckHandle(hConn);
             try {
                 var flags = PInvoke.INTERNET_FLAG_NO_CACHE_WRITE

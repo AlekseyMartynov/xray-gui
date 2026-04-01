@@ -77,4 +77,13 @@ static class Extensions {
         }
         return result;
     }
+
+    public static string GetAddress(this Uri uri) {
+        // Inspired by https://github.com/XTLS/Xray-core/blob/v26.3.27/common/net/address.go#L80
+        var host = uri.Host;
+        if(host.StartsWith('[')) {
+            return host[1..^1];
+        }
+        return host;
+    }
 }

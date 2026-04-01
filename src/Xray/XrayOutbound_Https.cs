@@ -2,6 +2,7 @@ namespace Project;
 
 partial class XrayOutbound {
     static JsonObject FromHttpsUri(Uri uri) {
+        var address = uri.GetAddress();
         var streamSettings = new StreamSettings();
         streamSettings.Set("security", "tls"); // implied by https
 
@@ -14,12 +15,12 @@ partial class XrayOutbound {
 
         _ = uri.UserInfo.TrySplit(':', out var user, out var pass);
 
-        streamSettings.Validate(uri.Host, true);
+        streamSettings.Validate(address, true);
 
         return new JsonObject {
             ["protocol"] = "http",
             ["settings"] = new JsonObject {
-                ["address"] = uri.Host,
+                ["address"] = address,
                 ["port"] = uri.Port,
                 ["user"] = user,
                 ["pass"] = pass,

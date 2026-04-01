@@ -187,6 +187,14 @@ public class XrayOutboundTests {
     }
 
     [Fact]
+    public void IPv6NoBrackets() {
+        var uri = new Uri("https://[2001:db8::1]:443?sni=example.net&fp=any");
+        var outbound = XrayOutbound.FromUri(uri);
+        var settings = outbound.GetChildObject("settings");
+        Assert.Equal("2001:db8::1", settings["address"]);
+    }
+
+    [Fact]
     public void ShadowsocksWithPlugin() {
         var uri = new Uri("ss://YWVzLTI1Ni1nY206ajEyMw==@example.net:8388?plugin=plugin1;a=1;b=2");
         var outbound = XrayOutbound.FromUri(uri);

@@ -8,7 +8,7 @@ static partial class XrayOutbound {
     const string CATEGORY_USERINFO_PARAM = "UserInfo param";
 
     public static JsonObject FromUri(Uri uri) {
-        if(String.IsNullOrEmpty(uri.Host) || uri.Port < 0) {
+        if(!uri.IsAbsoluteUri || uri.Port < 0) {
             throw new UIException("Must be absolute URI with host and port");
         }
         if(uri.AbsolutePath != "/") {

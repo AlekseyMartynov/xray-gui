@@ -8,12 +8,13 @@ partial class XrayOutbound {
 
     static JsonObject FromShadowsocksUri(Uri uri) {
         var sip003 = default(SIP003);
+        var address = uri.GetAddress();
         var streamSettings = default(StreamSettings);
 
         uri.Query.ParseQueryString((key, value) => {
             if(key == "plugin") {
                 ValidateParamNotBlank(CATEGORY_QUERY_STRING, key, value);
-                var remoteAddr = uri.Host;
+                var remoteAddr = address;
                 var remotePort = uri.Port;
                 if(AppConfig.TunMode && !NativeIPAddress.TryParse(remoteAddr, out _)) {
                     throw new UIException("Plugin won't be able to resolve host name, use IP address");
@@ -46,7 +47,7 @@ partial class XrayOutbound {
         }
 
         var settings = new JsonObject {
-            ["address"] = sip003 != null ? AppConfig.SIP003Addr : uri.Host,
+            ["address"] = sip003 != null ? AppConfig.SIP003Addr : address,
             ["port"] = sip003 != null ? AppConfig.SIP003Port : uri.Port,
             ["method"] = method,
             ["password"] = password
@@ -64,7 +65,7 @@ partial class XrayOutbound {
         if(sip003 != null) {
             result[SIP003.KEY] = sip003;
         } else if(streamSettings != null) {
-            streamSettings.Validate(uri.Host, false);
+            streamSettings.Validate(address, false);
             result["streamSettings"] = streamSettings.ToJson();
         } else {
             throw new UIException("Raw Shadowsocks is disabled");

@@ -62,7 +62,7 @@ partial class XrayOutbound {
             }
         }
 
-        public void Validate(string uriHost, bool requireTLS) {
+        public void Validate(string address, bool requireTLS) {
             if(type == TYPE_XHTTP) {
                 ValidateParamNotBlank(CATEGORY_QUERY_STRING, nameof(path), path);
             } else if(type == TYPE_RAW) {
@@ -90,7 +90,7 @@ partial class XrayOutbound {
                 ValidateParam(CATEGORY_QUERY_STRING, nameof(allowInsecure), allowInsecure, ["0", "1"]);
                 ValidateParamNotBlank(CATEGORY_QUERY_STRING, nameof(fp), fp);
 
-                if(String.IsNullOrWhiteSpace(host) && NativeIPAddress.TryParse(uriHost, out _)) {
+                if(String.IsNullOrWhiteSpace(host) && NativeIPAddress.TryParse(address, out _)) {
                     ValidateParamNotBlank(CATEGORY_QUERY_STRING, nameof(sni), sni);
                 }
             }

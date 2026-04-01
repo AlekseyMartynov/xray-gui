@@ -35,7 +35,7 @@ static partial class Program {
 
         if(AppConfig.TunMode) {
             TunModeRouting.FindDefaults();
-            TunModeServerInfo.Refresh(uri.Host);
+            TunModeServerInfo.Refresh(uri.GetAddress());
 
             Wintun.EnsureCreated();
             TunModeAdapters.Refresh();

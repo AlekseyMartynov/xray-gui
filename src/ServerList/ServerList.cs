@@ -66,8 +66,8 @@ static class ServerList {
         if(result.Length > 1)
             return System.Uri.UnescapeDataString(result.AsSpan().Slice(1));
 
-        if(uri.Host.Length > 0 && uri.Port > -1)
-            return uri.Host + ':' + uri.Port;
+        if(uri.IsAbsoluteUri)
+            return uri.Authority;
 
         return uri.ToString();
     }

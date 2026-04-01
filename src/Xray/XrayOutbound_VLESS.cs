@@ -9,6 +9,7 @@ partial class XrayOutbound {
     static JsonObject FromVlessUri(Uri uri) {
         var encryption = ENCRYPTION_NONE;
         var flow = "";
+        var address = uri.GetAddress();
         var streamSettings = new StreamSettings();
 
         uri.Query.ParseQueryString((key, value) => {
@@ -28,10 +29,10 @@ partial class XrayOutbound {
         ValidateParam(CATEGORY_QUERY_STRING, nameof(flow), flow, ["", FLOW_VISION]);
 
 
-        streamSettings.Validate(uri.Host, encryption == ENCRYPTION_NONE);
+        streamSettings.Validate(address, encryption == ENCRYPTION_NONE);
 
         var settings = new JsonObject {
-            ["address"] = uri.Host,
+            ["address"] = address,
             ["port"] = uri.Port,
             ["id"] = uri.UserInfo,
             ["encryption"] = encryption
