@@ -80,6 +80,11 @@ static class NativeRouting {
             return false;
         }
 
+        if(result == WIN32_ERROR.ERROR_FILE_NOT_FOUND) {
+            // Can happen after reboot
+            return false;
+        }
+
         NativeUtils.MustSucceed(result);
 
         return true;
