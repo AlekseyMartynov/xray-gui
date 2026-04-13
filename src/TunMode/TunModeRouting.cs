@@ -40,12 +40,6 @@ static class TunModeRouting {
     }
 
     public static void AddDefaultOverride() {
-        // Outline also adds bypass routes for Special-Purpose IPv4 ranges (RFC6890)
-        // https://github.com/Jigsaw-Code/outline-apps/blob/manager_windows/v1.17.2/client/electron/windows/OutlineService/OutlineService/OutlineService.cs#L693
-        // However, this might be redundant:
-        // - Windows typically adds On-link LAN routes via DHCP
-        // - https://github.com/Jigsaw-Code/outline-server/issues/545
-
         var undo = LoadUndo(DefaultOverrideUndoPath);
 
         void TryAdd(NativeRoute route) {

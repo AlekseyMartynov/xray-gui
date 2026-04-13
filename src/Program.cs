@@ -142,7 +142,7 @@ static partial class Program {
     }
 
     static void EnsureGeoIP() {
-        if(!AppConfig.BypassRU) {
+        if(!AppConfig.HasBypassByIP) {
             return;
         }
         var filePath = Path.Join(AppContext.BaseDirectory, "geoip.dat");

@@ -30,7 +30,7 @@ static class XrayConfig {
             root["dns"] = CreateDnsModule();
         }
 
-        if(AppConfig.BypassRU) {
+        if(AppConfig.HasBypassByIP) {
             outboundList.Add(CreateBypassOutbound());
         }
 
@@ -146,11 +146,16 @@ static class XrayConfig {
                 }
             );
         }
-        if(AppConfig.BypassRU) {
+        if(AppConfig.HasBypassByIP) {
+            var ipList = new JsonArray();
+            if(AppConfig.BypassRU) {
+                ipList.Add("geoip:ru");
+            }
+            if(AppConfig.BypassPrivate) {
+                ipList.Add("geoip:private");
+            }
             rules.Add(new JsonObject {
-                ["ip"] = new JsonArray {
-                    "geoip:ru"
-                },
+                ["ip"] = ipList,
                 ["outboundTag"] = TAG_BYPASS
             });
         }

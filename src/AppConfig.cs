@@ -6,7 +6,8 @@ enum AppConfigFlags {
     TunMode = 2,
     TunModeIPv6 = 4,
     TunModeUnsetProxy = 8,
-    BypassRU = 16
+    BypassRU = 16,
+    BypassPrivate = 32,
 }
 
 static class AppConfig {
@@ -22,6 +23,9 @@ static class AppConfig {
     public static bool TunModeIPv6 => HasFlag(AppConfigFlags.TunModeIPv6);
     public static bool TunModeUnsetProxy => HasFlag(AppConfigFlags.TunModeUnsetProxy);
     public static bool BypassRU => HasFlag(AppConfigFlags.BypassRU);
+    public static bool BypassPrivate => HasFlag(AppConfigFlags.BypassPrivate);
+
+    public static bool HasBypassByIP => BypassRU || BypassPrivate;
 
     public static string ProxyAddr => Source.ProxyAddr;
     public static int ProxyPort => Source.ProxyPort;
@@ -64,6 +68,7 @@ class AppConfigFile(string filePath) : IAppConfigSource {
         KEY_TUN_MODE_IPv6 = "tun_mode_ipv6",
         KEY_TUN_MODE_UNSET_PROXY = "tun_mode_unset_proxy",
         KEY_BYPASS_RU = "bypass_ru",
+        KEY_BYPASS_PRIVATE = "bypass_private",
         KEY_PROXY = "proxy",
         KEY_SIP003_PORT = "sip003_port",
         KEY_MUX = "mux";
@@ -147,6 +152,7 @@ class AppConfigFile(string filePath) : IAppConfigSource {
             KEY_TUN_MODE_IPv6 + " = " + FormatFlag(AppConfigFlags.TunModeIPv6),
             KEY_TUN_MODE_UNSET_PROXY + " = " + FormatFlag(AppConfigFlags.TunModeUnsetProxy),
             KEY_BYPASS_RU + " = " + FormatFlag(AppConfigFlags.BypassRU),
+            KEY_BYPASS_PRIVATE + " = " + FormatFlag(AppConfigFlags.BypassPrivate),
             KEY_PROXY + " = " + ProxyAddr + ':' + ProxyPort,
             KEY_SIP003_PORT + " = " + SIP003Port,
             KEY_MUX + " = " + Mux,
@@ -160,6 +166,7 @@ class AppConfigFile(string filePath) : IAppConfigSource {
             (KEY_TUN_MODE_IPv6, AppConfigFlags.TunModeIPv6),
             (KEY_TUN_MODE_UNSET_PROXY, AppConfigFlags.TunModeUnsetProxy),
             (KEY_BYPASS_RU, AppConfigFlags.BypassRU),
+            (KEY_BYPASS_PRIVATE, AppConfigFlags.BypassPrivate),
             ("tap_mode", AppConfigFlags.TunMode),
             ("tap_mode_badvpn", default),
             ("tun_mode_bypass_proxy", AppConfigFlags.TunModeUnsetProxy),
@@ -207,7 +214,7 @@ interface IAppConfigSource {
         }
 
         public AppConfigFlags Flags {
-            get => default;
+            get => AppConfigFlags.BypassPrivate;
             set => Throw();
         }
 

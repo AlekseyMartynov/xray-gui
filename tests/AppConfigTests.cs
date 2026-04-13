@@ -29,6 +29,7 @@ public sealed class AppConfigTests : IDisposable {
             tun_mode_ipv6 = 1
             tun_mode_unset_proxy = 1
             bypass_ru = 1
+            bypass_private = 0
             proc_console = 123
             mux = 1
             """
@@ -41,6 +42,7 @@ public sealed class AppConfigTests : IDisposable {
         AssertFlag(true, AppConfigFlags.TunModeIPv6);
         AssertFlag(true, AppConfigFlags.TunModeUnsetProxy);
         AssertFlag(true, AppConfigFlags.BypassRU);
+        AssertFlag(false, AppConfigFlags.BypassPrivate);
         AssertFlag(true, AppConfigFlags.ProcConsole);
         Assert.Equal(1, ConfigFile.Mux);
     }

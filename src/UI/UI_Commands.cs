@@ -14,6 +14,7 @@ partial class UI {
     const uint IDM_TUN_UNSET_PROXY = 1006;
 
     const uint IDM_BYPASS_RU = 1007;
+    const uint IDM_BYPASS_PRIVATE = 1008;
 
     const uint ID_TRAY_ICON_DBLCLK = 1100;
     const uint ID_SERVER_LIST_START = 1200;
@@ -109,12 +110,14 @@ partial class UI {
 
     static HMENU CreateBypassSubMenu() {
         var subMenu = PInvoke.CreatePopupMenu();
-        PInvoke.AppendMenu(
-            subMenu,
-            GetMenuItemFlags(isChecked: AppConfig.BypassRU),
-            IDM_BYPASS_RU,
-            "geoip:ru"
-        );
+        ReadOnlySpan<(AppConfigFlags, uint, string)> items = [
+            (AppConfigFlags.BypassPrivate, IDM_BYPASS_PRIVATE, "geoip: private"),
+            (AppConfigFlags.BypassRU, IDM_BYPASS_RU, "geoip: ru"),
+        ];
+        foreach(var (flag, id, text) in items) {
+            var isChecked = AppConfig.HasFlag(flag);
+            PInvoke.AppendMenu(subMenu, GetMenuItemFlags(false, isChecked), id, text);
+        }
         return subMenu;
     }
 
@@ -239,6 +242,7 @@ partial class UI {
             IDM_TUN_IPv6 => AppConfigFlags.TunModeIPv6,
             IDM_TUN_UNSET_PROXY => AppConfigFlags.TunModeUnsetProxy,
             IDM_BYPASS_RU => AppConfigFlags.BypassRU,
+            IDM_BYPASS_PRIVATE => AppConfigFlags.BypassPrivate,
             _ => default
         };
         return result != default;
