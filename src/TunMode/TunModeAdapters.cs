@@ -32,18 +32,18 @@ static class TunModeAdapters {
 
     public static uint IPv6LoopbackIndex { get; private set; }
 
-    public static string IPv4BypassName { get; private set; } = "";
+    public static string PrimaryName { get; private set; } = "";
 
     public static void Refresh() {
         IPv4TunIndex = default;
         IPv6TunIndex = default;
         IPv6TunEnabled = default;
         IPv6LoopbackIndex = default;
-        IPv4BypassName = "";
+        PrimaryName = "";
 
         var tunFound = false;
         var ip6LoopbackFound = false;
-        var bypassFound = false;
+        var primaryFound = false;
 
         NativeAdapters.Enumerate((ref readonly NativeAdapterInfo info) => {
             if(!tunFound && IsGoodTun(in info)) {
@@ -56,9 +56,9 @@ static class TunModeAdapters {
                 IPv6LoopbackIndex = info.IPv6Index;
                 ip6LoopbackFound = true;
             }
-            if(!bypassFound && IsIPv4Bypass(in info)) {
-                IPv4BypassName = info.Name.ToString();
-                bypassFound = true;
+            if(!primaryFound && IsIPv4Primary(in info)) {
+                PrimaryName = info.Name.ToString();
+                primaryFound = true;
             }
         });
 
@@ -69,6 +69,8 @@ static class TunModeAdapters {
         if(!ip6LoopbackFound) {
             IPv6LoopbackIndex = 1;
         }
+
+        // TODO primary v4 vs v6
     }
 
     public static void SetTunParams(bool dhcp) {
@@ -108,7 +110,7 @@ static class TunModeAdapters {
             && info.Unicast.Contains(NativeIPAddress.IPv6Loopback);
     }
 
-    static bool IsIPv4Bypass(ref readonly NativeAdapterInfo info) {
+    static bool IsIPv4Primary(ref readonly NativeAdapterInfo info) {
         return TunModeRouting.DefaultV4 != null
             && TunModeRouting.DefaultV4.AdapterIndex == info.IPv4Index;
     }

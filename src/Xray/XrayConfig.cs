@@ -86,7 +86,7 @@ static class XrayConfig {
                     // https://github.com/XTLS/Xray-core/blob/v26.2.6/transport/internet/sockopt_windows.go#L36
                     // https://github.com/golang/go/blob/go1.26.0/src/net/interface.go#L169
                     // https://github.com/golang/go/blob/go1.26.0/src/net/interface_windows.go#L62
-                    ["interface"] = TunModeAdapters.IPv4BypassName
+                    ["interface"] = TunModeAdapters.PrimaryName
                 }
             };
         }
