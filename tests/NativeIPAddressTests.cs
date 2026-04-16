@@ -53,4 +53,17 @@ public class NativeIPAddressTests {
         Assert.True(NativeIPAddress.TryParse(slice, out var ip));
         Assert.Equal("3.0.0.1", ip.ToString());
     }
+
+    [Fact]
+    public void FromPrefixAndHost() {
+        var prefix = new NativeIPAddress(192, 168, 0, 0);
+        Assert.Equal(
+            new NativeIPAddress(192, 168, 0, 2),
+            new NativeIPAddress(prefix, 2)
+        );
+        Assert.Equal(
+            new NativeIPAddress(192, 168, 1, 1),
+            new NativeIPAddress(prefix, 256 + 1)
+        );
+    }
 }

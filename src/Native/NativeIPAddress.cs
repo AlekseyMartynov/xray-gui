@@ -36,6 +36,11 @@ readonly partial struct NativeIPAddress {
         upperSpan[1] = ip4;
     }
 
+    public NativeIPAddress(NativeIPAddress prefix, ulong host) {
+        Upper = prefix.Upper | BinaryPrimitives.ReverseEndianness(host);
+        Lower = prefix.Lower;
+    }
+
     public bool IsIPv4() {
         return Lower == 0
             && Upper << 32 == 0xFFFF_0000_0000_0000;
@@ -120,7 +125,7 @@ partial struct NativeIPAddress {
         IPv4Zero = new(0),
         IPv6Zero = new([]),
         IPv4Loopback = new(127, 0, 0, 1),
-        IPv6Loopback = new([0, 0, 0, 0, 0, 0, 0, 1]);
+        IPv6Loopback = new(IPv6Zero, 1);
 
     public static unsafe bool TryParse(string text, out NativeIPAddress result) {
         if(!PreParseValidate(text)) {
