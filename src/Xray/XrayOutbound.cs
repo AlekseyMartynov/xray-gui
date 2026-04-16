@@ -41,6 +41,17 @@ static partial class XrayOutbound {
         return sip003;
     }
 
+    public static void BindToPrimaryAdapter(JsonObject outbound) {
+        if(AppConfig.TunMode) {
+            // See WARNING at https://xtls.github.io/en/config/inbounds/tun.html
+            var sockopt = outbound.EnsureChildObject("streamSettings", "sockopt");
+            // https://github.com/XTLS/Xray-core/blob/v26.2.6/transport/internet/sockopt_windows.go#L36
+            // https://github.com/golang/go/blob/go1.26.0/src/net/interface.go#L169
+            // https://github.com/golang/go/blob/go1.26.0/src/net/interface_windows.go#L62
+            sockopt["interface"] = TunModeAdapters.PrimaryName;
+        }
+    }
+
     static void AddMux(JsonObject outbound) {
         var settings = (JsonObject)outbound["settings"];
         if(settings.TryGetValue("flow", out var flow) && FLOW_VISION.Equals(flow)) {

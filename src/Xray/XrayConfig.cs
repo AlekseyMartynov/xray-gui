@@ -80,16 +80,7 @@ static class XrayConfig {
 
     static JsonObject CreateBypassOutbound() {
         var obj = CreateTaggedOutbound("freedom", TAG_BYPASS);
-        if(AppConfig.TunMode) {
-            obj["streamSettings"] = new JsonObject {
-                ["sockopt"] = new JsonObject {
-                    // https://github.com/XTLS/Xray-core/blob/v26.2.6/transport/internet/sockopt_windows.go#L36
-                    // https://github.com/golang/go/blob/go1.26.0/src/net/interface.go#L169
-                    // https://github.com/golang/go/blob/go1.26.0/src/net/interface_windows.go#L62
-                    ["interface"] = TunModeAdapters.PrimaryName
-                }
-            };
-        }
+        XrayOutbound.BindToPrimaryAdapter(obj);
         return obj;
     }
 
