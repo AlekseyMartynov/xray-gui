@@ -12,11 +12,6 @@ readonly partial struct NativeIPAddress {
     readonly ulong Lower;
     readonly ulong Upper;
 
-    NativeIPAddress(ulong lower, ulong upper) {
-        Lower = lower;
-        Upper = upper;
-    }
-
     public NativeIPAddress(ReadOnlySpan<ushort> hextets, bool networkOrder = false) {
         var inputLen = hextets.Length;
         ArgumentOutOfRangeException.ThrowIfGreaterThan(inputLen, 8);
@@ -126,10 +121,6 @@ partial struct NativeIPAddress {
         IPv6Zero = new([]),
         IPv4Loopback = new(127, 0, 0, 1),
         IPv6Loopback = new([0, 0, 0, 0, 0, 0, 0, 1]);
-
-    public static NativeIPAddress operator |(NativeIPAddress x, NativeIPAddress y) {
-        return new(x.Lower | y.Lower, x.Upper | y.Upper);
-    }
 
     public static unsafe bool TryParse(string text, out NativeIPAddress result) {
         if(!PreParseValidate(text)) {
