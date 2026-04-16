@@ -9,12 +9,21 @@ static class TunModeAdapters {
     const int IPv4TunPrefixLen = 24;
     const int IPv6TunPrefixLen = 64; // serverfault.com/a/218432
 
-    // https://github.com/eycorsican/go-tun2socks/blob/v1.16.11/cmd/tun2socks/main.go#L92-L94
-    static readonly NativeIPAddress IPv4TunAddr = new(10, 255, 0, 2);
+    static readonly NativeIPAddress IPv4TunAddr;
+    static readonly NativeIPAddress IPv6TunAddr;
 
-    static readonly NativeIPAddress IPv6TunAddr = new([0xfd00, 0x10, 0x255, 0, 0, 0, 0, 2]);
+    public static readonly NativeIPAddress TunDns;
 
-    public static readonly NativeIPAddress TunDns = new(10, 255, 0, 53);
+    static TunModeAdapters() {
+        // https://github.com/eycorsican/go-tun2socks/blob/v1.16.11/cmd/tun2socks/main.go#L92-L94
+        var v4TunPrefix = new NativeIPAddress(10, 255, 0, 0);
+        var v6TunPrefix = new NativeIPAddress([0xfd00, 0x10, 0x255]);
+
+        IPv4TunAddr = new(v4TunPrefix, 2);
+        IPv6TunAddr = new(v6TunPrefix, 2);
+
+        TunDns = new(v4TunPrefix, 53);
+    }
 
     public static uint IPv4TunIndex { get; private set; }
     public static uint IPv6TunIndex { get; private set; }
