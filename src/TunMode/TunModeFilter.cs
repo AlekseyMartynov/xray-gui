@@ -8,8 +8,8 @@ namespace Project;
 // https://github.com/eycorsican/go-tun2socks/blob/v1.16.11/common/dns/blocker/blocker_windows.go
 // https://github.com/Jigsaw-Code/outline-apps/blob/manager_windows/v1.17.2/client/electron/windows/smartdnsblock/smartdnsblock/smartdnsblock.cpp
 
-static class TunModeOutsideDnsBlock {
-    const string NAME = "xray-gui-outside-dns-block";
+static class TunModeFilter {
+    const string NAME = "xray-gui-filter";
 
     static readonly Guid SubLayerKey = Guid.NewGuid();
 

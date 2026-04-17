@@ -104,7 +104,7 @@ static partial class Program {
                 ProxyBackup.TrySave();
                 NativeProxyManager.SetDirectOnly();
             }
-            TunModeOutsideDnsBlock.Start();
+            TunModeFilter.Start();
             TunModeRouting.AddDefaultOverride();
             TunModeRouting.AddTunnel();
         } else {
@@ -114,7 +114,7 @@ static partial class Program {
     }
 
     static void UndoTrafficRedirect() {
-        TunModeOutsideDnsBlock.Stop();
+        TunModeFilter.Stop();
         TunModeRouting.UndoAll();
         ProxyBackup.TryRestore();
     }
