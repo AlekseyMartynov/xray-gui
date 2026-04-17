@@ -18,38 +18,26 @@ static class TunModeFilter {
     public static void Start() {
         InitEngine();
         InitSubLayer();
+        BlockOutsideDns();
+    }
 
-        ReadOnlySpan<Guid> blockLayerList = [
-            PInvoke.FWPM_LAYER_ALE_AUTH_CONNECT_V4,
-            PInvoke.FWPM_LAYER_ALE_AUTH_CONNECT_V6,
-        ];
+    static void BlockOutsideDns() {
+        // https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
+        ReadOnlySpan<ushort> ports = [53, 853];
 
-        ReadOnlySpan<IPPROTO> block53ProtoList = [
-            IPPROTO.IPPROTO_UDP,
-            IPPROTO.IPPROTO_TCP,
-        ];
+        FWPM_FILTER_CONDITION0 portCond = default, ifCond = default;
 
-        foreach(var layer in blockLayerList) {
-            foreach(var proto in block53ProtoList) {
-                AddBlockFilter(layer, 1, proto, 53);
+        foreach(var port in ports) {
+            InitRemotePortCondition(ref portCond, port);
+            {
+                InitInterfaceCondition(ref ifCond, TunModeAdapters.IPv4TunIndex, not: true);
+                AddBlockFilter(PInvoke.FWPM_LAYER_OUTBOUND_TRANSPORT_V4, portCond, ifCond);
             }
-            // DNS over TLS
-            // https://techcommunity.microsoft.com/blog/-/-/3565859
-            AddBlockFilter(layer, 1, IPPROTO.IPPROTO_TCP, 853);
+            {
+                InitInterfaceCondition(ref ifCond, TunModeAdapters.IPv6TunIndex, not: true);
+                AddBlockFilter(PInvoke.FWPM_LAYER_OUTBOUND_TRANSPORT_V6, portCond, ifCond);
+            }
         }
-
-        var permitCondition = new FWPM_FILTER_CONDITION0() {
-            fieldKey = PInvoke.FWPM_CONDITION_INTERFACE_INDEX,
-            matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
-            conditionValue = {
-                type = FWP_DATA_TYPE.FWP_UINT32,
-                Anonymous = {
-                    uint32 = TunModeAdapters.IPv4TunIndex
-                }
-            }
-        };
-
-        AddFilter(PInvoke.FWPM_LAYER_ALE_AUTH_CONNECT_V4, 2, [permitCondition], FWP_ACTION_TYPE.FWP_ACTION_PERMIT);
     }
 
     public static void Stop() {
@@ -95,30 +83,8 @@ static class TunModeFilter {
         }
     }
 
-    static void AddBlockFilter(Guid layerKey, ulong weight, IPPROTO proto, ushort port) {
-        ReadOnlySpan<FWPM_FILTER_CONDITION0> blockConditions = [
-            new() {
-                fieldKey = PInvoke.FWPM_CONDITION_IP_PROTOCOL,
-                matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
-                conditionValue = {
-                    type = FWP_DATA_TYPE.FWP_UINT8,
-                    Anonymous = {
-                        uint8 = (byte)proto
-                    }
-                }
-            },
-            new() {
-                fieldKey = PInvoke.FWPM_CONDITION_IP_REMOTE_PORT,
-                matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL,
-                conditionValue = {
-                    type = FWP_DATA_TYPE.FWP_UINT16,
-                    Anonymous = {
-                        uint16 = port
-                    }
-                }
-            }
-        ];
-        AddFilter(layerKey, weight, blockConditions, FWP_ACTION_TYPE.FWP_ACTION_BLOCK);
+    static void AddBlockFilter(Guid layerKey, params ReadOnlySpan<FWPM_FILTER_CONDITION0> conditions) {
+        AddFilter(layerKey, 1, conditions, FWP_ACTION_TYPE.FWP_ACTION_BLOCK);
     }
 
     static unsafe void AddFilter(Guid layerKey, ulong weight, ReadOnlySpan<FWPM_FILTER_CONDITION0> conditions, FWP_ACTION_TYPE actionType) {
@@ -151,6 +117,28 @@ static class TunModeFilter {
                 PInvoke.FwpmFilterAdd0(Engine, in filter, default, out _)
             );
         }
+    }
+
+    static void InitRemotePortCondition(ref FWPM_FILTER_CONDITION0 cond, ushort port) {
+        cond.matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL;
+        cond.fieldKey = PInvoke.FWPM_CONDITION_IP_REMOTE_PORT;
+        cond.conditionValue = new() {
+            type = FWP_DATA_TYPE.FWP_UINT16,
+            Anonymous = {
+                uint16 = port
+            }
+        };
+    }
+
+    static void InitInterfaceCondition(ref FWPM_FILTER_CONDITION0 cond, uint index, bool not = false) {
+        cond.matchType = not ? FWP_MATCH_TYPE.FWP_MATCH_NOT_EQUAL : FWP_MATCH_TYPE.FWP_MATCH_EQUAL;
+        cond.fieldKey = PInvoke.FWPM_CONDITION_INTERFACE_INDEX;
+        cond.conditionValue = new() {
+            type = FWP_DATA_TYPE.FWP_UINT32,
+            Anonymous = {
+                uint32 = index
+            }
+        };
     }
 }
 
