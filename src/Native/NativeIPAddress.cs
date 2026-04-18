@@ -50,6 +50,14 @@ readonly partial struct NativeIPAddress {
         return IsIPv4() ? ADDRESS_FAMILY.AF_INET : ADDRESS_FAMILY.AF_INET6;
     }
 
+    public void WriteTo(Span<byte> destination) {
+        var bytes = AsBytes();
+        if(bytes.Length != destination.Length) {
+            throw new InvalidOperationException();
+        }
+        bytes.CopyTo(destination);
+    }
+
     public void WriteTo(ref SOCKADDR_INET addr) {
         var bytes = AsBytes();
         if(bytes.Length == 4) {

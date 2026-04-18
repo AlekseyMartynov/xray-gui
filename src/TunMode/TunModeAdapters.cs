@@ -13,6 +13,7 @@ static class TunModeAdapters {
     static readonly NativeIPAddress IPv6TunAddr;
 
     public static readonly NativeIPAddress TunDns;
+    public static readonly NativeIPAddress TunBroadcast;
 
     static TunModeAdapters() {
         // https://github.com/eycorsican/go-tun2socks/blob/v1.16.11/cmd/tun2socks/main.go#L92-L94
@@ -23,6 +24,7 @@ static class TunModeAdapters {
         IPv6TunAddr = new(v6TunPrefix, 2);
 
         TunDns = new(v4TunPrefix, 53);
+        TunBroadcast = new(v4TunPrefix, 255);
     }
 
     public static uint IPv4TunIndex { get; private set; }

@@ -19,6 +19,7 @@ static class TunModeFilter {
         InitEngine();
         InitSubLayer();
         BlockOutsideDns();
+        BlockNonUnicast();
     }
 
     static void BlockOutsideDns() {
@@ -36,6 +37,36 @@ static class TunModeFilter {
             {
                 InitInterfaceCondition(ref ifCond, TunModeAdapters.IPv6TunIndex, not: true);
                 AddBlockFilter(PInvoke.FWPM_LAYER_OUTBOUND_TRANSPORT_V6, portCond, ifCond);
+            }
+        }
+    }
+
+    static unsafe void BlockNonUnicast() {
+        var prefixes = (stackalloc[] {
+            (TunModeAdapters.TunBroadcast, 32),
+            (new(224), 3), // Class D + Class E
+            (new([0xff00]), 8)
+        });
+
+        FWPM_FILTER_CONDITION0 cidrCond = default, ifCond = default;
+
+        foreach(var (prefix, prefixLen) in prefixes) {
+            if(prefix.IsIPv4()) {
+                if(TunModeAdapters.IPv4TunIndex > 0) {
+                    var cidr = default(FWP_V4_ADDR_AND_MASK);
+                    InitCidr(ref cidr, prefix, prefixLen);
+                    InitRemoteCidrCondition(ref cidrCond, &cidr);
+                    InitInterfaceCondition(ref ifCond, TunModeAdapters.IPv4TunIndex);
+                    AddBlockFilter(PInvoke.FWPM_LAYER_OUTBOUND_IPPACKET_V4, cidrCond, ifCond);
+                }
+            } else {
+                if(TunModeAdapters.IPv6TunIndex > 0) {
+                    var cidr = default(FWP_V6_ADDR_AND_MASK);
+                    InitCidr(ref cidr, prefix, prefixLen);
+                    InitRemoteCidrCondition(ref cidrCond, &cidr);
+                    InitInterfaceCondition(ref ifCond, TunModeAdapters.IPv6TunIndex);
+                    AddBlockFilter(PInvoke.FWPM_LAYER_OUTBOUND_IPPACKET_V6, cidrCond, ifCond);
+                }
             }
         }
     }
@@ -139,6 +170,44 @@ static class TunModeFilter {
                 uint32 = index
             }
         };
+    }
+
+    static unsafe void InitRemoteCidrCondition(ref FWPM_FILTER_CONDITION0 cond, FWP_V4_ADDR_AND_MASK* cidr) {
+        cond.matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL;
+        cond.fieldKey = PInvoke.FWPM_CONDITION_IP_REMOTE_ADDRESS;
+        cond.conditionValue = new() {
+            type = FWP_DATA_TYPE.FWP_V4_ADDR_MASK,
+            Anonymous = {
+                v4AddrMask = cidr
+            }
+        };
+    }
+
+    static unsafe void InitRemoteCidrCondition(ref FWPM_FILTER_CONDITION0 cond, FWP_V6_ADDR_AND_MASK* cidr) {
+        cond.matchType = FWP_MATCH_TYPE.FWP_MATCH_EQUAL;
+        cond.fieldKey = PInvoke.FWPM_CONDITION_IP_REMOTE_ADDRESS;
+        cond.conditionValue = new() {
+            type = FWP_DATA_TYPE.FWP_V6_ADDR_MASK,
+            Anonymous = {
+                v6AddrMask = cidr
+            }
+        };
+    }
+
+    static void InitCidr(ref FWP_V4_ADDR_AND_MASK cidr, NativeIPAddress prefix, int prefixLen) {
+        var addrSpan = NativeUtils.Cast<uint, byte>(ref cidr.addr);
+        prefix.WriteTo(addrSpan);
+
+        // "Specifies IPv4 address and mask in host order"
+        // https://learn.microsoft.com/windows/win32/api/fwptypes/
+        addrSpan.Reverse();
+
+        cidr.mask = uint.MaxValue << (32 - prefixLen);
+    }
+
+    static void InitCidr(ref FWP_V6_ADDR_AND_MASK cidr, NativeIPAddress prefix, int prefixLen) {
+        prefix.WriteTo(cidr.addr.AsSpan());
+        cidr.prefixLength = (byte)prefixLen;
     }
 }
 
