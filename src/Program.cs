@@ -5,8 +5,6 @@ static partial class Program {
 
     internal static readonly object SingleInstanceLock = AcquireSingleInstanceLock();
 
-    static CancellationTokenSource? WanInfoUpdateCancellation;
-
     public static bool Started { get; private set; }
 
     static void Main() {
@@ -64,8 +62,7 @@ static partial class Program {
             throw;
         }
 
-        WanInfoUpdateCancellation = new(TimeSpan.FromMinutes(1));
-        WanInfo.RequestUpdate(WanInfoUpdateCancellation.Token);
+        WanInfo.RequestUpdate(TimeSpan.FromMinutes(1));
 
         Started = true;
     }
@@ -73,11 +70,7 @@ static partial class Program {
     public static void Stop() {
         EnsureStarted();
 
-        if(WanInfoUpdateCancellation != null) {
-            WanInfoUpdateCancellation.Cancel();
-            WanInfoUpdateCancellation.Dispose();
-            WanInfoUpdateCancellation = null;
-        }
+        WanInfo.CancelUpdate();
 
         ProcMan.StopAll();
         UndoTrafficRedirect();

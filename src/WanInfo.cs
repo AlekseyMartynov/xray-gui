@@ -20,6 +20,8 @@ static class WanInfo {
 
     static readonly Channel<CancellationToken> PendingUpdateRequests;
 
+    static CancellationTokenSource? UpdateCancellation;
+
     static WanInfo() {
         var channelOptions = new UnboundedChannelOptions {
             SingleReader = true
@@ -42,8 +44,18 @@ static class WanInfo {
 
     public static event EventHandler<WanInfoEventArgs>? Ready;
 
-    public static void RequestUpdate(CancellationToken ct) {
-        PendingUpdateRequests.Writer.TryWrite(ct);
+    public static void RequestUpdate(TimeSpan timeout) {
+        CancelUpdate();
+        UpdateCancellation = new(timeout);
+        PendingUpdateRequests.Writer.TryWrite(UpdateCancellation.Token);
+    }
+
+    public static void CancelUpdate() {
+        if(UpdateCancellation != null) {
+            UpdateCancellation.Cancel();
+            UpdateCancellation.Dispose();
+            UpdateCancellation = null;
+        }
     }
 
     static async Task WhenTunDnsReadyAsync(CancellationToken ct) {
