@@ -35,14 +35,14 @@ partial class UI {
                 menu,
                 MENU_ITEM_FLAGS.MF_POPUP,
                 (nuint)(nint)CreateServersSubMenu(),
-                "Server: " + EscapeApmersand(SelectedServer.GetDisplayName("(none)"))
+                "Server: " + EscapeAmpersand(SelectedServer.GetDisplayName("(none)"))
             );
         } else {
             PInvoke.AppendMenu(
                 menu,
                 MENU_ITEM_FLAGS.MF_STRING | MENU_ITEM_FLAGS.MF_DISABLED,
                 ID_SERVER_LIST_START,
-                "No items in " + EscapeApmersand(Path.GetFileName(ServerList.FilePath))
+                "No items in " + EscapeAmpersand(Path.GetFileName(ServerList.FilePath))
             );
         }
 
@@ -85,7 +85,7 @@ partial class UI {
                 subMenu,
                 GetMenuItemFlags(isChecked: i == AppConfig.SelectedServerIndex),
                 ID_SERVER_LIST_START + (uint)i,
-                EscapeApmersand(ServerList.DisplayName[i])
+                EscapeAmpersand(ServerList.DisplayName[i])
             );
             if(i < serverCount - 1 && ServerList.Separator[i]) {
                 AppendSeparator(subMenu);
@@ -136,7 +136,7 @@ partial class UI {
         return subMenu;
     }
 
-    static string EscapeApmersand(string text) {
+    static string EscapeAmpersand(string text) {
         return text.Replace("&", "&&");
     }
 
