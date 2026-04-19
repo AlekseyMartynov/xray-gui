@@ -41,7 +41,7 @@ static class NativeDns {
             }
 
             if(queryResult == WIN32_ERROR.ERROR_TIMEOUT) {
-                throw new UIException("DNS query timeout for " + domain);
+                return;
             }
 
             NativeUtils.MustSucceed(queryResult);
