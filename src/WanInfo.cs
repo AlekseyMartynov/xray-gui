@@ -78,7 +78,7 @@ static class WanInfo {
 
         foreach(var (uri, ipField, countryCodeField) in Services) {
             if(ct.IsCancellationRequested) {
-                return;
+                break;
             }
             try {
                 mem.Position = 0;
@@ -111,9 +111,18 @@ static class WanInfo {
             }
         }
 
+        if(!IsCurrentUpdate(ct)) {
+            return;
+        }
+
         Ready?.Invoke(default, new() {
             IP = ip,
             CountryCode = countryCode,
         });
+    }
+
+    static bool IsCurrentUpdate(CancellationToken ct) {
+        return UpdateCancellation != null
+            && UpdateCancellation.Token == ct;
     }
 }
