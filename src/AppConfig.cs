@@ -7,6 +7,7 @@ enum AppConfigFlags {
     TunMode = 1 << 10,
     TunModeIPv6 = 1 << 11,
     TunModeUnsetProxy = 1 << 12,
+    TunModeLockdown = 1 << 13,
 
     BypassRU = 1 << 20,
     BypassPrivate = 1 << 21,
@@ -24,6 +25,7 @@ static class AppConfig {
     public static bool TunMode => HasFlag(AppConfigFlags.TunMode);
     public static bool TunModeIPv6 => HasFlag(AppConfigFlags.TunModeIPv6);
     public static bool TunModeUnsetProxy => HasFlag(AppConfigFlags.TunModeUnsetProxy);
+    public static bool TunModeLockdown => HasFlag(AppConfigFlags.TunModeLockdown);
     public static bool BypassRU => HasFlag(AppConfigFlags.BypassRU);
     public static bool BypassPrivate => HasFlag(AppConfigFlags.BypassPrivate);
 
@@ -69,6 +71,7 @@ class AppConfigFile(string filePath) : IAppConfigSource {
         KEY_TUN_MODE = "tun_mode",
         KEY_TUN_MODE_IPv6 = "tun_mode_ipv6",
         KEY_TUN_MODE_UNSET_PROXY = "tun_mode_unset_proxy",
+        KEY_TUN_MODE_LOCKDOWN = "tun_mode_lockdown",
         KEY_BYPASS_RU = "bypass_ru",
         KEY_BYPASS_PRIVATE = "bypass_private",
         KEY_PROXY = "proxy",
@@ -153,6 +156,7 @@ class AppConfigFile(string filePath) : IAppConfigSource {
             KEY_TUN_MODE + " = " + FormatFlag(AppConfigFlags.TunMode),
             KEY_TUN_MODE_IPv6 + " = " + FormatFlag(AppConfigFlags.TunModeIPv6),
             KEY_TUN_MODE_UNSET_PROXY + " = " + FormatFlag(AppConfigFlags.TunModeUnsetProxy),
+            KEY_TUN_MODE_LOCKDOWN + " = " + FormatFlag(AppConfigFlags.TunModeLockdown),
             KEY_BYPASS_RU + " = " + FormatFlag(AppConfigFlags.BypassRU),
             KEY_BYPASS_PRIVATE + " = " + FormatFlag(AppConfigFlags.BypassPrivate),
             KEY_PROXY + " = " + ProxyAddr + ':' + ProxyPort,
@@ -167,6 +171,7 @@ class AppConfigFile(string filePath) : IAppConfigSource {
             (KEY_TUN_MODE, AppConfigFlags.TunMode),
             (KEY_TUN_MODE_IPv6, AppConfigFlags.TunModeIPv6),
             (KEY_TUN_MODE_UNSET_PROXY, AppConfigFlags.TunModeUnsetProxy),
+            (KEY_TUN_MODE_LOCKDOWN, AppConfigFlags.TunModeLockdown),
             (KEY_BYPASS_RU, AppConfigFlags.BypassRU),
             (KEY_BYPASS_PRIVATE, AppConfigFlags.BypassPrivate),
             ("tap_mode", AppConfigFlags.TunMode),

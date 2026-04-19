@@ -12,6 +12,7 @@ partial class UI {
     const uint IDM_TUN_ENABLE = 1010;
     const uint IDM_TUN_IPv6 = 1011;
     const uint IDM_TUN_UNSET_PROXY = 1012;
+    const uint IDM_TUN_LOCKDOWN = 1013;
 
     const uint IDM_BYPASS_RU = 1020;
     const uint IDM_BYPASS_PRIVATE = 1021;
@@ -99,6 +100,7 @@ partial class UI {
             (AppConfigFlags.TunMode, IDM_TUN_ENABLE, "Enable"),
             (AppConfigFlags.TunModeIPv6, IDM_TUN_IPv6, "IPv6"),
             (AppConfigFlags.TunModeUnsetProxy, IDM_TUN_UNSET_PROXY, "Unset system proxy"),
+            (AppConfigFlags.TunModeLockdown, IDM_TUN_LOCKDOWN, "Lockdown"),
         ];
         foreach(var (flag, id, text) in items) {
             var isDisabled = !AppConfig.TunMode && flag != AppConfigFlags.TunMode;
@@ -241,6 +243,7 @@ partial class UI {
             IDM_TUN_ENABLE => AppConfigFlags.TunMode,
             IDM_TUN_IPv6 => AppConfigFlags.TunModeIPv6,
             IDM_TUN_UNSET_PROXY => AppConfigFlags.TunModeUnsetProxy,
+            IDM_TUN_LOCKDOWN => AppConfigFlags.TunModeLockdown,
             IDM_BYPASS_RU => AppConfigFlags.BypassRU,
             IDM_BYPASS_PRIVATE => AppConfigFlags.BypassPrivate,
             _ => default

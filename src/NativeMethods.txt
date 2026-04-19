@@ -84,6 +84,7 @@ TranslateMessage
 // Windows Filtering Platform
 
 FWPM_CONDITION_*
+FWP_CONDITION_FLAG_*
 FWPM_LAYER_*
 FWPM_SESSION_FLAG_DYNAMIC
 Windows.Win32.NetworkManagement.WindowsFilteringPlatform.FwpmEngineOpen0

@@ -18,8 +18,63 @@ static class TunModeFilter {
     public static void Start() {
         InitEngine();
         InitSubLayer();
+        if(AppConfig.TunModeLockdown) {
+            Lockdown();
+        }
         BlockOutsideDns();
         BlockNonUnicast();
+    }
+
+    static unsafe void Lockdown() {
+        // Stay within the same layer for proper weight-based rule arbitration
+        var layer4 = PInvoke.FWPM_LAYER_OUTBOUND_TRANSPORT_V4;
+        var layer6 = PInvoke.FWPM_LAYER_OUTBOUND_TRANSPORT_V6;
+        {
+            FWPM_FILTER_CONDITION0 ifCond = default;
+            {
+                InitInterfaceCondition(ref ifCond, TunModeAdapters.IPv4TunIndex, not: true);
+                AddBlockFilter(layer4, ifCond);
+            }
+            {
+                InitInterfaceCondition(ref ifCond, TunModeAdapters.IPv6TunIndex, not: true);
+                AddBlockFilter(layer6, ifCond);
+            }
+        }
+        {
+            FWPM_FILTER_CONDITION0 portCond = default, cidrCond = default;
+            InitRemotePortCondition(ref portCond, (ushort)TunModeServerInfo.Port);
+            foreach(var ip in TunModeServerInfo.IPList) {
+                if(ip.IsIPv4()) {
+                    var cidr = default(FWP_V4_ADDR_AND_MASK);
+                    InitCidr(ref cidr, ip, 32);
+                    InitRemoteCidrCondition(ref cidrCond, &cidr);
+                    AddPermitFilter(layer4, portCond, cidrCond);
+                } else {
+                    var cidr = default(FWP_V6_ADDR_AND_MASK);
+                    InitCidr(ref cidr, ip, 128);
+                    InitRemoteCidrCondition(ref cidrCond, &cidr);
+                    AddPermitFilter(layer6, portCond, cidrCond);
+                }
+            }
+        }
+        {
+            // Critical for OS internal communications:
+            // curl: (2) getaddrinfo() thread failed to start
+            var loopbackCond = new FWPM_FILTER_CONDITION0 {
+                fieldKey = PInvoke.FWPM_CONDITION_FLAGS,
+                matchType = FWP_MATCH_TYPE.FWP_MATCH_FLAGS_ALL_SET,
+                conditionValue = {
+                    type = FWP_DATA_TYPE.FWP_UINT32,
+                    Anonymous = {
+                        uint32 = PInvoke.FWP_CONDITION_FLAG_IS_LOOPBACK
+                    }
+                }
+            };
+            AddPermitFilter(layer4, loopbackCond);
+            AddPermitFilter(layer6, loopbackCond);
+        }
+        // TODO?
+        // https://github.com/WireGuard/wireguard-windows/blob/v1.0/tunnel/firewall/rules.go#L826
     }
 
     static void BlockOutsideDns() {
@@ -116,6 +171,10 @@ static class TunModeFilter {
 
     static void AddBlockFilter(Guid layerKey, params ReadOnlySpan<FWPM_FILTER_CONDITION0> conditions) {
         AddFilter(layerKey, 1, conditions, FWP_ACTION_TYPE.FWP_ACTION_BLOCK);
+    }
+
+    static void AddPermitFilter(Guid layerKey, params ReadOnlySpan<FWPM_FILTER_CONDITION0> conditions) {
+        AddFilter(layerKey, 2, conditions, FWP_ACTION_TYPE.FWP_ACTION_PERMIT);
     }
 
     static unsafe void AddFilter(Guid layerKey, ulong weight, ReadOnlySpan<FWPM_FILTER_CONDITION0> conditions, FWP_ACTION_TYPE actionType) {

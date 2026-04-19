@@ -28,6 +28,7 @@ public sealed class AppConfigTests : IDisposable {
             tun_mode = nonsense
             tun_mode_ipv6 = 1
             tun_mode_unset_proxy = 1
+            tun_mode_lockdown = 1
             bypass_ru = 1
             bypass_private = 0
             proc_console = 123
@@ -41,6 +42,7 @@ public sealed class AppConfigTests : IDisposable {
         AssertFlag(false, AppConfigFlags.TunMode);
         AssertFlag(true, AppConfigFlags.TunModeIPv6);
         AssertFlag(true, AppConfigFlags.TunModeUnsetProxy);
+        AssertFlag(true, AppConfigFlags.TunModeLockdown);
         AssertFlag(true, AppConfigFlags.BypassRU);
         AssertFlag(false, AppConfigFlags.BypassPrivate);
         AssertFlag(true, AppConfigFlags.ProcConsole);

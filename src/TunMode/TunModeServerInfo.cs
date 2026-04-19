@@ -2,11 +2,13 @@ namespace Project;
 
 static class TunModeServerInfo {
     public static string Address { get; private set; } = "";
+    public static int Port { get; private set; }
     public static bool IsDomainName { get; private set; }
     public static IReadOnlyList<NativeIPAddress> IPList { get; private set; } = [];
 
-    public static void Refresh(string address) {
+    public static void Refresh(string address, int port) {
         Address = address;
+        Port = port;
         IsDomainName = false;
 
         if(NativeIPAddress.TryParse(address, out var ip)) {
