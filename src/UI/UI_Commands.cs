@@ -9,12 +9,12 @@ partial class UI {
     const uint IDM_RELOAD_CONFIG = 1002;
     const uint IDM_QUIT = 1003;
 
-    const uint IDM_TUN_ENABLE = 1004;
-    const uint IDM_TUN_IPv6 = 1005;
-    const uint IDM_TUN_UNSET_PROXY = 1006;
+    const uint IDM_TUN_ENABLE = 1010;
+    const uint IDM_TUN_IPv6 = 1011;
+    const uint IDM_TUN_UNSET_PROXY = 1012;
 
-    const uint IDM_BYPASS_RU = 1007;
-    const uint IDM_BYPASS_PRIVATE = 1008;
+    const uint IDM_BYPASS_RU = 1020;
+    const uint IDM_BYPASS_PRIVATE = 1021;
 
     const uint ID_TRAY_ICON_DBLCLK = 1100;
     const uint ID_SERVER_LIST_START = 1200;

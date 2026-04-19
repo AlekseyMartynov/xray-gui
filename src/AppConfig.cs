@@ -2,12 +2,14 @@ namespace Project;
 
 [Flags]
 enum AppConfigFlags {
-    ProcConsole = 1,
-    TunMode = 2,
-    TunModeIPv6 = 4,
-    TunModeUnsetProxy = 8,
-    BypassRU = 16,
-    BypassPrivate = 32,
+    ProcConsole = 1 << 0,
+
+    TunMode = 1 << 10,
+    TunModeIPv6 = 1 << 11,
+    TunModeUnsetProxy = 1 << 12,
+
+    BypassRU = 1 << 20,
+    BypassPrivate = 1 << 21,
 }
 
 static class AppConfig {
