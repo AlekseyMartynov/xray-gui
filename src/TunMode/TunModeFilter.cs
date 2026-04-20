@@ -1,6 +1,4 @@
 using Windows.Win32;
-using Windows.Win32.Foundation;
-using Windows.Win32.Networking.WinSock;
 using Windows.Win32.NetworkManagement.WindowsFilteringPlatform;
 
 namespace Project;
@@ -73,8 +71,9 @@ static class TunModeFilter {
             AddPermitFilter(layer4, loopbackCond);
             AddPermitFilter(layer6, loopbackCond);
         }
-        // TODO?
-        // https://github.com/WireGuard/wireguard-windows/blob/v1.0/tunnel/firewall/rules.go#L826
+        // TODO
+        // Allow Hyper-V adapters?
+        // Allow CIDR white list?
     }
 
     static void BlockOutsideDns() {

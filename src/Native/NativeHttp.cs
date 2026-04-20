@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using Windows.Win32;
 using Windows.Win32.Networking.WinInet;
 
