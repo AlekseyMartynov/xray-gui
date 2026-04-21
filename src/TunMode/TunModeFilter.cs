@@ -24,6 +24,8 @@ static class TunModeFilter {
     }
 
     static unsafe void Lockdown() {
+        var blockWeight = 1;
+        var permitWeight = 2;
         // Stay within the same layer for proper weight-based rule arbitration
         var layer4 = PInvoke.FWPM_LAYER_OUTBOUND_TRANSPORT_V4;
         var layer6 = PInvoke.FWPM_LAYER_OUTBOUND_TRANSPORT_V6;
@@ -31,11 +33,11 @@ static class TunModeFilter {
             FWPM_FILTER_CONDITION0 ifCond = default;
             {
                 InitInterfaceCondition(ref ifCond, TunModeAdapters.IPv4TunIndex, not: true);
-                AddBlockFilter(layer4, ifCond);
+                AddBlockFilter(layer4, blockWeight, ifCond);
             }
             {
                 InitInterfaceCondition(ref ifCond, TunModeAdapters.IPv6TunIndex, not: true);
-                AddBlockFilter(layer6, ifCond);
+                AddBlockFilter(layer6, blockWeight, ifCond);
             }
         }
         {
@@ -46,12 +48,12 @@ static class TunModeFilter {
                     var cidr = default(FWP_V4_ADDR_AND_MASK);
                     InitCidr(ref cidr, ip, 32);
                     InitRemoteCidrCondition(ref cidrCond, &cidr);
-                    AddPermitFilter(layer4, portCond, cidrCond);
+                    AddPermitFilter(layer4, permitWeight, portCond, cidrCond);
                 } else {
                     var cidr = default(FWP_V6_ADDR_AND_MASK);
                     InitCidr(ref cidr, ip, 128);
                     InitRemoteCidrCondition(ref cidrCond, &cidr);
-                    AddPermitFilter(layer6, portCond, cidrCond);
+                    AddPermitFilter(layer6, permitWeight, portCond, cidrCond);
                 }
             }
         }
@@ -68,8 +70,8 @@ static class TunModeFilter {
                     }
                 }
             };
-            AddPermitFilter(layer4, loopbackCond);
-            AddPermitFilter(layer6, loopbackCond);
+            AddPermitFilter(layer4, permitWeight, loopbackCond);
+            AddPermitFilter(layer6, permitWeight, loopbackCond);
         }
         // TODO
         // Allow Hyper-V adapters?
@@ -77,6 +79,8 @@ static class TunModeFilter {
     }
 
     static void BlockOutsideDns() {
+        var weight = 3;
+
         // https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
         ReadOnlySpan<ushort> ports = [53, 853];
 
@@ -86,16 +90,18 @@ static class TunModeFilter {
             InitRemotePortCondition(ref portCond, port);
             {
                 InitInterfaceCondition(ref ifCond, TunModeAdapters.IPv4TunIndex, not: true);
-                AddBlockFilter(PInvoke.FWPM_LAYER_OUTBOUND_TRANSPORT_V4, portCond, ifCond);
+                AddBlockFilter(PInvoke.FWPM_LAYER_OUTBOUND_TRANSPORT_V4, weight, portCond, ifCond);
             }
             {
                 InitInterfaceCondition(ref ifCond, TunModeAdapters.IPv6TunIndex, not: true);
-                AddBlockFilter(PInvoke.FWPM_LAYER_OUTBOUND_TRANSPORT_V6, portCond, ifCond);
+                AddBlockFilter(PInvoke.FWPM_LAYER_OUTBOUND_TRANSPORT_V6, weight, portCond, ifCond);
             }
         }
     }
 
     static unsafe void BlockNonUnicast() {
+        var weight = 3;
+
         var prefixes = (stackalloc[] {
             (TunModeAdapters.TunBroadcast, 32),
             (new(224), 3), // Class D + Class E
@@ -111,7 +117,7 @@ static class TunModeFilter {
                     InitCidr(ref cidr, prefix, prefixLen);
                     InitRemoteCidrCondition(ref cidrCond, &cidr);
                     InitInterfaceCondition(ref ifCond, TunModeAdapters.IPv4TunIndex);
-                    AddBlockFilter(PInvoke.FWPM_LAYER_OUTBOUND_IPPACKET_V4, cidrCond, ifCond);
+                    AddBlockFilter(PInvoke.FWPM_LAYER_OUTBOUND_IPPACKET_V4, weight, cidrCond, ifCond);
                 }
             } else {
                 if(TunModeAdapters.IPv6TunIndex > 0) {
@@ -119,7 +125,7 @@ static class TunModeFilter {
                     InitCidr(ref cidr, prefix, prefixLen);
                     InitRemoteCidrCondition(ref cidrCond, &cidr);
                     InitInterfaceCondition(ref ifCond, TunModeAdapters.IPv6TunIndex);
-                    AddBlockFilter(PInvoke.FWPM_LAYER_OUTBOUND_IPPACKET_V6, cidrCond, ifCond);
+                    AddBlockFilter(PInvoke.FWPM_LAYER_OUTBOUND_IPPACKET_V6, weight, cidrCond, ifCond);
                 }
             }
         }
@@ -168,12 +174,12 @@ static class TunModeFilter {
         }
     }
 
-    static void AddBlockFilter(Guid layerKey, params ReadOnlySpan<FWPM_FILTER_CONDITION0> conditions) {
-        AddFilter(layerKey, 1, conditions, FWP_ACTION_TYPE.FWP_ACTION_BLOCK);
+    static void AddBlockFilter(Guid layerKey, int weight, params ReadOnlySpan<FWPM_FILTER_CONDITION0> conditions) {
+        AddFilter(layerKey, (ulong)weight, conditions, FWP_ACTION_TYPE.FWP_ACTION_BLOCK);
     }
 
-    static void AddPermitFilter(Guid layerKey, params ReadOnlySpan<FWPM_FILTER_CONDITION0> conditions) {
-        AddFilter(layerKey, 2, conditions, FWP_ACTION_TYPE.FWP_ACTION_PERMIT);
+    static void AddPermitFilter(Guid layerKey, int weight, params ReadOnlySpan<FWPM_FILTER_CONDITION0> conditions) {
+        AddFilter(layerKey, (ulong)weight, conditions, FWP_ACTION_TYPE.FWP_ACTION_PERMIT);
     }
 
     static unsafe void AddFilter(Guid layerKey, ulong weight, ReadOnlySpan<FWPM_FILTER_CONDITION0> conditions, FWP_ACTION_TYPE actionType) {
