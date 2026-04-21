@@ -2,6 +2,7 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Networking.WinSock;
 using Windows.Win32.NetworkManagement.IpHelper;
+using Windows.Win32.NetworkManagement.Ndis;
 
 namespace Project;
 
@@ -24,6 +25,7 @@ static class NativeRouting {
             var rows = tablePtr->Table.AsSpan(rowCount);
 
             var bestRowIndex = -1;
+            var bestTotalMetric = default(uint);
 
             for(var i = 0; i < rowCount; i++) {
                 var candidate = rows[i];
@@ -34,8 +36,14 @@ static class NativeRouting {
                 if(!destPrefix.Equals(NativeIPAddress.From(in candidateDest.Prefix))) {
                     continue;
                 }
-                if(bestRowIndex < 0 || candidate.Metric < rows[bestRowIndex].Metric) {
+                var candidateInterface = GetInterface(in candidate);
+                if(!candidateInterface.Connected) {
+                    continue;
+                }
+                var candidateTotalMetric = candidate.Metric + candidateInterface.Metric;
+                if(bestRowIndex < 0 || candidateTotalMetric < bestTotalMetric) {
                     bestRowIndex = i;
+                    bestTotalMetric = candidateTotalMetric;
                 }
             }
 
@@ -105,5 +113,14 @@ static class NativeRouting {
         route.Gateway.WriteTo(ref row.NextHop);
 
         return row;
+    }
+
+    static MIB_IPINTERFACE_ROW GetInterface(ref readonly MIB_IPFORWARD_ROW2 row) {
+        var result = default(MIB_IPINTERFACE_ROW);
+        PInvoke.InitializeIpInterfaceEntry(ref result);
+        result.Family = row.DestinationPrefix.Prefix.si_family;
+        result.InterfaceLuid = row.InterfaceLuid;
+        NativeUtils.MustSucceed(PInvoke.GetIpInterfaceEntry(ref result));
+        return result;
     }
 }

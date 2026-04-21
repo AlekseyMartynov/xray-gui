@@ -20,9 +20,11 @@ DnsQuery_W
 FreeMibTable
 GetAdaptersAddresses
 GetIpForwardTable2
+GetIpInterfaceEntry
 GetUnicastIpAddressTable
 InetNtop
 InetPton
+InitializeIpInterfaceEntry
 InitializeUnicastIpAddressEntry
 
 // Process
