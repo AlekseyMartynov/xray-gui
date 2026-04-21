@@ -45,9 +45,7 @@ static class TunModeAdapters {
 
         var tunFound = false;
         var ip6LoopbackFound = false;
-
-        var ip4Primary = "";
-        var ip6Primary = "";
+        var primaryFound = false;
 
         NativeAdapters.Enumerate((ref readonly NativeAdapterInfo info) => {
             if(!tunFound && IsGoodTun(in info)) {
@@ -60,11 +58,9 @@ static class TunModeAdapters {
                 IPv6LoopbackIndex = info.IPv6Index;
                 ip6LoopbackFound = true;
             }
-            if(ip4Primary.Length < 1 && IsIPv4Primary(in info)) {
-                ip4Primary = info.Name.ToString();
-            }
-            if(ip6Primary.Length < 1 && IsIPv6Primary(in info)) {
-                ip6Primary = info.Name.ToString();
+            if(!primaryFound && IsIPv4Primary(in info)) {
+                PrimaryName = info.Name.ToString();
+                primaryFound = true;
             }
         });
 
@@ -76,19 +72,7 @@ static class TunModeAdapters {
             IPv6LoopbackIndex = 1;
         }
 
-        if(ip4Primary.Length < 1) {
-            // Require IPv4 enabled
-            // to prevent 'failed to set IP_UNICAST_IF' error loop on bypass outbound
-            throw new InvalidOperationException("Failed to find primary adapter");
-        }
-
-        if(ip6Primary != ip4Primary) {
-            // Disable IPv6
-            // to prevent 'failed to set IPV6_UNICAST_IF' error loop on bypass outbound
-            IPv6TunEnabled = false;
-        }
-
-        PrimaryName = ip4Primary;
+        // TODO primary v4 vs v6
     }
 
     public static void SetTunParams(bool dhcp) {
@@ -131,10 +115,5 @@ static class TunModeAdapters {
     static bool IsIPv4Primary(ref readonly NativeAdapterInfo info) {
         return TunModeRouting.DefaultV4 != null
             && TunModeRouting.DefaultV4.AdapterIndex == info.IPv4Index;
-    }
-
-    static bool IsIPv6Primary(ref readonly NativeAdapterInfo info) {
-        return TunModeRouting.DefaultV6 != null
-            && TunModeRouting.DefaultV6.AdapterIndex == info.IPv6Index;
     }
 }
