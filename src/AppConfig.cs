@@ -30,6 +30,7 @@ static class AppConfig {
     public static bool BypassPrivate => HasFlag(AppConfigFlags.BypassPrivate);
 
     public static bool HasBypassByIP => BypassRU || BypassPrivate;
+    public static bool HasBypass => HasBypassByIP;
 
     public static string ProxyAddr => Source.ProxyAddr;
     public static int ProxyPort => Source.ProxyPort;

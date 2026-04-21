@@ -45,7 +45,9 @@ static class TunModeAdapters {
 
         var tunFound = false;
         var ip6LoopbackFound = false;
-        var primaryFound = false;
+
+        var ip4Primary = "";
+        var ip6Primary = "";
 
         NativeAdapters.Enumerate((ref readonly NativeAdapterInfo info) => {
             if(!tunFound && IsGoodTun(in info)) {
@@ -58,9 +60,11 @@ static class TunModeAdapters {
                 IPv6LoopbackIndex = info.IPv6Index;
                 ip6LoopbackFound = true;
             }
-            if(!primaryFound && IsIPv4Primary(in info)) {
-                PrimaryName = info.Name.ToString();
-                primaryFound = true;
+            if(ip4Primary.Length < 1 && IsIPv4Primary(in info)) {
+                ip4Primary = info.Name.ToString();
+            }
+            if(ip6Primary.Length < 1 && IsIPv6Primary(in info)) {
+                ip6Primary = info.Name.ToString();
             }
         });
 
@@ -72,7 +76,27 @@ static class TunModeAdapters {
             IPv6LoopbackIndex = 1;
         }
 
-        // TODO primary v4 vs v6
+        if(ip4Primary.Length > 0) {
+            PrimaryName = ip4Primary;
+        } else if(ip6Primary.Length > 0) {
+            PrimaryName = ip6Primary;
+        } else {
+            throw new UIException("Failed to detect primary adapter");
+        }
+
+        if(AppConfig.HasBypass) {
+            if(PrimaryName != ip4Primary) {
+                // Prevent 'failed to set IP_UNICAST_IF' error loop on
+                // curl -4 192.168.1.1
+                throw new UIException($"Bypass requires IPv4 on primary adapter (detected as '{PrimaryName}')");
+            }
+            if(AppConfig.TunModeIPv6 && ip6Primary != ip4Primary) {
+                // Prevent 'failed to set IPV6_UNICAST_IF' error loop on
+                // curl -6 [fe80::1234]
+                // (repeat until displayed in logs)
+                throw new UIException($"Bypass + IPv6 require dual stack primary adapter (detected as '{PrimaryName}')");
+            }
+        }
     }
 
     public static void SetTunParams(bool dhcp) {
@@ -114,6 +138,13 @@ static class TunModeAdapters {
 
     static bool IsIPv4Primary(ref readonly NativeAdapterInfo info) {
         return TunModeRouting.DefaultV4 != null
-            && TunModeRouting.DefaultV4.AdapterIndex == info.IPv4Index;
+            && TunModeRouting.DefaultV4.AdapterIndex == info.IPv4Index
+            && info.Status == IF_OPER_STATUS.IfOperStatusUp;
+    }
+
+    static bool IsIPv6Primary(ref readonly NativeAdapterInfo info) {
+        return TunModeRouting.DefaultV6 != null
+            && TunModeRouting.DefaultV6.AdapterIndex == info.IPv6Index
+            && info.Status == IF_OPER_STATUS.IfOperStatusUp;
     }
 }

@@ -30,7 +30,7 @@ static class XrayConfig {
             root["dns"] = CreateDnsModule();
         }
 
-        if(AppConfig.HasBypassByIP) {
+        if(AppConfig.HasBypass) {
             outboundList.Add(CreateBypassOutbound());
         }
 
@@ -136,6 +136,12 @@ static class XrayConfig {
                     ["outboundTag"] = TAG_DNS
                 }
             );
+            if(!AppConfig.TunModeIPv6) {
+                rules.Add(new JsonObject {
+                    ["ip"] = new JsonArray { "::/0" },
+                    ["outboundTag"] = TAG_BLACKHOLE
+                });
+            }
         }
         if(AppConfig.HasBypassByIP) {
             var ipList = new JsonArray();
