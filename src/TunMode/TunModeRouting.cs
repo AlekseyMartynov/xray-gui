@@ -95,7 +95,7 @@ static class TunModeRouting {
                 }
             }
             if(count < 1) {
-                throw new Exception("Failed to add tunnel route");
+                throw new UIException($"No route to address: {TunModeServerInfo.Address}");
             }
         } finally {
             SaveUndo(TunnelUndoPath, undo);
