@@ -66,4 +66,29 @@ public class NativeIPAddressTests {
             new NativeIPAddress(prefix, 256 + 1)
         );
     }
+
+    [Theory]
+    [InlineData(0, "0.0.0.0")]
+    [InlineData(3, "224.0.0.0")]
+    [InlineData(24, "255.255.255.0")]
+    [InlineData(32, "255.255.255.255")]
+    [InlineData(255, "255.255.255.255")]
+    public void ToPrefix_v4(byte prefixLen, string expectedText) {
+        var ip = new NativeIPAddress(uint.MaxValue);
+        Assert.Equal(expectedText, ip.ToPrefix(prefixLen).ToString());
+    }
+
+    [Theory]
+    [InlineData(0, "::")]
+    [InlineData(1, "8000::")]
+    [InlineData(63, "ffff:ffff:ffff:fffe::")]
+    [InlineData(64, "ffff:ffff:ffff:ffff::")]
+    [InlineData(65, "ffff:ffff:ffff:ffff:8000::")]
+    [InlineData(127, "ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe")]
+    [InlineData(128, "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff")]
+    [InlineData(255, "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff")]
+    public void ToPrefix_v6(byte prefixLen, string expectedText) {
+        var ip = new NativeIPAddress([0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff]);
+        Assert.Equal(expectedText, ip.ToPrefix(prefixLen).ToString());
+    }
 }

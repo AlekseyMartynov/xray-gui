@@ -12,6 +12,11 @@ readonly partial struct NativeIPAddress {
     readonly ulong Lower;
     readonly ulong Upper;
 
+    NativeIPAddress(ulong lower, ulong upper) {
+        Lower = lower;
+        Upper = upper;
+    }
+
     public NativeIPAddress(ReadOnlySpan<ushort> hextets, bool networkOrder = false) {
         var inputLen = hextets.Length;
         ArgumentOutOfRangeException.ThrowIfGreaterThan(inputLen, 8);
@@ -79,6 +84,24 @@ readonly partial struct NativeIPAddress {
             throw new InvalidOperationException();
         }
         return BitConverter.ToUInt32(bytes);
+    }
+
+    public NativeIPAddress ToPrefix(byte prefixLen) {
+        var shl = Math.Max(0, GetMaxPrefixLen() - prefixLen);
+
+        ulong lowerMask = 0, upperMask = 0;
+
+        if(shl < 64) {
+            lowerMask = ulong.MaxValue;
+            upperMask = ulong.MaxValue << shl;
+        } else if(shl < 128) {
+            lowerMask = ulong.MaxValue << (shl - 64);
+        }
+
+        return new(
+            Lower & BinaryPrimitives.ReverseEndianness(lowerMask),
+            Upper & BinaryPrimitives.ReverseEndianness(upperMask)
+        );
     }
 
     public override unsafe string ToString() {
