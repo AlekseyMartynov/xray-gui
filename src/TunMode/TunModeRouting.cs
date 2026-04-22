@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace Project;
 
 static class TunModeRouting {
-    static readonly IReadOnlyList<(NativeIPAddress, byte)>
+    static readonly IReadOnlyList<CIDR>
         DefaultOverrideV4,
         DefaultOverrideV6;
 
@@ -49,18 +49,16 @@ static class TunModeRouting {
         }
 
         try {
-            foreach(var (prefix, prefixLen) in DefaultOverrideV4) {
+            foreach(var dest in DefaultOverrideV4) {
                 TryAdd(new() {
-                    DestPrefix = prefix,
-                    DestPrefixLen = prefixLen,
+                    Dest = dest,
                     Gateway = NativeIPAddress.IPv4Zero,
                     AdapterIndex = TunModeAdapters.IPv4TunIndex,
                 });
             }
-            foreach(var (prefix, prefixLen) in DefaultOverrideV6) {
+            foreach(var dest in DefaultOverrideV6) {
                 TryAdd(new() {
-                    DestPrefix = prefix,
-                    DestPrefixLen = prefixLen,
+                    Dest = dest,
                     Gateway = NativeIPAddress.IPv6Zero,
                     AdapterIndex = AppConfig.TunModeIPv6 && TunModeAdapters.IPv6TunEnabled
                         ? TunModeAdapters.IPv6TunIndex
@@ -77,16 +75,13 @@ static class TunModeRouting {
         var undo = LoadUndo(TunnelUndoPath);
         try {
             foreach(var ip in TunModeServerInfo.IPList) {
-                var (gatewayRoute, destPrefixLen) = ip.IsIPv4()
-                    ? (DefaultV4, 32)
-                    : (DefaultV6, 128);
+                var gatewayRoute = ip.IsIPv4() ? DefaultV4 : DefaultV6;
                 if(gatewayRoute == null) {
                     continue;
                 }
                 count++;
                 var route = new NativeRoute {
-                    DestPrefix = ip,
-                    DestPrefixLen = (byte)destPrefixLen,
+                    Dest = ip,
                     Gateway = gatewayRoute.Gateway,
                     AdapterIndex = gatewayRoute.AdapterIndex,
                 };
@@ -136,14 +131,13 @@ static class TunModeRouting {
     }
 
     static string FormatUndoLine(NativeRoute route) {
-        return $"route delete {route.DestPrefix}/{route.DestPrefixLen} {route.Gateway} if {route.AdapterIndex}";
+        return $"route delete {route.Dest} {route.Gateway} if {route.AdapterIndex}";
     }
 
     static bool TryParseUndoLine(ReadOnlySpan<char> line, [NotNullWhen(true)] out NativeRoute? route) {
         route = default;
 
-        var destPrefix = default(NativeIPAddress);
-        var destPrefixLen = default(byte);
+        var dest = default(CIDR);
         var gateway = default(NativeIPAddress);
         var adapterIndex = default(uint);
 
@@ -157,13 +151,7 @@ static class TunModeRouting {
                 case 4:
                     break;
                 case 2:
-                    if(!chunk.TrySplit('/', out var destPrefixText, out var destPrefixLenText)) {
-                        return false;
-                    }
-                    if(!NativeIPAddress.TryParse(destPrefixText, out destPrefix)) {
-                        return false;
-                    }
-                    if(!byte.TryParse(destPrefixLenText, out destPrefixLen)) {
+                    if(!CIDR.TryParse(chunk, out dest)) {
                         return false;
                     }
                     break;
@@ -184,8 +172,7 @@ static class TunModeRouting {
         }
 
         route = new() {
-            DestPrefix = destPrefix,
-            DestPrefixLen = destPrefixLen,
+            Dest = dest,
             Gateway = gateway,
             AdapterIndex = adapterIndex,
         };

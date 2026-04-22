@@ -7,19 +7,22 @@ using Windows.Win32.NetworkManagement.Ndis;
 namespace Project;
 
 class NativeRoute {
-    public required NativeIPAddress DestPrefix { get; init; }
-    public required byte DestPrefixLen { get; init; }
+    public required CIDR Dest { get; init; }
     public required NativeIPAddress Gateway { get; init; }
     public required uint AdapterIndex { get; init; }
 }
 
 static class NativeRouting {
 
-    public static unsafe NativeRoute? FindRoute(NativeIPAddress destPrefix, byte destPrefixLen) {
+    public static NativeRoute? FindRoute(NativeIPAddress destPrefix, byte destPrefixLen) {
+        return FindRoute((destPrefix, destPrefixLen));
+    }
+
+    public static unsafe NativeRoute? FindRoute(CIDR dest) {
         var tablePtr = default(MIB_IPFORWARD_TABLE2*);
 
         try {
-            NativeUtils.MustSucceed(PInvoke.GetIpForwardTable2(destPrefix.GetFamily(), out tablePtr));
+            NativeUtils.MustSucceed(PInvoke.GetIpForwardTable2(dest.Prefix.GetFamily(), out tablePtr));
 
             var rowCount = (int)tablePtr->NumEntries;
             var rows = tablePtr->Table.AsSpan(rowCount);
@@ -30,10 +33,10 @@ static class NativeRouting {
             for(var i = 0; i < rowCount; i++) {
                 var candidate = rows[i];
                 var candidateDest = candidate.DestinationPrefix;
-                if(candidateDest.PrefixLength != destPrefixLen) {
+                if(candidateDest.PrefixLength != dest.PrefixLen) {
                     continue;
                 }
-                if(!destPrefix.Equals(NativeIPAddress.From(in candidateDest.Prefix))) {
+                if(!dest.Prefix.Equals(NativeIPAddress.From(in candidateDest.Prefix))) {
                     continue;
                 }
                 var candidateInterface = GetInterface(in candidate);
@@ -54,8 +57,7 @@ static class NativeRouting {
             var bestRow = rows[bestRowIndex];
 
             return new() {
-                DestPrefix = destPrefix,
-                DestPrefixLen = destPrefixLen,
+                Dest = dest,
                 Gateway = NativeIPAddress.From(in bestRow.NextHop),
                 AdapterIndex = bestRow.InterfaceIndex,
             };
@@ -104,12 +106,9 @@ static class NativeRouting {
             PreferredLifetime = PInvoke.INFINITE,
             Protocol = NL_ROUTE_PROTOCOL.MIB_IPPROTO_NETMGMT,
             InterfaceIndex = route.AdapterIndex,
-            DestinationPrefix = {
-                PrefixLength = route.DestPrefixLen
-            }
         };
 
-        route.DestPrefix.WriteTo(ref row.DestinationPrefix.Prefix);
+        route.Dest.WriteTo(ref row.DestinationPrefix);
         route.Gateway.WriteTo(ref row.NextHop);
 
         return row;

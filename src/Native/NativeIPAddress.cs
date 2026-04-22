@@ -50,6 +50,10 @@ readonly partial struct NativeIPAddress {
         return IsIPv4() ? ADDRESS_FAMILY.AF_INET : ADDRESS_FAMILY.AF_INET6;
     }
 
+    public byte GetMaxPrefixLen() {
+        return IsIPv4() ? (byte)32 : (byte)128;
+    }
+
     public void WriteTo(Span<byte> destination) {
         var bytes = AsBytes();
         if(bytes.Length != destination.Length) {
