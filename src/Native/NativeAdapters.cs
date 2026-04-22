@@ -16,6 +16,7 @@ readonly ref struct NativeAdapterInfo {
     public required bool IPv4Enabled { get; init; }
     public required bool IPv6Enabled { get; init; }
     public required ReadOnlySpan<NativeIPAddress> Unicast { get; init; }
+    public required ReadOnlySpan<CIDR> Nets { get; init; }
 }
 
 delegate void NativeAdapterCallback(ref readonly NativeAdapterInfo info);
@@ -35,13 +36,22 @@ static class NativeAdapters {
         var buf = Marshal.AllocHGlobal((int)bufSize);
         try {
             var unicastList = new List<NativeIPAddress>();
+            var netsList = new List<CIDR>();
             var itemPtr = (IP_ADAPTER_ADDRESSES_LH*)buf;
             NativeUtils.MustSucceed(PInvoke.GetAdaptersAddresses(family, flags, default, itemPtr, &bufSize));
             while(itemPtr != null) {
                 unicastList.Clear();
                 var unicastPtr = itemPtr->FirstUnicastAddress;
                 while(unicastPtr != null) {
-                    unicastList.Add(NativeIPAddress.From(unicastPtr->Address.lpSockaddr));
+                    var ip = NativeIPAddress.From(unicastPtr->Address.lpSockaddr);
+                    unicastList.Add(ip);
+                    if(unicastPtr->PrefixOrigin != NL_PREFIX_ORIGIN.IpPrefixOriginWellKnown) {
+                        var prefixLen = unicastPtr->OnLinkPrefixLength;
+                        if(prefixLen < ip.GetMaxPrefixLen()) {
+                            var net = new CIDR(ip.ToPrefix(prefixLen), prefixLen);
+                            netsList.Add(net);
+                        }
+                    }
                     unicastPtr = unicastPtr->Next;
                 }
                 var info = new NativeAdapterInfo {
@@ -54,6 +64,7 @@ static class NativeAdapters {
                     IPv4Enabled = itemPtr->Anonymous2.Anonymous.Ipv4Enabled,
                     IPv6Enabled = itemPtr->Anonymous2.Anonymous.Ipv6Enabled,
                     Unicast = CollectionsMarshal.AsSpan(unicastList),
+                    Nets = CollectionsMarshal.AsSpan(netsList),
                 };
                 callback(in info);
                 itemPtr = itemPtr->Next;
