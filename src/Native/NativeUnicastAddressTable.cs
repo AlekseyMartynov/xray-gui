@@ -1,12 +1,13 @@
 using Windows.Win32;
 using Windows.Win32.Networking.WinSock;
 using Windows.Win32.NetworkManagement.IpHelper;
+using Windows.Win32.NetworkManagement.Ndis;
 
 namespace Project;
 
 static class NativeUnicastAddressTable {
 
-    public static unsafe void AssignStatic(ADDRESS_FAMILY family, uint adapterIndex, NativeIPAddress ip, byte prefixLen) {
+    public static unsafe void AssignStatic(ADDRESS_FAMILY family, NET_LUID_LH adapterLuid, NativeIPAddress ip, byte prefixLen) {
         var tablePtr = default(MIB_UNICASTIPADDRESS_TABLE*);
 
         try {
@@ -31,7 +32,7 @@ static class NativeUnicastAddressTable {
         }
 
         bool ShouldDelete(ref readonly MIB_UNICASTIPADDRESS_ROW row) {
-            if(row.InterfaceIndex == adapterIndex || NativeIPAddress.From(in row.Address).Equals(ip)) {
+            if(row.InterfaceLuid.Value == adapterLuid.Value || NativeIPAddress.From(in row.Address).Equals(ip)) {
                 switch(row.PrefixOrigin) {
                     case NL_PREFIX_ORIGIN.IpPrefixOriginManual:
                     case NL_PREFIX_ORIGIN.IpPrefixOriginDhcp:
@@ -46,7 +47,7 @@ static class NativeUnicastAddressTable {
         }
 
         PInvoke.InitializeUnicastIpAddressEntry(out var newRow);
-        newRow.InterfaceIndex = adapterIndex;
+        newRow.InterfaceLuid = adapterLuid;
         newRow.OnLinkPrefixLength = prefixLen;
         ip.WriteTo(ref newRow.Address);
 

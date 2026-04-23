@@ -8,11 +8,10 @@ namespace Project;
 
 readonly ref struct NativeAdapterInfo {
     public required Guid Guid { get; init; }
+    public required NET_LUID_LH Luid { get; init; }
     public required ReadOnlySpan<char> Name { get; init; }
     public required ReadOnlySpan<char> Description { get; init; }
     public required IF_OPER_STATUS Status { get; init; }
-    public required uint IPv4Index { get; init; }
-    public required uint IPv6Index { get; init; }
     public required bool IPv4Enabled { get; init; }
     public required bool IPv6Enabled { get; init; }
     public required ReadOnlySpan<NativeIPAddress> Unicast { get; init; }
@@ -56,11 +55,10 @@ static class NativeAdapters {
                 }
                 var info = new NativeAdapterInfo {
                     Guid = NativeUtils.ParseGuid(itemPtr->AdapterName),
+                    Luid = itemPtr->Luid,
                     Name = itemPtr->FriendlyName.AsSpan(),
                     Description = itemPtr->Description.AsSpan(),
                     Status = itemPtr->OperStatus,
-                    IPv4Index = itemPtr->Anonymous1.Anonymous.IfIndex,
-                    IPv6Index = itemPtr->Ipv6IfIndex,
                     IPv4Enabled = itemPtr->Anonymous2.Anonymous.Ipv4Enabled,
                     IPv6Enabled = itemPtr->Anonymous2.Anonymous.Ipv6Enabled,
                     Unicast = CollectionsMarshal.AsSpan(unicastList),

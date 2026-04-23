@@ -9,7 +9,7 @@ namespace Project;
 class NativeRoute {
     public required CIDR Dest { get; init; }
     public required NativeIPAddress Gateway { get; init; }
-    public required uint AdapterIndex { get; init; }
+    public required NET_LUID_LH AdapterLuid { get; init; }
 }
 
 static class NativeRouting {
@@ -59,7 +59,7 @@ static class NativeRouting {
             return new() {
                 Dest = dest,
                 Gateway = NativeIPAddress.From(in bestRow.NextHop),
-                AdapterIndex = bestRow.InterfaceIndex,
+                AdapterLuid = bestRow.InterfaceLuid,
             };
 
         } finally {
@@ -105,7 +105,7 @@ static class NativeRouting {
             ValidLifetime = PInvoke.INFINITE,
             PreferredLifetime = PInvoke.INFINITE,
             Protocol = NL_ROUTE_PROTOCOL.MIB_IPPROTO_NETMGMT,
-            InterfaceIndex = route.AdapterIndex,
+            InterfaceLuid = route.AdapterLuid,
         };
 
         route.Dest.WriteTo(ref row.DestinationPrefix);

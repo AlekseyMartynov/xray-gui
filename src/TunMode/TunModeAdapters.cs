@@ -27,28 +27,26 @@ static class TunModeAdapters {
         TunBroadcast = new(v4TunPrefix, 255);
     }
 
-    public static uint IPv4TunIndex { get; private set; }
-    public static uint IPv6TunIndex { get; private set; }
+    public static NET_LUID_LH TunLuid { get; private set; }
 
     public static bool IPv6TunEnabled { get; private set; }
 
-    public static uint IPv6LoopbackIndex { get; private set; }
+    public static NET_LUID_LH LoopbackLuid { get; private set; }
 
     public static string PrimaryName { get; private set; } = "";
 
     public static IReadOnlyList<CIDR> PrimaryNets { get; private set; } = [];
 
-    public static uint PrimaryIndex { get; private set; }
+    public static NET_LUID_LH PrimaryLuid { get; private set; }
 
     public static void Refresh() {
-        IPv4TunIndex = default;
-        IPv6TunIndex = default;
+        TunLuid = default;
         IPv6TunEnabled = default;
-        IPv6LoopbackIndex = default;
+        LoopbackLuid = default;
         PrimaryName = "";
 
         var tunFound = false;
-        var ip6LoopbackFound = false;
+        var loopbackFound = false;
 
         var ip4PrimaryName = "";
         var ip6PrimaryName = "";
@@ -56,29 +54,28 @@ static class TunModeAdapters {
         var ip4PrimaryNets = Array.Empty<CIDR>();
         var ip6PrimaryNets = Array.Empty<CIDR>();
 
-        var ip4PrimaryIndex = default(uint);
-        var ip6PrimaryIndex = default(uint);
+        var ip4PrimaryLuid = default(NET_LUID_LH);
+        var ip6PrimaryLuid = default(NET_LUID_LH);
 
         NativeAdapters.Enumerate((ref readonly NativeAdapterInfo info) => {
             if(!tunFound && IsGoodTun(in info)) {
-                IPv4TunIndex = info.IPv4Index;
-                IPv6TunIndex = info.IPv6Index;
+                TunLuid = info.Luid;
                 IPv6TunEnabled = info.IPv6Enabled;
                 tunFound = true;
             }
-            if(!ip6LoopbackFound && IsIPv6Loopback(in info)) {
-                IPv6LoopbackIndex = info.IPv6Index;
-                ip6LoopbackFound = true;
+            if(!loopbackFound && IsLoopback(in info)) {
+                LoopbackLuid = info.Luid;
+                loopbackFound = true;
             }
             if(ip4PrimaryName.Length < 1 && IsIPv4Primary(in info)) {
                 ip4PrimaryName = info.Name.ToString();
                 ip4PrimaryNets = info.Nets.ToArray();
-                ip4PrimaryIndex = info.IPv4Index;
+                ip4PrimaryLuid = info.Luid;
             }
             if(ip6PrimaryName.Length < 1 && IsIPv6Primary(in info)) {
                 ip6PrimaryName = info.Name.ToString();
                 ip6PrimaryNets = info.Nets.ToArray();
-                ip6PrimaryIndex = info.IPv6Index;
+                ip6PrimaryLuid = info.Luid;
             }
         });
 
@@ -86,18 +83,18 @@ static class TunModeAdapters {
             throw new InvalidOperationException();
         }
 
-        if(!ip6LoopbackFound) {
-            IPv6LoopbackIndex = 1;
+        if(!loopbackFound) {
+            throw new InvalidOperationException();
         }
 
         if(ip4PrimaryName.Length > 0) {
             PrimaryName = ip4PrimaryName;
             PrimaryNets = ip4PrimaryNets;
-            PrimaryIndex = ip4PrimaryIndex;
+            PrimaryLuid = ip4PrimaryLuid;
         } else if(ip6PrimaryName.Length > 0) {
             PrimaryName = ip6PrimaryName;
             PrimaryNets = ip6PrimaryNets;
-            PrimaryIndex = ip6PrimaryIndex;
+            PrimaryLuid = ip6PrimaryLuid;
         } else {
             throw new UIException("Failed to detect primary adapter");
         }
@@ -130,11 +127,11 @@ static class TunModeAdapters {
             } finally {
                 PInvoke.RegCloseKey(key);
             }
-            NativeUnicastAddressTable.AssignStatic(ADDRESS_FAMILY.AF_INET, IPv4TunIndex, IPv4TunAddr, IPv4TunPrefixLen);
+            NativeUnicastAddressTable.AssignStatic(ADDRESS_FAMILY.AF_INET, TunLuid, IPv4TunAddr, IPv4TunPrefixLen);
             if(IPv6TunEnabled) {
                 NativeUnicastAddressTable.AssignStatic(
                     ADDRESS_FAMILY.AF_INET6,
-                    IPv6TunIndex,
+                    TunLuid,
                     AppConfig.TunModeIPv6 ? IPv6TunAddr : NativeIPAddress.IPv6Zero,
                     IPv6TunPrefixLen
                 );
@@ -149,20 +146,19 @@ static class TunModeAdapters {
             && info.Name.StartsWith(Wintun.Name);
     }
 
-    static bool IsIPv6Loopback(ref readonly NativeAdapterInfo info) {
-        return info.IPv6Enabled
-            && info.Unicast.Contains(NativeIPAddress.IPv6Loopback);
+    static bool IsLoopback(ref readonly NativeAdapterInfo info) {
+        return info.Luid.Info.IfType == PInvoke.IF_TYPE_SOFTWARE_LOOPBACK;
     }
 
     static bool IsIPv4Primary(ref readonly NativeAdapterInfo info) {
         return TunModeRouting.DefaultV4 != null
-            && TunModeRouting.DefaultV4.AdapterIndex == info.IPv4Index
+            && TunModeRouting.DefaultV4.AdapterLuid.Value == info.Luid.Value
             && info.Status == IF_OPER_STATUS.IfOperStatusUp;
     }
 
     static bool IsIPv6Primary(ref readonly NativeAdapterInfo info) {
         return TunModeRouting.DefaultV6 != null
-            && TunModeRouting.DefaultV6.AdapterIndex == info.IPv6Index
+            && TunModeRouting.DefaultV6.AdapterLuid.Value == info.Luid.Value
             && info.Status == IF_OPER_STATUS.IfOperStatusUp;
     }
 }

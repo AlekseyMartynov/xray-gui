@@ -1,4 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Runtime.CompilerServices;
+using Windows.Win32.NetworkManagement.Ndis;
 
 namespace Project;
 
@@ -27,8 +30,8 @@ static class TunModeRouting {
         ];
 
         var dir = AppContext.BaseDirectory;
-        DefaultOverrideUndoPath = Path.Join(dir, "routing_undo_default.cmd");
-        TunnelUndoPath = Path.Join(dir, "routing_undo_tunnel.cmd");
+        DefaultOverrideUndoPath = Path.Join(dir, "routing_undo_default.bak");
+        TunnelUndoPath = Path.Join(dir, "routing_undo_tunnel.bak");
     }
 
     public static NativeRoute? DefaultV4 { get; private set; }
@@ -53,16 +56,16 @@ static class TunModeRouting {
                 TryAdd(new() {
                     Dest = dest,
                     Gateway = NativeIPAddress.IPv4Zero,
-                    AdapterIndex = TunModeAdapters.IPv4TunIndex,
+                    AdapterLuid = TunModeAdapters.TunLuid,
                 });
             }
             foreach(var dest in DefaultOverrideV6) {
                 TryAdd(new() {
                     Dest = dest,
                     Gateway = NativeIPAddress.IPv6Zero,
-                    AdapterIndex = AppConfig.TunModeIPv6 && TunModeAdapters.IPv6TunEnabled
-                        ? TunModeAdapters.IPv6TunIndex
-                        : TunModeAdapters.IPv6LoopbackIndex,
+                    AdapterLuid = AppConfig.TunModeIPv6 && TunModeAdapters.IPv6TunEnabled
+                        ? TunModeAdapters.TunLuid
+                        : TunModeAdapters.LoopbackLuid,
                 });
             }
         } finally {
@@ -83,7 +86,7 @@ static class TunModeRouting {
                 var route = new NativeRoute {
                     Dest = ip,
                     Gateway = gatewayRoute.Gateway,
-                    AdapterIndex = gatewayRoute.AdapterIndex,
+                    AdapterLuid = gatewayRoute.AdapterLuid,
                 };
                 if(NativeRouting.TryCreateRoute(route)) {
                     undo.Add(route);
@@ -131,7 +134,7 @@ static class TunModeRouting {
     }
 
     static string FormatUndoLine(NativeRoute route) {
-        return $"route delete {route.Dest} {route.Gateway} if {route.AdapterIndex}";
+        return $"{route.Dest} {route.Gateway} {route.AdapterLuid.Value:x}";
     }
 
     static bool TryParseUndoLine(ReadOnlySpan<char> line, [NotNullWhen(true)] out NativeRoute? route) {
@@ -139,7 +142,7 @@ static class TunModeRouting {
 
         var dest = default(CIDR);
         var gateway = default(NativeIPAddress);
-        var adapterIndex = default(uint);
+        var adapterLuidValue = default(ulong);
 
         var chunkIndex = 0;
 
@@ -147,21 +150,17 @@ static class TunModeRouting {
             var chunk = line[r];
             switch(chunkIndex) {
                 case 0:
-                case 1:
-                case 4:
-                    break;
-                case 2:
                     if(!CIDR.TryParse(chunk, out dest)) {
                         return false;
                     }
                     break;
-                case 3:
+                case 1:
                     if(!NativeIPAddress.TryParse(chunk, out gateway)) {
                         return false;
                     }
                     break;
-                case 5:
-                    if(!uint.TryParse(chunk, out adapterIndex)) {
+                case 2:
+                    if(!ulong.TryParse(chunk, NumberStyles.HexNumber, default, out adapterLuidValue)) {
                         return false;
                     }
                     break;
@@ -174,7 +173,7 @@ static class TunModeRouting {
         route = new() {
             Dest = dest,
             Gateway = gateway,
-            AdapterIndex = adapterIndex,
+            AdapterLuid = Unsafe.As<ulong, NET_LUID_LH>(ref adapterLuidValue),
         };
 
         return true;
