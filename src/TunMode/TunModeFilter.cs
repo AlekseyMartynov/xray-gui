@@ -61,9 +61,33 @@ static class TunModeFilter {
             AddPermitFilter(layer4, permitWeight, loopbackCond);
             AddPermitFilter(layer6, permitWeight, loopbackCond);
         }
-        // TODO
-        // Allow Hyper-V adapters?
-        // Allow CIDR white list?
+        {
+            var assumeLAN = false;
+            foreach(var cidr in TunModeAdapters.PrimaryNets) {
+                if(cidr.Prefix.IsRfc1918()) {
+                    PermitCidr(TunModeAdapters.PrimaryIndex, cidr);
+                    assumeLAN = true;
+                }
+            }
+            if(assumeLAN) {
+                ReadOnlySpan<CIDR> allowList = [
+                    // Link-local multicast
+                    // Protocols: IGMPv3, LLMNR, mDNS
+                    (new(224, 0, 0, 0), 24),
+
+                    // Site-local multicast
+                    // Protocols: DLNA, SSDP, UPnP, WS-Discovery
+                    (new(239, 255, 255, 250), 32),
+
+                    // Link-local broadcast
+                    // Protocols: DHCP, NetBIOS legacy mode, custom discovery (Dropbox LAN sync, etc)
+                    (new(255, 255, 255, 255), 32),
+                ];
+                foreach(var cidr in allowList) {
+                    PermitCidr(TunModeAdapters.PrimaryIndex, cidr);
+                }
+            }
+        }
         void PermitCidr(uint interfaceIndex, CIDR cidr, int port = -1) {
             var anyPort = port < 0;
             var condList = (stackalloc FWPM_FILTER_CONDITION0[anyPort ? 2 : 3]);
