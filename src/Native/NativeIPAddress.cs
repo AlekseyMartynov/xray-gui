@@ -46,6 +46,16 @@ readonly partial struct NativeIPAddress {
         Lower = prefix.Lower;
     }
 
+    public bool IsRfc1918() {
+        var bytes = AsBytes();
+        if(bytes.Length != 4) {
+            return false;
+        }
+        return bytes[0] == 10
+            || bytes[0] == 192 && bytes[1] == 168
+            || bytes[0] == 172 && (bytes[1] & 0xF0) == 16;
+    }
+
     public bool IsIPv4() {
         return Lower == 0
             && Upper << 32 == 0xFFFF_0000_0000_0000;

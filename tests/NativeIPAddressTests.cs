@@ -68,6 +68,19 @@ public class NativeIPAddressTests {
     }
 
     [Theory]
+    [InlineData("10.0.0.1", true)]
+    [InlineData("192.168.1.1", true)]
+    [InlineData("172.16.0.2", true)]
+    [InlineData("172.15.15.15", false)]
+    [InlineData("172.32.32.32", false)]
+    [InlineData("169.254.169.254", false)]
+    [InlineData("fdaa::1", false)]
+    public void IsRfc1918(string ipText, bool expectedResult) {
+        Assert.True(NativeIPAddress.TryParse(ipText, out var ip));
+        Assert.Equal(expectedResult, ip.IsRfc1918());
+    }
+
+    [Theory]
     [InlineData(0, "0.0.0.0")]
     [InlineData(3, "224.0.0.0")]
     [InlineData(24, "255.255.255.0")]
