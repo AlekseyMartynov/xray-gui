@@ -42,9 +42,6 @@ static class TunModeAdapters {
         LoopbackLuid = default;
         PrimaryName = "";
 
-        var tunFound = false;
-        var loopbackFound = false;
-
         var ip4PrimaryName = "";
         var ip6PrimaryName = "";
 
@@ -55,13 +52,11 @@ static class TunModeAdapters {
         var ip6PrimaryLuid = default(NET_LUID_LH);
 
         NativeAdapters.Enumerate((ref readonly NativeAdapterInfo info) => {
-            if(!tunFound && IsGoodTun(in info)) {
+            if(TunLuid.Value == 0 && IsGoodTun(in info)) {
                 TunLuid = info.Luid;
-                tunFound = true;
             }
-            if(!loopbackFound && IsGoodLoopback(in info)) {
+            if(LoopbackLuid.Value == 0 && IsGoodLoopback(in info)) {
                 LoopbackLuid = info.Luid;
-                loopbackFound = true;
             }
             if(ip4PrimaryName.Length < 1 && IsIPv4Primary(in info)) {
                 ip4PrimaryName = info.Name.ToString();
@@ -75,11 +70,7 @@ static class TunModeAdapters {
             }
         });
 
-        if(!tunFound) {
-            throw new InvalidOperationException();
-        }
-
-        if(!loopbackFound) {
+        if(TunLuid.Value == 0 || LoopbackLuid.Value == 0) {
             throw new InvalidOperationException();
         }
 
