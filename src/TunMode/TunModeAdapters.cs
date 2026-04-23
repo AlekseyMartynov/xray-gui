@@ -46,8 +46,8 @@ static class TunModeAdapters {
         var tunFound = false;
         var ip6LoopbackFound = false;
 
-        var ip4Primary = "";
-        var ip6Primary = "";
+        var ip4PrimaryName = "";
+        var ip6PrimaryName = "";
 
         NativeAdapters.Enumerate((ref readonly NativeAdapterInfo info) => {
             if(!tunFound && IsGoodTun(in info)) {
@@ -60,11 +60,11 @@ static class TunModeAdapters {
                 IPv6LoopbackIndex = info.IPv6Index;
                 ip6LoopbackFound = true;
             }
-            if(ip4Primary.Length < 1 && IsIPv4Primary(in info)) {
-                ip4Primary = info.Name.ToString();
+            if(ip4PrimaryName.Length < 1 && IsIPv4Primary(in info)) {
+                ip4PrimaryName = info.Name.ToString();
             }
-            if(ip6Primary.Length < 1 && IsIPv6Primary(in info)) {
-                ip6Primary = info.Name.ToString();
+            if(ip6PrimaryName.Length < 1 && IsIPv6Primary(in info)) {
+                ip6PrimaryName = info.Name.ToString();
             }
         });
 
@@ -76,21 +76,21 @@ static class TunModeAdapters {
             IPv6LoopbackIndex = 1;
         }
 
-        if(ip4Primary.Length > 0) {
-            PrimaryName = ip4Primary;
-        } else if(ip6Primary.Length > 0) {
-            PrimaryName = ip6Primary;
+        if(ip4PrimaryName.Length > 0) {
+            PrimaryName = ip4PrimaryName;
+        } else if(ip6PrimaryName.Length > 0) {
+            PrimaryName = ip6PrimaryName;
         } else {
             throw new UIException("Failed to detect primary adapter");
         }
 
         if(AppConfig.HasBypass) {
-            if(PrimaryName != ip4Primary) {
+            if(PrimaryName != ip4PrimaryName) {
                 // Prevent 'failed to set IP_UNICAST_IF' error loop on
                 // curl -4 192.168.1.1
                 throw new UIException($"Bypass requires IPv4 on primary adapter (detected as '{PrimaryName}')");
             }
-            if(AppConfig.TunModeIPv6 && ip6Primary != ip4Primary) {
+            if(AppConfig.TunModeIPv6 && ip6PrimaryName != ip4PrimaryName) {
                 // Prevent 'failed to set IPV6_UNICAST_IF' error loop on
                 // curl -6 [fe80::1234]
                 // (repeat until displayed in logs)
