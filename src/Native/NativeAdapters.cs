@@ -16,6 +16,8 @@ readonly ref struct NativeAdapterInfo {
     public required bool IPv6Enabled { get; init; }
     public required ReadOnlySpan<NativeIPAddress> Unicast { get; init; }
     public required ReadOnlySpan<CIDR> Nets { get; init; }
+
+    public bool IsDualStack => IPv4Enabled && IPv6Enabled;
 }
 
 delegate void NativeAdapterCallback(ref readonly NativeAdapterInfo info);

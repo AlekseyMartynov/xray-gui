@@ -63,7 +63,7 @@ static class TunModeRouting {
                 TryAdd(new() {
                     Dest = dest,
                     Gateway = NativeIPAddress.IPv6Zero,
-                    AdapterLuid = AppConfig.TunModeIPv6 && TunModeAdapters.IPv6TunEnabled
+                    AdapterLuid = AppConfig.TunModeIPv6
                         ? TunModeAdapters.TunLuid
                         : TunModeAdapters.LoopbackLuid,
                 });

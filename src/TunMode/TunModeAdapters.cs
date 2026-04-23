@@ -29,8 +29,6 @@ static class TunModeAdapters {
 
     public static NET_LUID_LH TunLuid { get; private set; }
 
-    public static bool IPv6TunEnabled { get; private set; }
-
     public static NET_LUID_LH LoopbackLuid { get; private set; }
 
     public static string PrimaryName { get; private set; } = "";
@@ -41,7 +39,6 @@ static class TunModeAdapters {
 
     public static void Refresh() {
         TunLuid = default;
-        IPv6TunEnabled = default;
         LoopbackLuid = default;
         PrimaryName = "";
 
@@ -60,10 +57,9 @@ static class TunModeAdapters {
         NativeAdapters.Enumerate((ref readonly NativeAdapterInfo info) => {
             if(!tunFound && IsGoodTun(in info)) {
                 TunLuid = info.Luid;
-                IPv6TunEnabled = info.IPv6Enabled;
                 tunFound = true;
             }
-            if(!loopbackFound && IsLoopback(in info)) {
+            if(!loopbackFound && IsGoodLoopback(in info)) {
                 LoopbackLuid = info.Luid;
                 loopbackFound = true;
             }
@@ -128,26 +124,26 @@ static class TunModeAdapters {
                 PInvoke.RegCloseKey(key);
             }
             NativeUnicastAddressTable.AssignStatic(ADDRESS_FAMILY.AF_INET, TunLuid, IPv4TunAddr, IPv4TunPrefixLen);
-            if(IPv6TunEnabled) {
-                NativeUnicastAddressTable.AssignStatic(
-                    ADDRESS_FAMILY.AF_INET6,
-                    TunLuid,
-                    AppConfig.TunModeIPv6 ? IPv6TunAddr : NativeIPAddress.IPv6Zero,
-                    IPv6TunPrefixLen
-                );
-            }
+            NativeUnicastAddressTable.AssignStatic(
+                ADDRESS_FAMILY.AF_INET6,
+                TunLuid,
+                AppConfig.TunModeIPv6 ? IPv6TunAddr : NativeIPAddress.IPv6Zero,
+                IPv6TunPrefixLen
+            );
         }
     }
 
     static bool IsGoodTun(ref readonly NativeAdapterInfo info) {
-        return info.IPv4Enabled
+        return info.IsDualStack
             && info.Status == IF_OPER_STATUS.IfOperStatusDown
             && info.Guid == Wintun.Guid
             && info.Name.StartsWith(Wintun.Name);
     }
 
-    static bool IsLoopback(ref readonly NativeAdapterInfo info) {
-        return info.Luid.Info.IfType == PInvoke.IF_TYPE_SOFTWARE_LOOPBACK;
+    static bool IsGoodLoopback(ref readonly NativeAdapterInfo info) {
+        return info.IsDualStack
+            && info.Status == IF_OPER_STATUS.IfOperStatusUp
+            && info.Luid.Info.IfType == PInvoke.IF_TYPE_SOFTWARE_LOOPBACK;
     }
 
     static bool IsIPv4Primary(ref readonly NativeAdapterInfo info) {
