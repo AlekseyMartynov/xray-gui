@@ -28,14 +28,12 @@ static class TunModeAdapters {
     }
 
     public static NET_LUID_LH TunLuid { get; private set; }
-
     public static NET_LUID_LH LoopbackLuid { get; private set; }
+    public static NET_LUID_LH PrimaryLuid { get; private set; }
 
     public static string PrimaryName { get; private set; } = "";
 
     public static IReadOnlyList<CIDR> PrimaryNets { get; private set; } = [];
-
-    public static NET_LUID_LH PrimaryLuid { get; private set; }
 
     public static void Refresh() {
         TunLuid = default;
