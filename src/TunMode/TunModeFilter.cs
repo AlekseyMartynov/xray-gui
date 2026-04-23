@@ -41,21 +41,8 @@ static class TunModeFilter {
             }
         }
         {
-            FWPM_FILTER_CONDITION0 ifCond = default, portCond = default, cidrCond = default;
-            InitInterfaceCondition(ref ifCond, TunModeAdapters.PrimaryIndex);
-            InitRemotePortCondition(ref portCond, (ushort)TunModeServerInfo.Port);
-            foreach(CIDR cidr in TunModeServerInfo.IPList) {
-                if(cidr.IsIPv4()) {
-                    var addrMask = default(FWP_V4_ADDR_AND_MASK);
-                    cidr.WriteTo(ref addrMask);
-                    InitRemoteCidrCondition(ref cidrCond, &addrMask);
-                    AddPermitFilter(layer4, permitWeight, ifCond, portCond, cidrCond);
-                } else {
-                    var addrMask = default(FWP_V6_ADDR_AND_MASK);
-                    cidr.WriteTo(ref addrMask);
-                    InitRemoteCidrCondition(ref cidrCond, &addrMask);
-                    AddPermitFilter(layer6, permitWeight, ifCond, portCond, cidrCond);
-                }
+            foreach(var ip in TunModeServerInfo.IPList) {
+                PermitCidr(TunModeAdapters.PrimaryIndex, ip, TunModeServerInfo.Port);
             }
         }
         {
@@ -77,6 +64,25 @@ static class TunModeFilter {
         // TODO
         // Allow Hyper-V adapters?
         // Allow CIDR white list?
+        void PermitCidr(uint interfaceIndex, CIDR cidr, int port = -1) {
+            var anyPort = port < 0;
+            var condList = (stackalloc FWPM_FILTER_CONDITION0[anyPort ? 2 : 3]);
+            InitInterfaceCondition(ref condList[0], interfaceIndex);
+            if(!anyPort) {
+                InitRemotePortCondition(ref condList[2], (ushort)port);
+            }
+            if(cidr.IsIPv4()) {
+                var addrMask = default(FWP_V4_ADDR_AND_MASK);
+                cidr.WriteTo(ref addrMask);
+                InitRemoteCidrCondition(ref condList[1], &addrMask);
+                AddPermitFilter(layer4, permitWeight, condList);
+            } else {
+                var addrMask = default(FWP_V6_ADDR_AND_MASK);
+                cidr.WriteTo(ref addrMask);
+                InitRemoteCidrCondition(ref condList[1], &addrMask);
+                AddPermitFilter(layer6, permitWeight, condList);
+            }
+        }
     }
 
     static void BlockOutsideDns() {
