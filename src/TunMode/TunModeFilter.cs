@@ -41,19 +41,20 @@ static class TunModeFilter {
             }
         }
         {
-            FWPM_FILTER_CONDITION0 portCond = default, cidrCond = default;
+            FWPM_FILTER_CONDITION0 ifCond = default, portCond = default, cidrCond = default;
+            InitInterfaceCondition(ref ifCond, TunModeAdapters.PrimaryIndex);
             InitRemotePortCondition(ref portCond, (ushort)TunModeServerInfo.Port);
             foreach(CIDR cidr in TunModeServerInfo.IPList) {
                 if(cidr.IsIPv4()) {
                     var addrMask = default(FWP_V4_ADDR_AND_MASK);
                     cidr.WriteTo(ref addrMask);
                     InitRemoteCidrCondition(ref cidrCond, &addrMask);
-                    AddPermitFilter(layer4, permitWeight, portCond, cidrCond);
+                    AddPermitFilter(layer4, permitWeight, ifCond, portCond, cidrCond);
                 } else {
                     var addrMask = default(FWP_V6_ADDR_AND_MASK);
                     cidr.WriteTo(ref addrMask);
                     InitRemoteCidrCondition(ref cidrCond, &addrMask);
-                    AddPermitFilter(layer6, permitWeight, portCond, cidrCond);
+                    AddPermitFilter(layer6, permitWeight, ifCond, portCond, cidrCond);
                 }
             }
         }

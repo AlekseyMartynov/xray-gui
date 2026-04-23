@@ -38,6 +38,8 @@ static class TunModeAdapters {
 
     public static IReadOnlyList<CIDR> PrimaryNets { get; private set; } = [];
 
+    public static uint PrimaryIndex { get; private set; }
+
     public static void Refresh() {
         IPv4TunIndex = default;
         IPv6TunIndex = default;
@@ -54,6 +56,9 @@ static class TunModeAdapters {
         var ip4PrimaryNets = Array.Empty<CIDR>();
         var ip6PrimaryNets = Array.Empty<CIDR>();
 
+        var ip4PrimaryIndex = default(uint);
+        var ip6PrimaryIndex = default(uint);
+
         NativeAdapters.Enumerate((ref readonly NativeAdapterInfo info) => {
             if(!tunFound && IsGoodTun(in info)) {
                 IPv4TunIndex = info.IPv4Index;
@@ -68,10 +73,12 @@ static class TunModeAdapters {
             if(ip4PrimaryName.Length < 1 && IsIPv4Primary(in info)) {
                 ip4PrimaryName = info.Name.ToString();
                 ip4PrimaryNets = info.Nets.ToArray();
+                ip4PrimaryIndex = info.IPv4Index;
             }
             if(ip6PrimaryName.Length < 1 && IsIPv6Primary(in info)) {
                 ip6PrimaryName = info.Name.ToString();
                 ip6PrimaryNets = info.Nets.ToArray();
+                ip6PrimaryIndex = info.IPv6Index;
             }
         });
 
@@ -86,9 +93,11 @@ static class TunModeAdapters {
         if(ip4PrimaryName.Length > 0) {
             PrimaryName = ip4PrimaryName;
             PrimaryNets = ip4PrimaryNets;
+            PrimaryIndex = ip4PrimaryIndex;
         } else if(ip6PrimaryName.Length > 0) {
             PrimaryName = ip6PrimaryName;
             PrimaryNets = ip6PrimaryNets;
+            PrimaryIndex = ip6PrimaryIndex;
         } else {
             throw new UIException("Failed to detect primary adapter");
         }
