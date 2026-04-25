@@ -32,7 +32,7 @@ static class NativeUnicastAddressTable {
         }
 
         bool ShouldDelete(ref readonly MIB_UNICASTIPADDRESS_ROW row) {
-            if(row.InterfaceLuid.Value == adapterLuid.Value || NativeIPAddress.From(in row.Address).Equals(ip)) {
+            if(row.InterfaceLuid == adapterLuid || NativeIPAddress.From(in row.Address).Equals(ip)) {
                 switch(row.PrefixOrigin) {
                     case NL_PREFIX_ORIGIN.IpPrefixOriginManual:
                     case NL_PREFIX_ORIGIN.IpPrefixOriginDhcp:

@@ -50,10 +50,10 @@ static class TunModeAdapters {
         var ip6PrimaryLuid = default(NET_LUID_LH);
 
         NativeAdapters.Enumerate((ref readonly NativeAdapterInfo info) => {
-            if(TunLuid.Value == 0 && IsGoodTun(in info)) {
+            if(TunLuid.IsEmpty && IsGoodTun(in info)) {
                 TunLuid = info.Luid;
             }
-            if(LoopbackLuid.Value == 0 && IsGoodLoopback(in info)) {
+            if(LoopbackLuid.IsEmpty && IsGoodLoopback(in info)) {
                 LoopbackLuid = info.Luid;
             }
             if(ip4PrimaryName.Length < 1 && IsIPv4Primary(in info)) {
@@ -68,7 +68,7 @@ static class TunModeAdapters {
             }
         });
 
-        if(TunLuid.Value == 0 || LoopbackLuid.Value == 0) {
+        if(TunLuid.IsEmpty || LoopbackLuid.IsEmpty) {
             throw new InvalidOperationException();
         }
 
@@ -137,13 +137,13 @@ static class TunModeAdapters {
 
     static bool IsIPv4Primary(ref readonly NativeAdapterInfo info) {
         return TunModeRouting.DefaultV4 != null
-            && TunModeRouting.DefaultV4.AdapterLuid.Value == info.Luid.Value
+            && TunModeRouting.DefaultV4.AdapterLuid == info.Luid
             && info.Status == IF_OPER_STATUS.IfOperStatusUp;
     }
 
     static bool IsIPv6Primary(ref readonly NativeAdapterInfo info) {
         return TunModeRouting.DefaultV6 != null
-            && TunModeRouting.DefaultV6.AdapterLuid.Value == info.Luid.Value
+            && TunModeRouting.DefaultV6.AdapterLuid == info.Luid
             && info.Status == IF_OPER_STATUS.IfOperStatusUp;
     }
 }

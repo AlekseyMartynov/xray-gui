@@ -34,7 +34,7 @@ static class TunModeFilter {
             FWPM_FILTER_CONDITION0 ifCond = default;
 
             var ifLuid = TunModeAdapters.TunLuid;
-            InitInterfaceCondition(ref ifCond, &ifLuid.Value, not: true);
+            InitInterfaceCondition(ref ifCond, &ifLuid, not: true);
 
             AddBlockFilter(layer4, blockWeight, ifCond);
             AddBlockFilter(layer6, blockWeight, ifCond);
@@ -90,7 +90,7 @@ static class TunModeFilter {
         void PermitCidr(NET_LUID_LH ifLuid, CIDR cidr, int port = -1) {
             var anyPort = port < 0;
             var condList = (stackalloc FWPM_FILTER_CONDITION0[anyPort ? 2 : 3]);
-            InitInterfaceCondition(ref condList[0], &ifLuid.Value);
+            InitInterfaceCondition(ref condList[0], &ifLuid);
             if(!anyPort) {
                 InitRemotePortCondition(ref condList[2], (ushort)port);
             }
@@ -117,7 +117,7 @@ static class TunModeFilter {
         FWPM_FILTER_CONDITION0 portCond = default, ifCond = default;
 
         var ifLuid = TunModeAdapters.TunLuid;
-        InitInterfaceCondition(ref ifCond, &ifLuid.Value, not: true);
+        InitInterfaceCondition(ref ifCond, &ifLuid, not: true);
 
         foreach(var port in ports) {
             InitRemotePortCondition(ref portCond, port);
@@ -138,7 +138,7 @@ static class TunModeFilter {
         FWPM_FILTER_CONDITION0 cidrCond = default, ifCond = default;
 
         var ifLuid = TunModeAdapters.TunLuid;
-        InitInterfaceCondition(ref ifCond, &ifLuid.Value);
+        InitInterfaceCondition(ref ifCond, &ifLuid);
 
         foreach(var cidr in cidrList) {
             if(cidr.IsIPv4()) {
@@ -249,13 +249,13 @@ static class TunModeFilter {
         };
     }
 
-    static unsafe void InitInterfaceCondition(ref FWPM_FILTER_CONDITION0 cond, ulong* luidValuePtr, bool not = false) {
+    static unsafe void InitInterfaceCondition(ref FWPM_FILTER_CONDITION0 cond, NET_LUID_LH* luidPtr, bool not = false) {
         cond.matchType = not ? FWP_MATCH_TYPE.FWP_MATCH_NOT_EQUAL : FWP_MATCH_TYPE.FWP_MATCH_EQUAL;
         cond.fieldKey = PInvoke.FWPM_CONDITION_IP_LOCAL_INTERFACE;
         cond.conditionValue = new() {
             type = FWP_DATA_TYPE.FWP_UINT64,
             Anonymous = {
-                uint64 = luidValuePtr
+                uint64 = (ulong*)luidPtr
             }
         };
     }

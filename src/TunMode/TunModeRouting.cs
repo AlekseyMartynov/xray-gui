@@ -1,6 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Runtime.CompilerServices;
 using Windows.Win32.Networking.WinSock;
 using Windows.Win32.NetworkManagement.Ndis;
 
@@ -145,7 +143,7 @@ static class TunModeRouting {
     }
 
     static string FormatUndoLine(NativeRoute route) {
-        return $"{route.Dest} {route.Gateway} {route.AdapterLuid.Value:x}";
+        return $"{route.Dest} {route.Gateway} {route.AdapterLuid}";
     }
 
     static bool TryParseUndoLine(ReadOnlySpan<char> line, [NotNullWhen(true)] out NativeRoute? route) {
@@ -153,7 +151,7 @@ static class TunModeRouting {
 
         var dest = default(CIDR);
         var gateway = default(NativeIPAddress);
-        var adapterLuidValue = default(ulong);
+        var adapterLuid = default(NET_LUID_LH);
 
         var chunkIndex = 0;
 
@@ -171,7 +169,7 @@ static class TunModeRouting {
                     }
                     break;
                 case 2:
-                    if(!ulong.TryParse(chunk, NumberStyles.HexNumber, default, out adapterLuidValue)) {
+                    if(!NET_LUID_LH.TryParse(chunk, out adapterLuid)) {
                         return false;
                     }
                     break;
@@ -184,7 +182,7 @@ static class TunModeRouting {
         route = new() {
             Dest = dest,
             Gateway = gateway,
-            AdapterLuid = Unsafe.As<ulong, NET_LUID_LH>(ref adapterLuidValue),
+            AdapterLuid = adapterLuid,
         };
 
         return true;
