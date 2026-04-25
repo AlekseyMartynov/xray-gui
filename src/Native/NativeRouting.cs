@@ -12,55 +12,49 @@ class NativeRoute {
     public required NET_LUID_LH AdapterLuid { get; init; }
 }
 
+class MeasuredNativeRoute : NativeRoute {
+    public required uint TotalMetric { get; init; }
+}
+
 static class NativeRouting {
 
-    public static NativeRoute? FindRoute(NativeIPAddress destPrefix, byte destPrefixLen) {
-        return FindRoute((destPrefix, destPrefixLen));
+    public static IReadOnlyList<MeasuredNativeRoute> FindRoutes(NativeIPAddress destPrefix, byte destPrefixLen) {
+        return FindRoutes((destPrefix, destPrefixLen));
     }
 
-    public static unsafe NativeRoute? FindRoute(CIDR dest) {
+    public static unsafe IReadOnlyList<MeasuredNativeRoute> FindRoutes(CIDR dest) {
         var tablePtr = default(MIB_IPFORWARD_TABLE2*);
 
         try {
+            var result = new List<MeasuredNativeRoute>();
+
             NativeUtils.MustSucceed(PInvoke.GetIpForwardTable2(dest.Prefix.GetFamily(), out tablePtr));
 
             var rowCount = (int)tablePtr->NumEntries;
             var rows = tablePtr->Table.AsSpan(rowCount);
 
-            var bestRowIndex = -1;
-            var bestTotalMetric = default(uint);
-
             for(var i = 0; i < rowCount; i++) {
-                var candidate = rows[i];
-                var candidateDest = candidate.DestinationPrefix;
-                if(candidateDest.PrefixLength != dest.PrefixLen) {
+                var row = rows[i];
+                var rowDest = row.DestinationPrefix;
+                if(rowDest.PrefixLength != dest.PrefixLen) {
                     continue;
                 }
-                if(!dest.Prefix.Equals(NativeIPAddress.From(in candidateDest.Prefix))) {
+                if(!dest.Prefix.Equals(NativeIPAddress.From(in rowDest.Prefix))) {
                     continue;
                 }
-                var candidateInterface = GetInterface(in candidate);
-                if(!candidateInterface.Connected) {
+                var rowInterface = GetInterface(in row);
+                if(!rowInterface.Connected) {
                     continue;
                 }
-                var candidateTotalMetric = candidate.Metric + candidateInterface.Metric;
-                if(bestRowIndex < 0 || candidateTotalMetric < bestTotalMetric) {
-                    bestRowIndex = i;
-                    bestTotalMetric = candidateTotalMetric;
-                }
+                result.Add(new() {
+                    Dest = dest,
+                    Gateway = NativeIPAddress.From(in row.NextHop),
+                    AdapterLuid = row.InterfaceLuid,
+                    TotalMetric = row.Metric + rowInterface.Metric
+                });
             }
 
-            if(bestRowIndex < 0) {
-                return null;
-            }
-
-            var bestRow = rows[bestRowIndex];
-
-            return new() {
-                Dest = dest,
-                Gateway = NativeIPAddress.From(in bestRow.NextHop),
-                AdapterLuid = bestRow.InterfaceLuid,
-            };
+            return result;
 
         } finally {
             if(tablePtr != null) {

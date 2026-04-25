@@ -38,8 +38,18 @@ static class TunModeRouting {
     public static NativeRoute? DefaultV6 { get; private set; }
 
     public static void FindDefaults() {
-        DefaultV4 = NativeRouting.FindRoute(NativeIPAddress.IPv4Zero, 0);
-        DefaultV6 = NativeRouting.FindRoute(NativeIPAddress.IPv6Zero, 0);
+        DefaultV4 = SelectBest(NativeRouting.FindRoutes(NativeIPAddress.IPv4Zero, 0));
+        DefaultV6 = SelectBest(NativeRouting.FindRoutes(NativeIPAddress.IPv6Zero, 0));
+
+        static NativeRoute? SelectBest(IReadOnlyList<MeasuredNativeRoute> candidates) {
+            var best = default(MeasuredNativeRoute);
+            foreach(var candidate in candidates) {
+                if(best == null || candidate.TotalMetric < best.TotalMetric) {
+                    best = candidate;
+                }
+            }
+            return best;
+        }
     }
 
     public static void AddDefaultOverride() {
