@@ -18,17 +18,13 @@ class MeasuredNativeRoute : NativeRoute {
 
 static class NativeRouting {
 
-    public static IReadOnlyList<MeasuredNativeRoute> FindRoutes(NativeIPAddress destPrefix, byte destPrefixLen) {
-        return FindRoutes((destPrefix, destPrefixLen));
-    }
-
-    public static unsafe IReadOnlyList<MeasuredNativeRoute> FindRoutes(CIDR dest) {
+    public static unsafe IReadOnlyList<MeasuredNativeRoute> FindDefaultRoutes(ADDRESS_FAMILY family = ADDRESS_FAMILY.AF_UNSPEC) {
         var tablePtr = default(MIB_IPFORWARD_TABLE2*);
 
         try {
             var result = new List<MeasuredNativeRoute>();
 
-            NativeUtils.MustSucceed(PInvoke.GetIpForwardTable2(dest.Prefix.GetFamily(), out tablePtr));
+            NativeUtils.MustSucceed(PInvoke.GetIpForwardTable2(family, out tablePtr));
 
             var rowCount = (int)tablePtr->NumEntries;
             var rows = tablePtr->Table.AsSpan(rowCount);
@@ -36,10 +32,7 @@ static class NativeRouting {
             for(var i = 0; i < rowCount; i++) {
                 var row = rows[i];
                 var rowDest = row.DestinationPrefix;
-                if(rowDest.PrefixLength != dest.PrefixLen) {
-                    continue;
-                }
-                if(!dest.Prefix.Equals(NativeIPAddress.From(in rowDest.Prefix))) {
+                if(rowDest.PrefixLength > 0) {
                     continue;
                 }
                 var rowInterface = GetInterface(in row);
@@ -47,7 +40,7 @@ static class NativeRouting {
                     continue;
                 }
                 result.Add(new() {
-                    Dest = dest,
+                    Dest = new(NativeIPAddress.From(in rowDest.Prefix), 0),
                     Gateway = NativeIPAddress.From(in row.NextHop),
                     AdapterLuid = row.InterfaceLuid,
                     TotalMetric = row.Metric + rowInterface.Metric

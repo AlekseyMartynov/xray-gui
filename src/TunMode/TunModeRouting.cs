@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using Windows.Win32.Networking.WinSock;
 using Windows.Win32.NetworkManagement.Ndis;
 
 namespace Project;
@@ -38,8 +39,8 @@ static class TunModeRouting {
     public static NativeRoute? DefaultV6 { get; private set; }
 
     public static void FindDefaults() {
-        DefaultV4 = SelectBest(NativeRouting.FindRoutes(NativeIPAddress.IPv4Zero, 0));
-        DefaultV6 = SelectBest(NativeRouting.FindRoutes(NativeIPAddress.IPv6Zero, 0));
+        DefaultV4 = SelectBest(NativeRouting.FindDefaultRoutes(ADDRESS_FAMILY.AF_INET));
+        DefaultV6 = SelectBest(NativeRouting.FindDefaultRoutes(ADDRESS_FAMILY.AF_INET6));
 
         static NativeRoute? SelectBest(IReadOnlyList<MeasuredNativeRoute> candidates) {
             var best = default(MeasuredNativeRoute);
