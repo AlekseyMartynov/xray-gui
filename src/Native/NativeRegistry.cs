@@ -11,8 +11,6 @@ static class NativeRegistry {
     const int MAX_ON_STACK_BYTES = 512;
 
     public static unsafe HKEY OpenOrCreateKey(HKEY parent, string subKey, bool writable = false) {
-        var result = default(HKEY);
-
         var sam = REG_SAM_FLAGS.KEY_READ;
         if(writable) {
             sam |= REG_SAM_FLAGS.KEY_WRITE;
@@ -26,7 +24,7 @@ static class NativeRegistry {
                 REG_OPEN_CREATE_OPTIONS.REG_OPTION_NON_VOLATILE,
                 sam,
                 default,
-                &result
+                out var result
             )
         );
 
