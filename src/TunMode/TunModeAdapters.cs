@@ -29,7 +29,7 @@ static class TunModeAdapters {
 
     public static NET_LUID_LH TunLuid { get; private set; }
     public static NET_LUID_LH LoopbackLuid { get; private set; }
-    public static NET_LUID_LH PrimaryLuid { get; private set; }
+    public static NET_LUID_LH PrimaryLuid => TunModeRouting.BestDefault.Luid;
 
     public static string PrimaryName { get; private set; } = "";
 
@@ -40,15 +40,6 @@ static class TunModeAdapters {
         LoopbackLuid = default;
         PrimaryName = "";
 
-        var ip4PrimaryName = "";
-        var ip6PrimaryName = "";
-
-        var ip4PrimaryNets = Array.Empty<CIDR>();
-        var ip6PrimaryNets = Array.Empty<CIDR>();
-
-        var ip4PrimaryLuid = default(NET_LUID_LH);
-        var ip6PrimaryLuid = default(NET_LUID_LH);
-
         NativeAdapters.Enumerate((ref readonly NativeAdapterInfo info) => {
             if(TunLuid.IsEmpty && IsGoodTun(in info)) {
                 TunLuid = info.Luid;
@@ -56,15 +47,9 @@ static class TunModeAdapters {
             if(LoopbackLuid.IsEmpty && IsGoodLoopback(in info)) {
                 LoopbackLuid = info.Luid;
             }
-            if(ip4PrimaryName.Length < 1 && IsIPv4Primary(in info)) {
-                ip4PrimaryName = info.Name.ToString();
-                ip4PrimaryNets = info.Nets.ToArray();
-                ip4PrimaryLuid = info.Luid;
-            }
-            if(ip6PrimaryName.Length < 1 && IsIPv6Primary(in info)) {
-                ip6PrimaryName = info.Name.ToString();
-                ip6PrimaryNets = info.Nets.ToArray();
-                ip6PrimaryLuid = info.Luid;
+            if(PrimaryName.Length == 0 && IsGoodPrimary(in info)) {
+                PrimaryName = info.Name.ToString();
+                PrimaryNets = info.Nets.ToArray();
             }
         });
 
@@ -72,25 +57,17 @@ static class TunModeAdapters {
             throw new InvalidOperationException();
         }
 
-        if(ip4PrimaryName.Length > 0) {
-            PrimaryName = ip4PrimaryName;
-            PrimaryNets = ip4PrimaryNets;
-            PrimaryLuid = ip4PrimaryLuid;
-        } else if(ip6PrimaryName.Length > 0) {
-            PrimaryName = ip6PrimaryName;
-            PrimaryNets = ip6PrimaryNets;
-            PrimaryLuid = ip6PrimaryLuid;
-        } else {
+        if(PrimaryName.Length == 0) {
             throw new UIException("Failed to detect primary adapter");
         }
 
         if(AppConfig.HasBypass) {
-            if(PrimaryName != ip4PrimaryName) {
+            if(!TunModeRouting.BestDefault.HasIPv4) {
                 // Prevent 'failed to set IP_UNICAST_IF' error loop on
                 // curl -4 192.168.1.1
                 throw new UIException($"Bypass requires IPv4 on primary adapter (detected as '{PrimaryName}')");
             }
-            if(AppConfig.TunModeIPv6 && ip6PrimaryName != ip4PrimaryName) {
+            if(AppConfig.TunModeIPv6 && !TunModeRouting.BestDefault.HasIPv6) {
                 // Prevent 'failed to set IPV6_UNICAST_IF' error loop on
                 // curl -6 [fe80::1234]
                 // (repeat until displayed in logs)
@@ -135,15 +112,8 @@ static class TunModeAdapters {
             && info.Luid.Info.IfType == PInvoke.IF_TYPE_SOFTWARE_LOOPBACK;
     }
 
-    static bool IsIPv4Primary(ref readonly NativeAdapterInfo info) {
-        return TunModeRouting.DefaultV4 != null
-            && TunModeRouting.DefaultV4.AdapterLuid == info.Luid
-            && info.Status == IF_OPER_STATUS.IfOperStatusUp;
-    }
-
-    static bool IsIPv6Primary(ref readonly NativeAdapterInfo info) {
-        return TunModeRouting.DefaultV6 != null
-            && TunModeRouting.DefaultV6.AdapterLuid == info.Luid
-            && info.Status == IF_OPER_STATUS.IfOperStatusUp;
+    static bool IsGoodPrimary(ref readonly NativeAdapterInfo info) {
+        return info.Status == IF_OPER_STATUS.IfOperStatusUp
+            && info.Luid == PrimaryLuid;
     }
 }

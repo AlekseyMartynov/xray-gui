@@ -32,7 +32,7 @@ static partial class Program {
         var uri = SelectedServer.GetUri();
 
         if(AppConfig.TunMode) {
-            TunModeRouting.FindDefaults();
+            TunModeRouting.FindBestDefault();
             TunModeServerInfo.Refresh(uri.GetAddress(), uri.Port);
 
             Wintun.EnsureCreated();

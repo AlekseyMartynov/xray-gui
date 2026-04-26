@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using Windows.Win32.Networking.WinSock;
 using Windows.Win32.NetworkManagement.Ndis;
 
 namespace Project;
@@ -33,22 +32,10 @@ static class TunModeRouting {
         TunnelUndoPath = Path.Join(dir, "routing_undo_tunnel.bak");
     }
 
-    public static NativeRoute? DefaultV4 { get; private set; }
-    public static NativeRoute? DefaultV6 { get; private set; }
+    public static BestDefaultRoute BestDefault { get; private set; } = BestDefaultRoute.Empty;
 
-    public static void FindDefaults() {
-        DefaultV4 = SelectBest(NativeRouting.FindDefaultRoutes(ADDRESS_FAMILY.AF_INET));
-        DefaultV6 = SelectBest(NativeRouting.FindDefaultRoutes(ADDRESS_FAMILY.AF_INET6));
-
-        static NativeRoute? SelectBest(IReadOnlyList<MeasuredNativeRoute> candidates) {
-            var best = default(MeasuredNativeRoute);
-            foreach(var candidate in candidates) {
-                if(best == null || candidate.TotalMetric < best.TotalMetric) {
-                    best = candidate;
-                }
-            }
-            return best;
-        }
+    public static void FindBestDefault() {
+        BestDefault = new BestDefaultRoute(NativeRouting.FindDefaultRoutes());
     }
 
     public static void AddDefaultOverride() {
@@ -87,15 +74,14 @@ static class TunModeRouting {
         var undo = LoadUndo(TunnelUndoPath);
         try {
             foreach(var ip in TunModeServerInfo.IPList) {
-                var gatewayRoute = ip.IsIPv4() ? DefaultV4 : DefaultV6;
-                if(gatewayRoute == null) {
+                if(!BestDefault.TryGetGateway(ip.GetFamily(), out var gateway)) {
                     continue;
                 }
                 count++;
                 var route = new NativeRoute {
                     Dest = ip,
-                    Gateway = gatewayRoute.Gateway,
-                    AdapterLuid = gatewayRoute.AdapterLuid,
+                    Gateway = gateway,
+                    AdapterLuid = BestDefault.Luid,
                 };
                 if(NativeRouting.TryCreateRoute(route)) {
                     undo.Add(route);
