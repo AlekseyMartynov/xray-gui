@@ -98,9 +98,9 @@ partial class UI {
         var subMenu = PInvoke.CreatePopupMenu();
         ReadOnlySpan<(AppConfigFlags, uint, string)> items = [
             (AppConfigFlags.TunMode, IDM_TUN_ENABLE, "Enable"),
+            (AppConfigFlags.TunModeLockdown, IDM_TUN_LOCKDOWN, "Lockdown"),
             (AppConfigFlags.TunModeIPv6, IDM_TUN_IPv6, "IPv6"),
             (AppConfigFlags.TunModeUnsetProxy, IDM_TUN_UNSET_PROXY, "Unset system proxy"),
-            (AppConfigFlags.TunModeLockdown, IDM_TUN_LOCKDOWN, "Lockdown"),
         ];
         foreach(var (flag, id, text) in items) {
             var isDisabled = !AppConfig.TunMode && flag != AppConfigFlags.TunMode;
