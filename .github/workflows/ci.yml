@@ -26,6 +26,23 @@ jobs:
         dotnet-version: 9
     - run: dotnet test --logger "console;verbosity=detailed"
 
+  unit-test-wine:
+    runs-on: ubuntu-latest
+    env:
+      WINEARCH: win64
+      WINEDEBUG: -all
+    steps:
+    - uses: actions/checkout@v6
+    - run: |
+        sudo apt-get update
+        sudo apt-get install -y wine64
+    - run: |
+        mkdir ~/dotnet-win
+        cd    ~/dotnet-win
+        wget https://builds.dotnet.microsoft.com/dotnet/Sdk/9.0.313/dotnet-sdk-9.0.313-win-x64.zip -O dotnet.zip
+        unzip -q dotnet.zip
+    - run: wine ~/dotnet-win/dotnet.exe test --logger "console;verbosity=detailed"
+
   publish:
     runs-on: windows-latest
     steps:
