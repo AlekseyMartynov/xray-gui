@@ -48,25 +48,14 @@ public class NativeUtilsTests {
     static void CheckWin32Exception(int expectedError, bool throwsOnNoError, Action testCode) {
         Marshal.SetLastPInvokeError(0);
         var x = Record.Exception(testCode);
-        switch(expectedError) {
-            case (int)WIN32_ERROR.NO_ERROR:
-                if(throwsOnNoError) {
-                    Assert.IsType<Win32Exception>(x);
-                    Assert.Contains("completed successfully", x.Message);
-                } else {
-                    Assert.Null(x);
-                }
-                break;
-            case (int)WIN32_ERROR.ERROR_FILE_NOT_FOUND:
-                Assert.IsType<Win32Exception>(x);
-                Assert.Contains("cannot find the file", x.Message);
-                break;
-            case (int)WIN32_ERROR.ERROR_ACCESS_DENIED:
-                Assert.IsType<UIException>(x);
-                Assert.Equal("Restart as Administrator", x.Message);
-                break;
-            default:
-                throw new NotImplementedException();
+        if(expectedError == (int)WIN32_ERROR.NO_ERROR && !throwsOnNoError) {
+            Assert.Null(x);
+        } else if(expectedError == (int)WIN32_ERROR.ERROR_ACCESS_DENIED) {
+            Assert.IsType<UIException>(x);
+            Assert.Equal("Restart as Administrator", x.Message);
+        } else {
+            var win32 = Assert.IsType<Win32Exception>(x);
+            Assert.Equal(expectedError, win32.NativeErrorCode);
         }
     }
 }
