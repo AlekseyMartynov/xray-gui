@@ -43,6 +43,12 @@ static class NativeRestrictedTokens {
         // does not work with AssignProcessToJobObject because process launched with such token
         // is implicitly assigned to Explorer's job
 
+        if(Wine.IsDetected) {
+            // SaferCreateLevel is stub
+            // https://github.com/wine-mirror/wine/blob/wine-11.8/dlls/advapi32/security.c#L3105
+            return baseToken;
+        }
+
         SAFER_LEVEL_HANDLE levelHandle = default;
         try {
             NativeUtils.MustSucceed(
