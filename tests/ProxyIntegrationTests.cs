@@ -65,7 +65,7 @@ public sealed class ProxyIntegrationTests : IDisposable {
 
                 var line = await reader.ReadLineAsync();
 
-                if(line != null && line.StartsWith("GET http://example.net/test/")) {
+                if(line != null && StripPort(line).StartsWith("GET http://example.net/test/")) {
                     status = 200;
                     body = JsonSerializer.Serialize(new Dictionary<string, string> {
                         ["test_ip"] = TEST_IP,
@@ -86,5 +86,9 @@ public sealed class ProxyIntegrationTests : IDisposable {
                 break;
             }
         }
+    }
+
+    static string StripPort(string line) {
+        return line.Replace("/example.net:80/", "/example.net/");
     }
 }

@@ -97,7 +97,11 @@ static class NativeProxyManager {
             );
 
             NativeUtils.MustSucceed(PInvoke.InternetSetOption(default, PInvoke.INTERNET_OPTION_SETTINGS_CHANGED, default, default));
-            NativeUtils.MustSucceed(PInvoke.InternetSetOption(default, PInvoke.INTERNET_OPTION_REFRESH, default, default));
+
+            if(!Wine.IsDetected) {
+                // https://github.com/wine-mirror/wine/blob/wine-11.8/dlls/wininet/internet.c#L3310
+                NativeUtils.MustSucceed(PInvoke.InternetSetOption(default, PInvoke.INTERNET_OPTION_REFRESH, default, default));
+            }
         }
     }
 
