@@ -29,22 +29,10 @@ jobs:
   unit-test-wine:
     runs-on: ubuntu-latest
     env:
-      WINEARCH: win64
       WINEDEBUG: -all
     steps:
     - uses: actions/checkout@v6
-    - run: |
-        CODENAME=$(lsb_release -cs)
-        wget -O- https://dl.winehq.org/wine-builds/winehq.key | sudo gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key
-        sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/$CODENAME/winehq-$CODENAME.sources
-        sudo dpkg --add-architecture i386
-        sudo apt-get update
-        sudo apt-get install -y winehq-stable
-    - run: |
-        mkdir ~/dotnet-win
-        cd    ~/dotnet-win
-        wget https://builds.dotnet.microsoft.com/dotnet/Sdk/9.0.313/dotnet-sdk-9.0.313-win-x64.zip -O dotnet.zip
-        unzip -q dotnet.zip
+    - run: sh -e .github/workflows/install-wine.sh
     - run: wine ~/dotnet-win/dotnet.exe test --logger "console;verbosity=detailed"
 
   publish:
