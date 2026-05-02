@@ -20,9 +20,16 @@ static class NativeRestrictedTokens {
             )
         );
 
-        Constrained = CreateRestrictedToken(currentProcToken, PInvoke.SAFER_LEVELID_CONSTRAINED);
-        NormalUser = CreateRestrictedToken(currentProcToken, PInvoke.SAFER_LEVELID_NORMALUSER);
-        FullyTrusted = CreateRestrictedToken(currentProcToken, PInvoke.SAFER_LEVELID_FULLYTRUSTED);
+        if(Wine.IsDetected) {
+            // https://github.com/wine-mirror/wine/blob/wine-11.8/dlls/advapi32/security.c#L3102-L3121
+            Constrained = HANDLE.INVALID_HANDLE_VALUE;
+            NormalUser = currentProcToken;
+            FullyTrusted = HANDLE.INVALID_HANDLE_VALUE;
+        } else {
+            Constrained = CreateRestrictedToken(currentProcToken, PInvoke.SAFER_LEVELID_CONSTRAINED);
+            NormalUser = CreateRestrictedToken(currentProcToken, PInvoke.SAFER_LEVELID_NORMALUSER);
+            FullyTrusted = CreateRestrictedToken(currentProcToken, PInvoke.SAFER_LEVELID_FULLYTRUSTED);
+        }
 
         SetMediumIntegrity([
             Constrained,
@@ -42,12 +49,6 @@ static class NativeRestrictedTokens {
         // Explorer token clone trick (https://stackoverflow.com/a/40687129)
         // does not work with AssignProcessToJobObject because process launched with such token
         // is implicitly assigned to Explorer's job
-
-        if(Wine.IsDetected) {
-            // SaferCreateLevel is stub
-            // https://github.com/wine-mirror/wine/blob/wine-11.8/dlls/advapi32/security.c#L3105
-            return baseToken;
-        }
 
         SAFER_LEVEL_HANDLE levelHandle = default;
         try {
