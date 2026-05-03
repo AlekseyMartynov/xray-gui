@@ -20,9 +20,18 @@ static class NativeRestrictedTokens {
             )
         );
 
-        Constrained = CreateRestrictedToken(currentProcToken, PInvoke.SAFER_LEVELID_CONSTRAINED);
-        NormalUser = CreateRestrictedToken(currentProcToken, PInvoke.SAFER_LEVELID_NORMALUSER);
-        FullyTrusted = CreateRestrictedToken(currentProcToken, PInvoke.SAFER_LEVELID_FULLYTRUSTED);
+        if(Wine.IsDetected) {
+            // Wine's Safer APIs are stubs that return invalid handles
+            // https://github.com/wine-mirror/wine/blob/wine-11.8/dlls/advapi32/security.c#L3102-L3121
+            // So only approximate NormalUser with the current process token and explicitly mark the rest as invalid
+            Constrained = HANDLE.INVALID_HANDLE_VALUE;
+            NormalUser = currentProcToken;
+            FullyTrusted = HANDLE.INVALID_HANDLE_VALUE;
+        } else {
+            Constrained = CreateRestrictedToken(currentProcToken, PInvoke.SAFER_LEVELID_CONSTRAINED);
+            NormalUser = CreateRestrictedToken(currentProcToken, PInvoke.SAFER_LEVELID_NORMALUSER);
+            FullyTrusted = CreateRestrictedToken(currentProcToken, PInvoke.SAFER_LEVELID_FULLYTRUSTED);
+        }
 
         SetMediumIntegrity([
             Constrained,

@@ -34,6 +34,10 @@ static class NativeDns {
                 return;
             }
 
+            if(queryResult == WIN32_ERROR.DNS_ERROR_INVALID_NAME) {
+                return;
+            }
+
             if((int)queryResult == PInvoke.DNS_INFO_NO_RECORDS) {
                 return;
             }

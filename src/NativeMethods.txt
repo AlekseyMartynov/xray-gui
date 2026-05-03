@@ -1,6 +1,7 @@
 // Common
 
 INFINITE
+INVALID_HANDLE_VALUE
 GetModuleHandle
 GlobalFree
 

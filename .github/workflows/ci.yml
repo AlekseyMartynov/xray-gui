@@ -26,6 +26,15 @@ jobs:
         dotnet-version: 9
     - run: dotnet test --logger "console;verbosity=detailed"
 
+  unit-test-wine:
+    runs-on: ubuntu-latest
+    env:
+      WINEDEBUG: -all
+    steps:
+    - uses: actions/checkout@v6
+    - run: sh -e .github/workflows/install-wine.sh
+    - run: wine ~/dotnet-win/dotnet.exe test --logger "console;verbosity=detailed"
+
   publish:
     runs-on: windows-latest
     steps:
