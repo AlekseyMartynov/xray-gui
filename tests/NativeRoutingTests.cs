@@ -13,7 +13,7 @@ public class NativeRoutingTests {
     public void FindDefaultRoutes() {
         var routes = NativeRouting.FindDefaultRoutes();
 
-        if (routes.Count == 0) {
+        if(routes.Count == 0) {
             // Some CI/containerized environments route network traffic through a
             // system-wide proxy and do not expose a default route to the guest.
             // In that case, assert proxy env vars are present so the reason for
