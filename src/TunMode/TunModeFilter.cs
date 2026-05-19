@@ -70,26 +70,17 @@ static class TunModeFilter {
             }
             if(assumeLAN) {
                 ReadOnlySpan<CIDR> allowList = [
-                    // IPv4 Link-local multicast
-                    // Protocols: IGMPv3, LLMNR/mDNS
+                    // Link-local multicast
+                    // Protocols: IGMPv3, LLMNR, mDNS
                     (new(224, 0, 0, 0), 24),
 
-                    // IPv4 Site-local multicast
-                    // Protocols: DLNA/SSDP/UPnP/WS-Discovery
+                    // Site-local multicast
+                    // Protocols: DLNA, SSDP, UPnP, WS-Discovery
                     (new(239, 255, 255, 250), 32),
 
-                    // IPv4 Link-local broadcast
+                    // Link-local broadcast
                     // Protocols: DHCP, NetBIOS legacy mode, custom discovery (Dropbox LAN sync, etc)
                     (new(255, 255, 255, 255), 32),
-
-                    // IPv6 Link-local unicast
-                    // Required for basic operation such as next-hop routing
-                    // Protocols: DHCPv6 (initial), NDP, SLAAC
-                    (new([0xfe80]), 10),
-
-                    // IPv6 Link-local multicast
-                    // Protocols: DHCPv6, ICMPv6, DLNA/SSDP/UPnP/WS-Discovery, LLMNR/mDNS
-                    (new([0xff02]), 16),
                 ];
                 foreach(var cidr in allowList) {
                     PermitCidr(TunModeAdapters.PrimaryLuid, cidr);
