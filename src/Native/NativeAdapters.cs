@@ -42,6 +42,7 @@ static class NativeAdapters {
             NativeUtils.MustSucceed(PInvoke.GetAdaptersAddresses(family, flags, default, itemPtr, &bufSize));
             while(itemPtr != null) {
                 unicastList.Clear();
+                netsList.Clear();
                 var unicastPtr = itemPtr->FirstUnicastAddress;
                 while(unicastPtr != null) {
                     var ip = NativeIPAddress.From(unicastPtr->Address.lpSockaddr);
