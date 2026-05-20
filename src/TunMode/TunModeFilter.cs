@@ -61,31 +61,18 @@ static class TunModeFilter {
             AddPermitFilter(layer6, permitWeight, loopbackCond);
         }
         {
-            var assumeLAN = false;
+            // LAN access on Primary adapter
+            var luid = TunModeAdapters.PrimaryLuid;
+            // 1. On-link aka directly connected destinations (including fe80::)
             foreach(var cidr in TunModeAdapters.PrimaryNets) {
-                if(cidr.Prefix.IsRfc1918()) {
-                    PermitCidr(TunModeAdapters.PrimaryLuid, cidr);
-                    assumeLAN = true;
-                }
+                PermitCidr(luid, cidr);
             }
-            if(assumeLAN) {
-                ReadOnlySpan<CIDR> allowList = [
-                    // Link-local multicast
-                    // Protocols: IGMPv3, LLMNR, mDNS
-                    (new(224, 0, 0, 0), 24),
-
-                    // Site-local multicast
-                    // Protocols: DLNA, SSDP, UPnP, WS-Discovery
-                    (new(239, 255, 255, 250), 32),
-
-                    // Link-local broadcast
-                    // Protocols: DHCP, NetBIOS legacy mode, custom discovery (Dropbox LAN sync, etc)
-                    (new(255, 255, 255, 255), 32),
-                ];
-                foreach(var cidr in allowList) {
-                    PermitCidr(TunModeAdapters.PrimaryLuid, cidr);
-                }
-            }
+            // 2. Link-local non-unicast
+            PermitCidr(luid, (new(224, 0, 0, 0), 24));
+            PermitCidr(luid, (new(255, 255, 255, 255), 32));
+            PermitCidr(luid, (new([0xff02]), 16));
+            // 3. SSDP, WS-Discovery, Samsung TV, Plex, etc
+            PermitCidr(luid, (new(239, 255, 255, 250), 32));
         }
         void PermitCidr(NET_LUID_LH ifLuid, CIDR cidr, int port = -1) {
             var anyPort = port < 0;

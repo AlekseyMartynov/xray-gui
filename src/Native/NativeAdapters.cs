@@ -47,12 +47,10 @@ static class NativeAdapters {
                 while(unicastPtr != null) {
                     var ip = NativeIPAddress.From(unicastPtr->Address.lpSockaddr);
                     unicastList.Add(ip);
-                    if(unicastPtr->PrefixOrigin != NL_PREFIX_ORIGIN.IpPrefixOriginWellKnown) {
-                        var prefixLen = unicastPtr->OnLinkPrefixLength;
-                        if(prefixLen < ip.GetMaxPrefixLen()) {
-                            var net = new CIDR(ip.ToPrefix(prefixLen), prefixLen);
-                            netsList.Add(net);
-                        }
+                    var prefixLen = unicastPtr->OnLinkPrefixLength;
+                    if(IsNet(ip, prefixLen)) {
+                        var net = new CIDR(ip.ToPrefix(prefixLen), prefixLen);
+                        netsList.Add(net);
                     }
                     unicastPtr = unicastPtr->Next;
                 }
@@ -72,6 +70,15 @@ static class NativeAdapters {
             }
         } finally {
             Marshal.FreeHGlobal(buf);
+        }
+    }
+
+    static bool IsNet(NativeIPAddress ip, byte onLinkPrefixLen) {
+        if(ip.IsIPv4()) {
+            return onLinkPrefixLen < 32;
+        } else {
+            // Per RFC 4291 & 7421
+            return onLinkPrefixLen == 64;
         }
     }
 }
