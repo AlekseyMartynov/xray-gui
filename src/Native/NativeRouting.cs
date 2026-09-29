@@ -103,10 +103,7 @@ static class NativeRouting {
 
     static MIB_IPINTERFACE_ROW GetInterface(ref readonly MIB_IPFORWARD_ROW2 row) {
         var result = default(MIB_IPINTERFACE_ROW);
-        if(!Wine.IsDetected) {
-            // https://github.com/wine-mirror/wine/blob/wine-11.8/dlls/iphlpapi/iphlpapi.spec#L167
-            PInvoke.InitializeIpInterfaceEntry(ref result);
-        }
+        PInvoke.InitializeIpInterfaceEntry(ref result);
         result.Family = row.DestinationPrefix.Prefix.si_family;
         result.InterfaceLuid = row.InterfaceLuid;
         NativeUtils.MustSucceed(PInvoke.GetIpInterfaceEntry(ref result));
