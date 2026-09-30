@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Windows.Win32.NetworkManagement.Ndis;
 
-partial struct NET_LUID_LH {
+partial struct NET_LUID_LH : IEquatable<NET_LUID_LH> {
 
     public static NET_LUID_LH FromValue(ulong value) {
         return Unsafe.As<ulong, NET_LUID_LH>(ref value);

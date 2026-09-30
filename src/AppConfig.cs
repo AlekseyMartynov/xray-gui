@@ -214,7 +214,7 @@ interface IAppConfigSource {
     void Load();
     void Save();
 
-    class DefaultImpl : IAppConfigSource {
+    private class DefaultImpl : IAppConfigSource {
 
         public int SelectedServerIndex {
             get => -1;
