@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
+using Windows.Win32.Storage.FileSystem;
 
 namespace Project;
 
@@ -80,5 +81,31 @@ static class NativeUtils {
     public static unsafe PCWSTR MAKEINTRESOURCE(int id) {
         // https://stackoverflow.com/q/3610565
         return (PCWSTR)(char*)id;
+    }
+
+    public static bool TryGetFileBasicInfo(string filePath, out FILE_BASIC_INFO result) {
+        var handle = PInvoke.CreateFile(
+            filePath,
+            (uint)FILE_ACCESS_RIGHTS.FILE_READ_ATTRIBUTES,
+            FILE_SHARE_MODE.FILE_SHARE_NONE,
+            default,
+            FILE_CREATION_DISPOSITION.OPEN_EXISTING,
+            FILE_FLAGS_AND_ATTRIBUTES.FILE_ATTRIBUTE_NORMAL
+        );
+        result = default;
+        try {
+            MustSucceed(
+                PInvoke.GetFileInformationByHandleEx(
+                    handle,
+                    FILE_INFO_BY_HANDLE_CLASS.FileBasicInfo,
+                    Cast<FILE_BASIC_INFO, byte>(ref result)
+                )
+            );
+            return true;
+        } catch {
+            return false;
+        } finally {
+            TryCloseHandle(handle);
+        }
     }
 }

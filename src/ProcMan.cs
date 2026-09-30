@@ -1,7 +1,7 @@
 namespace Project;
 
 static class ProcMan {
-    static readonly string WorkDir, XrayExePath;
+    static readonly string WorkDir;
 
     static NativeProcess? SIP003Proc;
     static NativeProcess? XrayProc;
@@ -11,7 +11,6 @@ static class ProcMan {
 
     static ProcMan() {
         WorkDir = AppContext.BaseDirectory;
-        XrayExePath = Path.Join(WorkDir, "xray.exe");
     }
 
     public static void StartSIP003(SIP003 sip003) {
@@ -26,14 +25,9 @@ static class ProcMan {
     }
 
     public static void StartXray() {
-        if(!File.Exists(XrayExePath)) {
-            throw new UIException(
-                "Missing " + XrayExePath + "\n" +
-                "Download it from github.com/XTLS/Xray-core"
-            );
-        }
+        XrayExeHelper.Validate();
 
-        var commandLine = XrayExePath.Quote() + " -c " + XrayConfig.FilePath.Quote();
+        var commandLine = XrayExeHelper.ExePath.Quote() + " -c " + XrayConfig.FilePath.Quote();
 
         var accessToken = AppConfig.TunMode
             ? NativeRestrictedTokens.FullyTrusted
@@ -66,7 +60,7 @@ static class ProcMan {
 
     static void Xray_Exited() {
         if(NotifyXrayExit) {
-            UI.ShowBalloon(Path.GetFileName(XrayExePath) + " exited unexpectedly", true);
+            UI.ShowBalloon(Path.GetFileName(XrayExeHelper.ExePath) + " exited unexpectedly", true);
         }
     }
 }
