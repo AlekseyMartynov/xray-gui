@@ -1,6 +1,7 @@
 using Microsoft.Win32.SafeHandles;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Security;
@@ -21,11 +22,13 @@ class NativeProcess : IDisposable {
     bool Exited;
 
     public unsafe NativeProcess(string commandLine, string? workDir = null, string[]? env = null, Action? exitHandler = null, HANDLE accessToken = default, bool redirectOutput = false) {
-        var si = new STARTUPINFOW {
-            cb = (uint)Unsafe.SizeOf<STARTUPINFOW>(),
+        var si = new STARTUPINFOEXW {
+            StartupInfo = {
+                cb = (uint)Unsafe.SizeOf<STARTUPINFOEXW>(),
+            }
         };
 
-        var flags = PROCESS_CREATION_FLAGS.CREATE_SUSPENDED | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
+        var flags = PROCESS_CREATION_FLAGS.EXTENDED_STARTUPINFO_PRESENT | PROCESS_CREATION_FLAGS.CREATE_SUSPENDED | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
 
         if(!redirectOutput && AppConfig.ProcConsole) {
             flags |= PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
@@ -47,6 +50,7 @@ class NativeProcess : IDisposable {
         }
 
         var outputWritePipe = HANDLE.Null;
+        var attrList = LPPROC_THREAD_ATTRIBUTE_LIST.Null;
 
         try {
             if(redirectOutput) {
@@ -60,9 +64,29 @@ class NativeProcess : IDisposable {
                 NativeUtils.MustSucceed(
                     PInvoke.SetHandleInformation(OutputReadPipe, (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT, 0)
                 );
-                si.dwFlags |= STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES;
-                si.hStdOutput = outputWritePipe;
-                si.hStdError = outputWritePipe;
+
+                var attrListSize = default(nuint);
+                PInvoke.InitializeProcThreadAttributeList(default, 1, ref attrListSize);
+
+                var attrListBuf = stackalloc byte[(int)attrListSize];
+                attrList = (LPPROC_THREAD_ATTRIBUTE_LIST)attrListBuf;
+
+                NativeUtils.MustSucceed(
+                    PInvoke.InitializeProcThreadAttributeList(attrList, 1, ref attrListSize)
+                );
+
+                NativeUtils.MustSucceed(
+                    PInvoke.UpdateProcThreadAttribute(
+                        attrList, default,
+                        PInvoke.PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
+                        MemoryMarshal.AsBytes([outputWritePipe])
+                    )
+                );
+
+                si.StartupInfo.dwFlags |= STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES;
+                si.StartupInfo.hStdOutput = outputWritePipe;
+                si.StartupInfo.hStdError = outputWritePipe;
+                si.lpAttributeList = attrList;
             }
 
             fixed(void* envBufPtr = envBuf) {
@@ -75,7 +99,7 @@ class NativeProcess : IDisposable {
                         flags,
                         envBufPtr,
                         workDir,
-                        in si,
+                        in si.StartupInfo,
                         out ProcInfo
                     )
                 );
@@ -90,6 +114,9 @@ class NativeProcess : IDisposable {
             CloseProcHandles();
             throw;
         } finally {
+            if(!attrList.IsNull) {
+                PInvoke.DeleteProcThreadAttributeList(attrList);
+            }
             NativeUtils.TryCloseHandle(outputWritePipe);
         }
 
