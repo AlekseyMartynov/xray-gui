@@ -5,11 +5,6 @@ using Windows.Win32.System.Registry;
 namespace Project;
 
 static class NativeRegistry {
-    // https://learn.microsoft.com/windows/win32/sysinfo/registry-element-size-limits
-    const int KEY_NAME_CHAR_BUF_LEN = 255 + 1;
-
-    const int MAX_ON_STACK_BYTES = 512;
-
     public static unsafe HKEY OpenOrCreateKey(HKEY parent, string subKey, bool writable = false) {
         var sam = REG_SAM_FLAGS.KEY_READ;
         if(writable) {

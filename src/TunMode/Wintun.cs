@@ -1,7 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace Project;
 
+[SuppressMessage("Security", "CA5393")]
 static partial class Wintun {
     public const string Name = "xray-gui";
 
@@ -31,8 +33,10 @@ static partial class Wintun {
     }
 
     [LibraryImport("wintun", SetLastError = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.ApplicationDirectory)]
     private static unsafe partial nint WintunCreateAdapter(char* name, char* tunnelType, Guid* guid);
 
     [LibraryImport("wintun", SetLastError = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.ApplicationDirectory)]
     private static unsafe partial void WintunCloseAdapter(nint h);
 }
