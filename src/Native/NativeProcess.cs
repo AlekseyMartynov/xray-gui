@@ -48,43 +48,41 @@ class NativeProcess : IDisposable {
 
         var outputWritePipe = HANDLE.Null;
 
-        if(redirectOutput) {
-            var pipeAttrs = new SECURITY_ATTRIBUTES {
-                nLength = (uint)Unsafe.SizeOf<SECURITY_ATTRIBUTES>(),
-                bInheritHandle = true
-            };
-            NativeUtils.MustSucceed(
-                PInvoke.CreatePipe(out OutputReadPipe, out outputWritePipe, pipeAttrs, default)
-            );
-            NativeUtils.MustSucceed(
-                PInvoke.SetHandleInformation(OutputReadPipe, (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT, 0)
-            );
-            si.dwFlags |= STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES;
-            si.hStdOutput = outputWritePipe;
-            si.hStdError = outputWritePipe;
-        }
-
-        fixed(void* envBufPtr = envBuf) {
-            NativeUtils.MustSucceed(
-                PInvoke.CreateProcessAsUser(
-                    accessToken,
-                    default,
-                    ref commandLineSpan,
-                    default, default, redirectOutput,
-                    flags,
-                    envBufPtr,
-                    workDir,
-                    in si,
-                    out ProcInfo
-                )
-            );
-        }
-
-        var proc = ProcInfo.hProcess;
-
-        NativeUtils.MustSucceed(PInvoke.AssignProcessToJobObject(AntiOrphanJobObject, proc));
-
         try {
+            if(redirectOutput) {
+                var pipeAttrs = new SECURITY_ATTRIBUTES {
+                    nLength = (uint)Unsafe.SizeOf<SECURITY_ATTRIBUTES>(),
+                    bInheritHandle = true
+                };
+                NativeUtils.MustSucceed(
+                    PInvoke.CreatePipe(out OutputReadPipe, out outputWritePipe, pipeAttrs, default)
+                );
+                NativeUtils.MustSucceed(
+                    PInvoke.SetHandleInformation(OutputReadPipe, (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT, 0)
+                );
+                si.dwFlags |= STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES;
+                si.hStdOutput = outputWritePipe;
+                si.hStdError = outputWritePipe;
+            }
+
+            fixed(void* envBufPtr = envBuf) {
+                NativeUtils.MustSucceed(
+                    PInvoke.CreateProcessAsUser(
+                        accessToken,
+                        default,
+                        ref commandLineSpan,
+                        default, default, redirectOutput,
+                        flags,
+                        envBufPtr,
+                        workDir,
+                        in si,
+                        out ProcInfo
+                    )
+                );
+            }
+
+            NativeUtils.MustSucceed(PInvoke.AssignProcessToJobObject(AntiOrphanJobObject, ProcInfo.hProcess));
+
             if(PInvoke.ResumeThread(ProcInfo.hThread) != 1) {
                 throw new InvalidOperationException();
             }
@@ -92,12 +90,10 @@ class NativeProcess : IDisposable {
             CloseProcHandles();
             throw;
         } finally {
-            if(!outputWritePipe.IsNull) {
-                PInvoke.CloseHandle(outputWritePipe);
-            }
+            NativeUtils.TryCloseHandle(outputWritePipe);
         }
 
-        ProcWaitHandle = new NativeWaitHandle(proc);
+        ProcWaitHandle = new NativeWaitHandle(ProcInfo.hProcess);
 
         ProcWaitRegistration = ThreadPool.RegisterWaitForSingleObject(
             ProcWaitHandle,
@@ -125,11 +121,9 @@ class NativeProcess : IDisposable {
     }
 
     void CloseProcHandles() {
-        PInvoke.CloseHandle(ProcInfo.hProcess);
-        PInvoke.CloseHandle(ProcInfo.hThread);
-        if(!OutputReadPipe.IsNull) {
-            PInvoke.CloseHandle(OutputReadPipe);
-        }
+        NativeUtils.TryCloseHandle(ProcInfo.hProcess);
+        NativeUtils.TryCloseHandle(ProcInfo.hThread);
+        NativeUtils.TryCloseHandle(OutputReadPipe);
     }
 
     [SuppressMessage(
