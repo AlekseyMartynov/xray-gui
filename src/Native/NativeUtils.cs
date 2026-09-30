@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Windows.Win32;
 using Windows.Win32.Foundation;
 
 namespace Project;
@@ -36,6 +37,13 @@ static class NativeUtils {
         if(h == null) {
             ThrowLastWin32Error();
         }
+    }
+
+    public static bool TryCloseHandle(HANDLE h) {
+        if(!h.IsNull) {
+            return PInvoke.CloseHandle(h);
+        }
+        return false;
     }
 
     static void ThrowLastWin32Error() {

@@ -1,8 +1,10 @@
 // Common
 
 INFINITE
+CreatePipe
 GetModuleHandle
 GlobalFree
+SetHandleInformation
 
 // Network
 
@@ -31,14 +33,19 @@ InitializeUnicastIpAddressEntry
 // Process
 
 JOBOBJECT_EXTENDED_LIMIT_INFORMATION
+PROC_THREAD_ATTRIBUTE_HANDLE_LIST
+STARTUPINFOEXW
 AssignProcessToJobObject
 GetCurrentProcess
 CreateJobObject
 CreateProcessAsUser
+DeleteProcThreadAttributeList
+InitializeProcThreadAttributeList
 OpenProcessToken
 ResumeThread
 SetInformationJobObject
 TerminateProcess
+UpdateProcThreadAttribute
 
 // Registry
 
