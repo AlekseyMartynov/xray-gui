@@ -89,9 +89,7 @@ class NativeProcess : IDisposable {
                 throw new InvalidOperationException();
             }
         } catch {
-            if(!OutputReadPipe.IsNull) {
-                PInvoke.CloseHandle(OutputReadPipe);
-            }
+            CloseProcHandles();
             throw;
         } finally {
             if(!outputWritePipe.IsNull) {
@@ -123,9 +121,12 @@ class NativeProcess : IDisposable {
         ProcWaitRegistration.Unregister(null);
         ProcWaitHandle.Dispose();
 
+        CloseProcHandles();
+    }
+
+    void CloseProcHandles() {
         PInvoke.CloseHandle(ProcInfo.hProcess);
         PInvoke.CloseHandle(ProcInfo.hThread);
-
         if(!OutputReadPipe.IsNull) {
             PInvoke.CloseHandle(OutputReadPipe);
         }
