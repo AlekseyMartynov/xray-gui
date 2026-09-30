@@ -61,6 +61,24 @@ public sealed class NativeProcessTests : IDisposable {
         await ExitTCS.Task;
     }
 
+    [Fact]
+    public async Task RedirectOutput() {
+        var proc = new NativeProcess(
+            "cmd.exe /c echo test123",
+            exitHandler: ExitHandler,
+            redirectOutput: true
+        );
+
+        using var outputStream = proc.OpenOutput();
+        using var outputReader = new StreamReader(outputStream);
+
+        var outputText = await outputReader.ReadToEndAsync();
+
+        Assert.Equal("test123", outputText.TrimEnd());
+
+        await ExitTCS.Task;
+    }
+
     static string ReadTestOutput() {
         return File.ReadAllText(TestOutputPath).TrimEnd();
     }

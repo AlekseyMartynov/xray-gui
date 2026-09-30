@@ -1,8 +1,10 @@
 // Common
 
 INFINITE
+CreatePipe
 GetModuleHandle
 GlobalFree
+SetHandleInformation
 
 // Network
 

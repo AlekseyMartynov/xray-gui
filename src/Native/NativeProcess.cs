@@ -1,7 +1,9 @@
 using Microsoft.Win32.SafeHandles;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
+using Windows.Win32.Security;
 using Windows.Win32.System.JobObjects;
 using Windows.Win32.System.Threading;
 
@@ -10,6 +12,7 @@ namespace Project;
 class NativeProcess : IDisposable {
     static readonly HANDLE AntiOrphanJobObject = CreateAntiOrphanJobObject();
 
+    readonly HANDLE OutputReadPipe;
     readonly PROCESS_INFORMATION ProcInfo;
 
     readonly NativeWaitHandle ProcWaitHandle;
@@ -17,14 +20,14 @@ class NativeProcess : IDisposable {
 
     bool Exited;
 
-    public unsafe NativeProcess(string commandLine, string? workDir = null, string[]? env = null, Action? exitHandler = null, HANDLE accessToken = default) {
+    public unsafe NativeProcess(string commandLine, string? workDir = null, string[]? env = null, Action? exitHandler = null, HANDLE accessToken = default, bool redirectOutput = false) {
         var si = new STARTUPINFOW {
             cb = (uint)Unsafe.SizeOf<STARTUPINFOW>(),
         };
 
         var flags = PROCESS_CREATION_FLAGS.CREATE_SUSPENDED | PROCESS_CREATION_FLAGS.CREATE_UNICODE_ENVIRONMENT;
 
-        if(AppConfig.ProcConsole) {
+        if(!redirectOutput && AppConfig.ProcConsole) {
             flags |= PROCESS_CREATION_FLAGS.CREATE_NEW_CONSOLE;
         } else {
             flags |= PROCESS_CREATION_FLAGS.CREATE_NO_WINDOW;
@@ -43,13 +46,31 @@ class NativeProcess : IDisposable {
             accessToken = NativeRestrictedTokens.NormalUser;
         }
 
+        var outputWritePipe = HANDLE.Null;
+
+        if(redirectOutput) {
+            var pipeAttrs = new SECURITY_ATTRIBUTES {
+                nLength = (uint)Unsafe.SizeOf<SECURITY_ATTRIBUTES>(),
+                bInheritHandle = true
+            };
+            NativeUtils.MustSucceed(
+                PInvoke.CreatePipe(out OutputReadPipe, out outputWritePipe, pipeAttrs, default)
+            );
+            NativeUtils.MustSucceed(
+                PInvoke.SetHandleInformation(OutputReadPipe, (uint)HANDLE_FLAGS.HANDLE_FLAG_INHERIT, 0)
+            );
+            si.dwFlags |= STARTUPINFOW_FLAGS.STARTF_USESTDHANDLES;
+            si.hStdOutput = outputWritePipe;
+            si.hStdError = outputWritePipe;
+        }
+
         fixed(void* envBufPtr = envBuf) {
             NativeUtils.MustSucceed(
                 PInvoke.CreateProcessAsUser(
                     accessToken,
                     default,
                     ref commandLineSpan,
-                    default, default, default,
+                    default, default, redirectOutput,
                     flags,
                     envBufPtr,
                     workDir,
@@ -63,8 +84,19 @@ class NativeProcess : IDisposable {
 
         NativeUtils.MustSucceed(PInvoke.AssignProcessToJobObject(AntiOrphanJobObject, proc));
 
-        if(PInvoke.ResumeThread(ProcInfo.hThread) != 1) {
-            throw new InvalidOperationException();
+        try {
+            if(PInvoke.ResumeThread(ProcInfo.hThread) != 1) {
+                throw new InvalidOperationException();
+            }
+        } catch {
+            if(!OutputReadPipe.IsNull) {
+                PInvoke.CloseHandle(OutputReadPipe);
+            }
+            throw;
+        } finally {
+            if(!outputWritePipe.IsNull) {
+                PInvoke.CloseHandle(outputWritePipe);
+            }
         }
 
         ProcWaitHandle = new NativeWaitHandle(proc);
@@ -93,6 +125,19 @@ class NativeProcess : IDisposable {
 
         PInvoke.CloseHandle(ProcInfo.hProcess);
         PInvoke.CloseHandle(ProcInfo.hThread);
+
+        if(!OutputReadPipe.IsNull) {
+            PInvoke.CloseHandle(OutputReadPipe);
+        }
+    }
+
+    [SuppressMessage(
+        "Reliability", "CA2000",
+        Justification = "Safe handle is a wrapper required by FileStream, not the owner of the native handle")
+    ]
+    public Stream OpenOutput() {
+        var safeHandle = new SafeFileHandle(OutputReadPipe, ownsHandle: false);
+        return new FileStream(safeHandle, FileAccess.Read);
     }
 
     static unsafe HANDLE CreateAntiOrphanJobObject() {
