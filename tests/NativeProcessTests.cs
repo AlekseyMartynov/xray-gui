@@ -63,7 +63,7 @@ public sealed class NativeProcessTests : IDisposable {
 
     [Fact]
     public async Task RedirectOutput() {
-        var proc = new NativeProcess(
+        using var proc = new NativeProcess(
             "cmd.exe /c echo test123",
             exitHandler: ExitHandler,
             redirectOutput: true
