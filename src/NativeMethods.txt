@@ -22,20 +22,16 @@ IF_TYPE_SOFTWARE_LOOPBACK
 IPPROTO
 SOCKADDR
 CreateIpForwardEntry2
-CreateUnicastIpAddressEntry
 DeleteIpForwardEntry2
-DeleteUnicastIpAddressEntry
 DnsFree
 DnsQuery_W
 FreeMibTable
 GetAdaptersAddresses
 GetIpForwardTable2
 GetIpInterfaceEntry
-GetUnicastIpAddressTable
 InetNtop
 InetPton
 InitializeIpInterfaceEntry
-InitializeUnicastIpAddressEntry
 
 // Process
 

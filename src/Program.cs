@@ -37,13 +37,11 @@ static partial class Program {
 
             Wintun.EnsureCreated();
             TunModeAdapters.Refresh();
-            TunModeAdapters.SetTunParams(false);
+            TunModeAdapters.ResetTunParams();
         }
 
         var outbound = XrayOutbound.FromUri(uri);
         var sip003 = XrayOutbound.ExtractSIP003(outbound);
-
-        XrayOutbound.BindToPrimaryAdapter(outbound);
 
         XrayConfig.WriteFile(outbound);
 

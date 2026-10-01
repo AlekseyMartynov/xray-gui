@@ -50,7 +50,12 @@ static class XrayConfig {
             return new() {
                 ["protocol"] = "tun",
                 ["settings"] = new JsonObject {
-                    ["name"] = Wintun.Name
+                    ["name"] = Wintun.Name,
+                    ["dns"] = new JsonArray {
+                        TunModeAdapters.TunDns.ToString()
+                    },
+                    ["gateway"] = TunModeAdapters.GetAddrStrings(),
+                    ["autoOutboundsInterface"] = TunModeAdapters.PrimaryName
                 },
                 ["sniffing"] = new JsonObject {
                     ["enabled"] = true
@@ -73,15 +78,24 @@ static class XrayConfig {
         // https://xtls.github.io/en/config/outbounds/dns.html
         var obj = CreateTaggedOutbound("dns", TAG_DNS);
         obj["settings"] = new JsonObject {
-            ["nonIPQuery"] = "reject"
+            ["rules"] = new JsonArray {
+                // https://github.com/XTLS/Xray-core/blob/v26.9.30/infra/conf/dns_proxy.go#L148-L153
+                new JsonObject {
+                    ["qType"] = "1,28",
+                    ["action"] = "hijack"
+                },
+                // https://github.com/XTLS/Xray-core/blob/v26.9.30/infra/conf/dns_proxy.go#L157-L159
+                new JsonObject {
+                    ["action"] = "return",
+                    ["rCode"] = 5 // REFUSED
+                }
+            }
         };
         return obj;
     }
 
     static JsonObject CreateBypassOutbound() {
-        var obj = CreateTaggedOutbound("freedom", TAG_BYPASS);
-        XrayOutbound.BindToPrimaryAdapter(obj);
-        return obj;
+        return CreateTaggedOutbound("freedom", TAG_BYPASS);
     }
 
     static JsonObject CreateTaggedOutbound(string protocol, string tag) {
