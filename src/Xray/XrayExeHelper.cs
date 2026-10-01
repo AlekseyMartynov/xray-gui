@@ -4,6 +4,7 @@ namespace Project;
 
 static class XrayExeHelper {
     const string RequiredVersion = "26.3.27";
+    const string UnknownVersion = "unknown";
 
     public static readonly string ExePath;
 
@@ -51,14 +52,19 @@ static class XrayExeHelper {
         );
         using var stream = proc.OpenOutput();
         if(stream.Read(buf) == buf.Length) {
-            if(buf.StartsWith<byte>([88, 114, 97, 121, 32])) {
-                buf = buf.Slice(5);
-                var endIndex = buf.IndexOf<byte>(32);
-                if(endIndex > -1) {
-                    return Encoding.ASCII.GetString(buf[..endIndex]);
-                }
+            return ExtractVersion(buf);
+        }
+        return UnknownVersion;
+    }
+
+    static string ExtractVersion(ReadOnlySpan<byte> buf) {
+        if(buf.StartsWith<byte>([88, 114, 97, 121, 32])) {
+            buf = buf.Slice(5);
+            var endIndex = buf.IndexOf<byte>(32);
+            if(endIndex > -1) {
+                return Encoding.ASCII.GetString(buf[..endIndex]);
             }
         }
-        return "unknown";
+        return UnknownVersion;
     }
 }
