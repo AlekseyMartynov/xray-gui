@@ -27,8 +27,12 @@ static class XrayExeHelper {
             version = File.ReadAllText(VersionCachePath);
         } else {
             version = ExecVersionCommand();
-            File.WriteAllText(VersionCachePath, version);
-            File.SetLastWriteTime(VersionCachePath, DateTime.FromFileTimeUtc(exeInfo.ChangeTime));
+            try {
+                File.WriteAllText(VersionCachePath, version);
+                File.SetLastWriteTime(VersionCachePath, DateTime.FromFileTimeUtc(exeInfo.ChangeTime));
+            } catch {
+                // Treat cache persistence as best-effort
+            }
         }
         if(version != RequiredVersion) {
             throw new UIException(
