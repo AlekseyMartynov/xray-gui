@@ -6,6 +6,13 @@ GetModuleHandle
 GlobalFree
 SetHandleInformation
 
+// Files
+
+FILE_ACCESS_RIGHTS
+FILE_BASIC_INFO
+CreateFile
+GetFileInformationByHandleEx
+
 // Network
 
 DNS_FREE_TYPE
