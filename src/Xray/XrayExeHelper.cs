@@ -27,7 +27,7 @@ static class XrayExeHelper {
         if(NativeUtils.TryGetFileBasicInfo(VersionCachePath, out var versionInfo) && exeInfo.ChangeTime == versionInfo.LastWriteTime) {
             version = File.ReadAllText(VersionCachePath);
         } else {
-            version = ExecVersionCommand();
+            version = Task.Run(ExecVersionCommandAsync).GetAwaiter().GetResult();
             try {
                 File.WriteAllText(VersionCachePath, version);
                 File.SetLastWriteTime(VersionCachePath, DateTime.FromFileTimeUtc(exeInfo.ChangeTime));
@@ -43,16 +43,21 @@ static class XrayExeHelper {
         }
     }
 
-    static string ExecVersionCommand() {
-        var buf = (stackalloc byte[16]);
+    static async Task<string> ExecVersionCommandAsync() {
+        var buf = new byte[16];
         using var proc = new NativeProcess(
             ExePath.Quote() + " --version",
             accessToken: NativeRestrictedTokens.Constrained,
             redirectOutput: true
         );
         using var stream = proc.OpenOutput();
-        if(stream.Read(buf) == buf.Length) {
-            return ExtractVersion(buf);
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        try {
+            if(await stream.ReadAsync(buf, timeout.Token) == buf.Length) {
+                return ExtractVersion(buf);
+            }
+        } catch(OperationCanceledException) when(timeout.IsCancellationRequested) {
+            throw new UIException("Timeout while checking Xray version");
         }
         return UnknownVersion;
     }
