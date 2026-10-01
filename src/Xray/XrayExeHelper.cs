@@ -43,26 +43,20 @@ static class XrayExeHelper {
     }
 
     static string ExecVersionCommand() {
-        var bufLen = 16;
-        var byteBuf = (stackalloc byte[bufLen]);
-        var charBuf = (stackalloc char[bufLen]);
+        var buf = (stackalloc byte[16]);
         using var proc = new NativeProcess(
             ExePath.Quote() + " --version",
             accessToken: NativeRestrictedTokens.Constrained,
             redirectOutput: true
         );
         using var stream = proc.OpenOutput();
-        if(stream.Read(byteBuf) == bufLen) {
-            Encoding.ASCII.GetChars(byteBuf, charBuf);
-            var index = 0;
-            foreach(var r in MemoryExtensions.Split(charBuf, ' ')) {
-                if(index == 0 && !charBuf[r].SequenceEqual("Xray")) {
-                    break;
+        if(stream.Read(buf) == buf.Length) {
+            if(buf.StartsWith<byte>([88, 114, 97, 121, 32])) {
+                buf = buf.Slice(5);
+                var endIndex = buf.IndexOf<byte>(32);
+                if(endIndex > -1) {
+                    return Encoding.ASCII.GetString(buf[..endIndex]);
                 }
-                if(index == 1) {
-                    return charBuf[r].ToString();
-                }
-                index++;
             }
         }
         return "unknown";
