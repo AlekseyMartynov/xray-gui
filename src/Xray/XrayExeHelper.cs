@@ -32,8 +32,8 @@ static class XrayExeHelper {
         }
         if(version != RequiredVersion) {
             throw new UIException(
-                "Xray v" + RequiredVersion + " is required\n" +
-                "Current is v" + version
+                "Xray " + RequiredVersion + " is required\n" +
+                "Detected version: " + version
             );
         }
     }
