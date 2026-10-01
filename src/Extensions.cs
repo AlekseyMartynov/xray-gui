@@ -57,14 +57,6 @@ static class Extensions {
     }
 
     public static JsonObject GetChildObject(this JsonObject obj, params ReadOnlySpan<string> path) {
-        return GetChildObject(obj, path, false);
-    }
-
-    public static JsonObject EnsureChildObject(this JsonObject obj, params ReadOnlySpan<string> path) {
-        return GetChildObject(obj, path, true);
-    }
-
-    static JsonObject GetChildObject(JsonObject obj, ReadOnlySpan<string> path, bool create) {
         foreach(var key in path) {
             if(obj.TryGetValue(key, out var value)) {
                 if(value is JsonObject childObj) {
@@ -73,13 +65,7 @@ static class Extensions {
                     throw new InvalidOperationException();
                 }
             } else {
-                if(create) {
-                    var newChild = new JsonObject();
-                    obj[key] = newChild;
-                    obj = newChild;
-                } else {
-                    throw new KeyNotFoundException();
-                }
+                throw new KeyNotFoundException();
             }
         }
         return obj;
