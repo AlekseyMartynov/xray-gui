@@ -28,6 +28,7 @@ static partial class Program {
     public static void Start() {
         EnsureStopped();
         EnsureGeoIP();
+        ValidateBypass();
 
         var uri = SelectedServer.GetUri();
 
@@ -141,6 +142,12 @@ static partial class Program {
         var filePath = Path.Join(AppContext.BaseDirectory, "geoip.dat");
         if(!File.Exists(filePath)) {
             throw new UIException("Missing " + filePath);
+        }
+    }
+
+    static void ValidateBypass() {
+        if(AppConfig.TunMode && AppConfig.TunModeLockdown && AppConfig.HasBypassByPublicIP) {
+            throw new UIException("Incompatible Lockdown/Bypass");
         }
     }
 }

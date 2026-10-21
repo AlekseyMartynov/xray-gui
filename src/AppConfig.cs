@@ -29,7 +29,8 @@ static class AppConfig {
     public static bool BypassRU => HasFlag(AppConfigFlags.BypassRU);
     public static bool BypassPrivate => HasFlag(AppConfigFlags.BypassPrivate);
 
-    public static bool HasBypassByIP => BypassRU || BypassPrivate;
+    public static bool HasBypassByPublicIP => BypassRU;
+    public static bool HasBypassByIP => HasBypassByPublicIP || BypassPrivate;
     public static bool HasBypass => HasBypassByIP;
 
     public static string ProxyAddr => Source.ProxyAddr;
