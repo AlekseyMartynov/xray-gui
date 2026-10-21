@@ -166,15 +166,15 @@ static partial class UI {
         var data = new NOTIFYICONDATAW {
             cbSize = (uint)Unsafe.SizeOf<NOTIFYICONDATAW>(),
             hWnd = MainWindow,
-            guidItem = Program.AppGuid,
+            uID = 0,
+            // Don't use guidItem: https://stackoverflow.com/q/73334917
         };
 
         if(visible) {
             data.uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_MESSAGE
                         | NOTIFY_ICON_DATA_FLAGS.NIF_ICON
                         | NOTIFY_ICON_DATA_FLAGS.NIF_TIP
-                        | NOTIFY_ICON_DATA_FLAGS.NIF_INFO
-                        | NOTIFY_ICON_DATA_FLAGS.NIF_GUID;
+                        | NOTIFY_ICON_DATA_FLAGS.NIF_INFO;
 
             data.dwInfoFlags = NOTIFY_ICON_INFOTIP_FLAGS.NIIF_NOSOUND;
 
@@ -192,7 +192,6 @@ static partial class UI {
                 PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, in data);
             }
         } else {
-            data.uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_GUID;
             PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_DELETE, in data);
         }
     }
