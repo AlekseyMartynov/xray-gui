@@ -76,26 +76,26 @@ static class TunModeAdapters {
         }
     }
 
-    public static void SetTunParams(bool dhcp) {
+    public static void ResetTunParams() {
         var keyName = $@"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\{{{Wintun.Guid}}}";
 
         NativeRegistry.DeleteTree(HKEY.HKEY_LOCAL_MACHINE, keyName, false);
 
-        if(!dhcp) {
-            var key = NativeRegistry.OpenOrCreateKey(HKEY.HKEY_LOCAL_MACHINE, keyName, true);
-            try {
-                NativeRegistry.SetValue(key, "EnableDHCP", 0);
-                NativeRegistry.SetValue(key, "NameServer", TunDns.ToString());
-            } finally {
-                PInvoke.RegCloseKey(key);
-            }
-            NativeUnicastAddressTable.AssignStatic(ADDRESS_FAMILY.AF_INET, TunLuid, IPv4TunAddr, IPv4TunPrefixLen);
-            NativeUnicastAddressTable.AssignStatic(
-                ADDRESS_FAMILY.AF_INET6,
-                TunLuid,
-                AppConfig.TunModeIPv6 ? IPv6TunAddr : NativeIPAddress.IPv6Zero,
-                IPv6TunPrefixLen
-            );
+        var key = NativeRegistry.OpenOrCreateKey(HKEY.HKEY_LOCAL_MACHINE, keyName, true);
+        try {
+            NativeRegistry.SetValue(key, "EnableDHCP", 0);
+        } finally {
+            PInvoke.RegCloseKey(key);
+        }
+    }
+
+    public static IReadOnlyList<string> GetAddrStrings() {
+        var addr4 = IPv4TunAddr + "/" + IPv4TunPrefixLen;
+        if(AppConfig.TunModeIPv6) {
+            var addr6 = IPv6TunAddr + "/" + IPv6TunPrefixLen;
+            return [addr4, addr6];
+        } else {
+            return [addr4];
         }
     }
 
