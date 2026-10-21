@@ -3,7 +3,7 @@ using System.Text;
 namespace Project;
 
 static class XrayExeHelper {
-    const string RequiredVersion = "26.9.30";
+    const string RequiredVersion = "26.10.21";
     const string UnknownVersion = "unknown";
 
     public static readonly string ExePath;
