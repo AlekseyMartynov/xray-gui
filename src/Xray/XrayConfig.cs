@@ -119,6 +119,14 @@ static class XrayConfig {
             };
         }
 
+        obj["enableParallelQuery"] = true;
+
+        // When the cache has expired but the optimistic cache has not,
+        // the stale DNS record in the cache is returned immediately,
+        // and the cache is refreshed in the background
+        // https://xtls.github.io/en/config/dns.html
+        obj["serveStale"] = true;
+
         return obj;
     }
 
